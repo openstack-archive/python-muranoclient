@@ -34,10 +34,6 @@ class Status(base.Resource):
 class SessionManager(base.Manager):
     resource_class = Session
 
-    def list(self, environment_id):
-        return self._list('environments/{id}/sessions'.
-                          format(id=environment_id), 'sessions')
-
     def get(self, environment_id, session_id):
         return self._get('environments/{id}/sessions/{session_id}'.
                          format(id=environment_id, session_id=session_id))
