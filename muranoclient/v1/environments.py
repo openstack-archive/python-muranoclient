@@ -39,5 +39,10 @@ class EnvironmentManager(base.Manager):
     def delete(self, environment_id):
         return self._delete('environments/{id}'.format(id=environment_id))
 
-    def get(self, environment_id):
-        return self._get("environments/{id}".format(id=environment_id))
+    def get(self, environment_id, session_id=None):
+        if session_id:
+            headers = {'X-Configuration-Session': session_id}
+        else:
+            headers = {}
+        return self._get("environments/{id}".format(id=environment_id),
+                         headers=headers)

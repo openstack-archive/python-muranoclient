@@ -92,8 +92,8 @@ class Manager(object):
             return self.resource_class(self, body[response_key])
         return self.resource_class(self, body)
 
-    def _get(self, url, response_key=None, return_raw=False):
-        resp, body = self.api.json_request('GET', url)
+    def _get(self, url, response_key=None, return_raw=False, headers={}):
+        resp, body = self.api.json_request('GET', url, headers=headers)
         if return_raw:
             if response_key:
                 return body[response_key]

@@ -350,25 +350,6 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
         service_iis = services.ActiveDirectory(api, api)
         assert service_iis.data() is not None
 
-    def test_session_manager_list(self):
-        manager = sessions.SessionManager(api)
-        result = manager.list('datacenter1')
-        assert result == []
-
-    def test_session_manager_list_with_named_parameters(self):
-        manager = sessions.SessionManager(api)
-        result = manager.list(environment_id='datacenter1')
-        assert result == []
-
-    def test_session_manager_list_negative_without_parameters(self):
-        result = 'Exception'
-        manager = sessions.SessionManager(api)
-        try:
-            result = manager.list()
-        except TypeError:
-            pass
-        assert result == 'Exception'
-
     def test_session_manager_delete(self):
         manager = sessions.SessionManager(api)
         result = manager.delete('datacenter1', 'session1')
