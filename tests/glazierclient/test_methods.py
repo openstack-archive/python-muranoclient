@@ -16,10 +16,10 @@ import unittest
 import logging
 from mock import MagicMock
 
-from glazierclient.client import Client
-import glazierclient.v1.environments as environments
-import glazierclient.v1.services as services
-import glazierclient.v1.sessions as sessions
+from muranoclient.client import Client
+import muranoclient.v1.environments as environments
+import muranoclient.v1.services as services
+import muranoclient.v1.sessions as sessions
 
 def my_mock(*a, **b):
     return [a, b]

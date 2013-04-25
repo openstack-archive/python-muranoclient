@@ -13,7 +13,7 @@
 #    under the License.
 
 """
-Command-line interface to the Glazier Project.
+Command-line interface to the Murano Project.
 """
 
 import argparse
@@ -22,19 +22,19 @@ import sys
 
 import httplib2
 from keystoneclient.v2_0 import client as ksclient
-from glazierclient import client as glazierclient
-from glazierclient.common import utils, exceptions
+from muranoclient import client as apiclient
+from muranoclient.common import utils, exceptions
 
 
 logger = logging.getLogger(__name__)
 
 
-class GlazierShell(object):
+class MuranoShell(object):
     def get_base_parser(self):
         parser = argparse.ArgumentParser(
-            prog='glazier',
+            prog='murano',
             description=__doc__.strip(),
-            epilog='See glazier help COMMAND" '
+            epilog='See murano help COMMAND" '
                    'for help on a specific command.',
             add_help=False,
             formatter_class=HelpFormatter,
@@ -46,9 +46,9 @@ class GlazierShell(object):
                             help=argparse.SUPPRESS,)
 
         parser.add_argument('-d', '--debug',
-                            default=bool(utils.env('GLAZIERCLIENT_DEBUG')),
+                            default=bool(utils.env('MURANOCLIENT_DEBUG')),
                             action='store_true',
-                            help='Defaults to env[GLAZIERCLIENT_DEBUG]')
+                            help='Defaults to env[MURANOCLIENT_DEBUG]')
 
         parser.add_argument('-v', '--verbose',
                             default=False, action="store_true",
@@ -57,7 +57,7 @@ class GlazierShell(object):
         parser.add_argument('-k', '--insecure',
                             default=False,
                             action='store_true',
-                            help="Explicitly allow glazierclient to perform "
+                            help="Explicitly allow muranoclient to perform "
                                  "\"insecure\" SSL (https) requests. "
                                  "The server's certificate will "
                                  "not be verified against any certificate "
@@ -112,14 +112,14 @@ class GlazierShell(object):
                             default=utils.env('OS_AUTH_TOKEN'),
                             help='Defaults to env[OS_AUTH_TOKEN]')
 
-        parser.add_argument('--glazier-url',
-                            default=utils.env('GLAZIER_URL'),
-                            help='Defaults to env[GLAZIER_URL]')
+        parser.add_argument('--murano-url',
+                            default=utils.env('MURANO_URL'),
+                            help='Defaults to env[MURANO_URL]')
 
-        parser.add_argument('--glazier-api-version',
+        parser.add_argument('--murano-api-version',
                             default=utils.env(
-                                'GLAZIER_API_VERSION', default='1'),
-                            help='Defaults to env[GLAZIER_API_VERSION] '
+                                'MURANO_API_VERSION', default='1'),
+                            help='Defaults to env[MURANO_API_VERSION] '
                                  'or 1')
 
         parser.add_argument('--os-service-type',
@@ -204,7 +204,7 @@ class GlazierShell(object):
         self._setup_debugging(options.debug)
 
         # build available subcommands based on version
-        api_version = options.glazier_api_version
+        api_version = options.murano_api_version
         subcommand_parser = self.get_subcommand_parser(api_version)
         self.parser = subcommand_parser
 
@@ -222,9 +222,9 @@ class GlazierShell(object):
             self.do_help(args)
             return 0
 
-        if args.os_auth_token and args.glazier_url:
+        if args.os_auth_token and args.murano_url:
             token = args.os_auth_token
-            endpoint = args.glazier_url
+            endpoint = args.murano_url
         else:
             if not args.os_username:
                 raise exceptions.CommandError("You must provide a username "
@@ -258,7 +258,7 @@ class GlazierShell(object):
             _ksclient = self._get_ksclient(**kwargs)
             token = args.os_auth_token or _ksclient.auth_token
 
-            url = args.glazier_url
+            url = args.murano_url
             endpoint = url or self._get_endpoint(_ksclient, **kwargs)
 
         kwargs = {
@@ -270,7 +270,7 @@ class GlazierShell(object):
             'key_file': args.key_file,
         }
 
-        client = glazierclient.Client(api_version, endpoint, **kwargs)
+        client = apiclient.Client(api_version, endpoint, **kwargs)
 
         try:
             args.func(client, args)
@@ -303,7 +303,7 @@ class HelpFormatter(argparse.HelpFormatter):
 
 def main():
     try:
-        GlazierShell().main(sys.argv[1:])
+        MuranoShell().main(sys.argv[1:])
 
     except Exception, e:
         print >> sys.stderr, e

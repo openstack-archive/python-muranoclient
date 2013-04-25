@@ -11,10 +11,13 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from glazierclient.common import utils
+
+from muranoclient.common import utils
 
 
-def Client(version, *args, **kwargs):
-    module = utils.import_versioned_module(version, 'client')
-    client_class = getattr(module, 'Client')
-    return client_class(*args, **kwargs)
+def do_environment_list(cc, args={}):
+    """List the environments"""
+    environments = cc.environments.list()
+    field_labels = ['ID', 'Name', 'Created', 'Updated']
+    fields = ['id', 'name', 'created', 'updated']
+    utils.print_list(environments, fields, field_labels, sortby=0)

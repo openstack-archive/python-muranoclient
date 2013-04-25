@@ -21,7 +21,7 @@ import StringIO
 import urlparse
 
 import os
-from glazierclient.common import exceptions
+from muranoclient.common import exceptions
 
 
 try:
@@ -41,7 +41,7 @@ if not hasattr(urlparse, 'parse_qsl'):
     urlparse.parse_qsl = cgi.parse_qsl
 
 LOG = logging.getLogger(__name__)
-USER_AGENT = 'python-glazierclient'
+USER_AGENT = 'python-muranoclient'
 CHUNKSIZE = 1024 * 64  # 64kB
 
 

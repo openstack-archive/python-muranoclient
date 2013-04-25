@@ -2,7 +2,7 @@
 
 function usage {
   echo "Usage: $0 [OPTION]..."
-  echo "Run python-glazierclient's test suite(s)"
+  echo "Run python-muranoclient's test suite(s)"
   echo ""
   echo "  -p, --pep8               Just run pep8"
   echo "  -h, --help               Print this usage message"

@@ -14,9 +14,9 @@
 
 import setuptools
 
-from glazierclient.openstack.common import setup
+from muranoclient.openstack.common import setup
 
-project = 'python-glazierclient'
+project = 'python-muranoclient'
 
 
 setuptools.setup(
@@ -24,9 +24,9 @@ setuptools.setup(
     version=setup.get_version(project, '2013.1'),
     author='Mirantis, Inc.',
     author_email='smelikyan@mirantis.com',
-    description="Client library for Glazier Project",
+    description="Client library for Murano Project",
     license='Apache',
-    url='http://glazier.mirantis.com/',
+    url='http://murano.mirantis.com/',
     packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
     install_requires=setup.parse_requirements(),
@@ -42,7 +42,7 @@ setuptools.setup(
         'Programming Language :: Python',
     ],
     entry_points={
-        'console_scripts': ['glazier = glazierclient.shell:main']
+        'console_scripts': ['murano = muranoclient.shell:main']
     },
     dependency_links=setup.parse_dependency_links(),
     tests_require=setup.parse_requirements(['tools/test-requires']),

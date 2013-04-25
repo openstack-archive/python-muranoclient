@@ -12,7 +12,4 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-from glazierclient.openstack.common import version as common_version
-
-version_info = common_version.VersionInfo('python-glazierclient')
+from muranoclient.v1.client import Client

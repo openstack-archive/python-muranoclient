@@ -12,12 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glazierclient.common import http
-from glazierclient.v1 import environments, sessions, services
+from muranoclient.common import http
+from muranoclient.v1 import environments, sessions, services
 
 
 class Client(http.HTTPClient):
-    """Client for the Glazier v1 API.
+    """Client for the Murano v1 API.
 
     :param string endpoint: A user-supplied endpoint URL for the service.
     :param string token: Token for authentication.
@@ -26,7 +26,7 @@ class Client(http.HTTPClient):
     """
 
     def __init__(self, *args, **kwargs):
-        """ Initialize a new client for the Glazier v1 API. """
+        """ Initialize a new client for the Murano v1 API. """
         super(Client, self).__init__(*args, **kwargs)
         self.environments = environments.EnvironmentManager(self)
         self.sessions = sessions.SessionManager(self)

@@ -11,5 +11,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from muranoclient.common import utils
 
-from glazierclient.v1.client import Client
+
+def Client(version, *args, **kwargs):
+    module = utils.import_versioned_module(version, 'client')
+    client_class = getattr(module, 'Client')
+    return client_class(*args, **kwargs)
