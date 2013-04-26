@@ -12,12 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glazierclient.common import utils
 
+from muranoclient.openstack.common import version as common_version
 
-def do_environment_list(cc, args={}):
-    """List the environments"""
-    environments = cc.environments.list()
-    field_labels = ['ID', 'Name', 'Created', 'Updated']
-    fields = ['id', 'name', 'created', 'updated']
-    utils.print_list(environments, fields, field_labels, sortby=0)
+version_info = common_version.VersionInfo('python-muranoclient')

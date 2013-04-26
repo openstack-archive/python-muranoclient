@@ -15,7 +15,7 @@
 import unittest
 import logging
 from httpretty import HTTPretty, httprettified
-from glazierclient.client import Client
+from muranoclient.client import Client
 
 
 LOG = logging.getLogger('Unit tests')

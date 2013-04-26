@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from glazierclient.common import base
+from muranoclient.common import base
 
 
 class Session(base.Resource):

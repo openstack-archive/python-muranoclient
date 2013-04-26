@@ -17,9 +17,9 @@ import sys
 import uuid
 
 import os
-from glazierclient.common import exceptions
+from muranoclient.common import exceptions
 import prettytable
-from glazierclient.openstack.common import importutils
+from muranoclient.openstack.common import importutils
 
 
 # Decorator for cli-args
@@ -107,7 +107,7 @@ def env(*vars, **kwargs):
 
 
 def import_versioned_module(version, submodule=None):
-    module = 'glazierclient.v%s' % version
+    module = 'muranoclient.v%s' % version
     if submodule:
         module = '.'.join((module, submodule))
     return importutils.import_module(module)

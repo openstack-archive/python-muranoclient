@@ -2,7 +2,7 @@
 #
 import os
 
-project = 'python-glazierclient'
+project = 'python-muranoclient'
 
 # -- General configuration ----------------------------------------------------
 

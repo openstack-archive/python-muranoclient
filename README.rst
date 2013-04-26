@@ -1,9 +1,9 @@
-Python bindings to the Glazier API
+Python bindings to the Murano API
 =====================
-This is a client library for Glazier built on the Glazier API. It
-provides a Python API (the ``glazierclient`` module) and a command-line tool
-(``glazier``).
+This is a client library for Murano built on the Murano API. It
+provides a Python API (the ``muranoclient`` module) and a command-line tool
+(``murano``).
 
 SEE ALSO
 --------
-* `Glazier <http://glazier.mirantis.com>`__
+* `Murano <http://murano.mirantis.com>`__

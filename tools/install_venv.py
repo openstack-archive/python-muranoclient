@@ -20,7 +20,7 @@
 #    under the License.
 
 """
-Installation script for python-glazierclient's development virtualenv
+Installation script for python-muranoclient's development virtualenv
 """
 
 import os
@@ -32,12 +32,12 @@ import install_venv_common as install_venv
 
 def print_help():
     help = """
- Glazier development environment setup is complete.
+ Murano development environment setup is complete.
 
- Glazier development uses virtualenv to track and manage Python dependencies
+ Murano development uses virtualenv to track and manage Python dependencies
  while in development and testing.
 
- To activate the Glazier virtualenv for the extent of your current shell session
+ To activate the Murano virtualenv for the extent of your current shell session
  you can run:
 
  $ source .venv/bin/activate
@@ -58,7 +58,7 @@ def main(argv):
     pip_requires = os.path.join(root, 'tools', 'pip-requires')
     test_requires = os.path.join(root, 'tools', 'test-requires')
     py_version = "python%s.%s" % (sys.version_info[0], sys.version_info[1])
-    project = 'python-glazierclient'
+    project = 'python-muranoclient'
     install = install_venv.InstallVenv(root, venv, pip_requires, test_requires,
                                        py_version, project)
     options = install.parse_args(argv)
