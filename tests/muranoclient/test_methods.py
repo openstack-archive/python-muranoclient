@@ -21,15 +21,16 @@ import muranoclient.v1.environments as environments
 import muranoclient.v1.services as services
 import muranoclient.v1.sessions as sessions
 
+
 def my_mock(*a, **b):
     return [a, b]
+
 
 LOG = logging.getLogger('Unit tests')
 api = MagicMock(json_request=my_mock)
 
 
 class UnitTestsForClassesAndFunctions(unittest.TestCase):
-    
     def test_create_client_instance(self):
 
         endpoint = 'http://no-resolved-host:8001'
@@ -117,7 +118,7 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
         result = manager.get('test')
         ## WTF?
         assert result.manager is not None
-        
+
     def test_env(self):
         environment = environments.Environment(api, api)
         assert environment.data() is not None
@@ -230,7 +231,7 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
         except TypeError:
             pass
         assert result == 'Exception'
-        
+
     def test_iis_manager_list_with_one_parameter(self):
         manager = services.WebServerManager(api)
         result = manager.list('datacenter1')
@@ -344,11 +345,11 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
     def test_service_ad(self):
         service_ad = services.ActiveDirectory(api, api)
         assert service_ad.data() is not None
-    
+
     def test_service_iis(self):
         service_iis = services.ActiveDirectory(api, api)
         assert service_iis.data() is not None
-        
+
     def test_session_manager_list(self):
         manager = sessions.SessionManager(api)
         result = manager.list('datacenter1')
@@ -396,13 +397,13 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
         except TypeError:
             pass
         assert result == 'Exception'
-        
+
     def test_session_manager_get(self):
         manager = sessions.SessionManager(api)
         result = manager.get('datacenter1', 'session1')
         # WTF?
         assert result.manager is not None
-        
+
     def test_session_manager_configure(self):
         manager = sessions.SessionManager(api)
         result = manager.configure('datacenter1')
