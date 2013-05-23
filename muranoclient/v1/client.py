@@ -32,3 +32,4 @@ class Client(http.HTTPClient):
         self.sessions = sessions.SessionManager(self)
         self.activeDirectories = services.ActiveDirectoryManager(self)
         self.webServers = services.WebServerManager(self)
+        self.aspNetApps = services.AspNetAppManager(self)

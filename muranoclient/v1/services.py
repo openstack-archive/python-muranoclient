@@ -90,3 +90,42 @@ class WebServerManager(base.Manager):
                             .format(id=environment_id,
                                     web_server_id=service_id),
                             headers=headers)
+
+
+class AspNetApp(base.Resource):
+    def __repr__(self):
+        return '<AspNetApp %s>' % self._info
+
+    def data(self, **kwargs):
+        return self.manager.data(self, **kwargs)
+
+
+class AspNetAppManager(base.Manager):
+    resource_class = AspNetApp
+
+    def list(self, environment_id, session_id=None):
+        if session_id:
+            headers = {'X-Configuration-Session': session_id}
+        else:
+            headers = {}
+
+        return self._list('environments/{id}/aspNetApps'.
+                          format(id=environment_id),
+                          'aspNetApps',
+                          headers=headers)
+
+    def create(self, environment_id, session_id, web_server):
+        headers = {'X-Configuration-Session': session_id}
+
+        return self._create('environments/{id}/aspNetApps'.
+                            format(id=environment_id),
+                            web_server,
+                            headers=headers)
+
+    def delete(self, environment_id, session_id, service_id):
+        headers = {'X-Configuration-Session': session_id}
+
+        return self._delete('environments/{id}/aspNetApps/{app_id}'
+                            .format(id=environment_id,
+                                    app_id=service_id),
+                            headers=headers)
