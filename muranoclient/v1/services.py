@@ -45,7 +45,7 @@ class ActiveDirectoryManager(base.Manager):
                             active_directory,
                             headers=headers)
 
-    def delete(self, environment_id, session_id, service_id):
+    def delete(self, environment_id, service_id, session_id):
         headers = {'X-Configuration-Session': session_id}
         path = 'environments/{id}/activeDirectories/{active_directory_id}'
         path = path.format(id=environment_id, active_directory_id=service_id)
@@ -122,7 +122,7 @@ class AspNetAppManager(base.Manager):
                             app,
                             headers=headers)
 
-    def delete(self, environment_id, session_id, service_id):
+    def delete(self, environment_id, service_id, session_id):
         headers = {'X-Configuration-Session': session_id}
 
         return self._delete('environments/{id}/aspNetApps/{app_id}'
@@ -161,7 +161,7 @@ class WebServerFarmManager(base.Manager):
                             web_server_farm,
                             headers=headers)
 
-    def delete(self, environment_id, session_id, service_id):
+    def delete(self, environment_id, service_id, session_id):
         headers = {'X-Configuration-Session': session_id}
 
         return self._delete('environments/{id}/webServerFarms'
@@ -201,7 +201,7 @@ class AspNetAppFarmManager(base.Manager):
                             app_farm,
                             headers=headers)
 
-    def delete(self, environment_id, session_id, service_id):
+    def delete(self, environment_id, service_id, session_id):
         headers = {'X-Configuration-Session': session_id}
 
         return self._delete('environments/{id}/aspNetAppFarms/{app_id}'
