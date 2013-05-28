@@ -114,18 +114,97 @@ class AspNetAppManager(base.Manager):
                           'aspNetApps',
                           headers=headers)
 
-    def create(self, environment_id, session_id, web_server):
+    def create(self, environment_id, session_id, app):
         headers = {'X-Configuration-Session': session_id}
 
         return self._create('environments/{id}/aspNetApps'.
                             format(id=environment_id),
-                            web_server,
+                            app,
                             headers=headers)
 
     def delete(self, environment_id, session_id, service_id):
         headers = {'X-Configuration-Session': session_id}
 
         return self._delete('environments/{id}/aspNetApps/{app_id}'
+                            .format(id=environment_id,
+                                    app_id=service_id),
+                            headers=headers)
+
+
+class WebServerFarm(base.Resource):
+    def __repr__(self):
+        return '<WebServerFarm %s>' % self._info
+
+    def data(self, **kwargs):
+        return self.manager.data(self, **kwargs)
+
+
+class WebServerFarmManager(base.Manager):
+    resource_class = WebServerFarm
+
+    def list(self, environment_id, session_id=None):
+        if session_id:
+            headers = {'X-Configuration-Session': session_id}
+        else:
+            headers = {}
+
+        return self._list('environments/{id}/webServerFarms'.
+                          format(id=environment_id),
+                          'webServerFarms',
+                          headers=headers)
+
+    def create(self, environment_id, session_id, web_server_farm):
+        headers = {'X-Configuration-Session': session_id}
+
+        return self._create('environments/{id}/webServerFarms'.
+                            format(id=environment_id),
+                            web_server_farm,
+                            headers=headers)
+
+    def delete(self, environment_id, session_id, service_id):
+        headers = {'X-Configuration-Session': session_id}
+
+        return self._delete('environments/{id}/webServerFarms'
+                            '/{web_server_farm_id}'
+                            .format(id=environment_id,
+                                    web_server_farm_id=service_id),
+                            headers=headers)
+
+
+class AspNetAppFarm(base.Resource):
+    def __repr__(self):
+        return '<AspNetAppFarm %s>' % self._info
+
+    def data(self, **kwargs):
+        return self.manager.data(self, **kwargs)
+
+
+class AspNetAppFarmManager(base.Manager):
+    resource_class = AspNetAppFarm
+
+    def list(self, environment_id, session_id=None):
+        if session_id:
+            headers = {'X-Configuration-Session': session_id}
+        else:
+            headers = {}
+
+        return self._list('environments/{id}/aspNetAppFarms'.
+                          format(id=environment_id),
+                          'aspNetAppFarms',
+                          headers=headers)
+
+    def create(self, environment_id, session_id, app_farm):
+        headers = {'X-Configuration-Session': session_id}
+
+        return self._create('environments/{id}/aspNetAppFarms'.
+                            format(id=environment_id),
+                            app_farm,
+                            headers=headers)
+
+    def delete(self, environment_id, session_id, service_id):
+        headers = {'X-Configuration-Session': session_id}
+
+        return self._delete('environments/{id}/aspNetAppFarms/{app_id}'
                             .format(id=environment_id,
                                     app_id=service_id),
                             headers=headers)
