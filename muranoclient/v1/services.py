@@ -83,7 +83,7 @@ class WebServerManager(base.Manager):
                             web_server,
                             headers=headers)
 
-    def delete(self, environment_id, session_id, service_id):
+    def delete(self, environment_id, service_id, session_id):
         headers = {'X-Configuration-Session': session_id}
 
         return self._delete('environments/{id}/webServers/{web_server_id}'
