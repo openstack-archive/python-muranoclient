@@ -40,6 +40,9 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
         assert test_client.sessions is not None
         assert test_client.activeDirectories is not None
         assert test_client.webServers is not None
+        assert test_client.aspNetApps is not None
+        assert test_client.webServerFarms is not None
+        assert test_client.aspNetAppFarms is not None
 
     def test_env_manager_list(self):
         manager = environments.EnvironmentManager(api)
@@ -458,6 +461,333 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
         manager = sessions.SessionManager(api)
         try:
             result = manager.reports()
+        except TypeError:
+            pass
+        assert result == 'Exception'
+
+    def test_webfarm_list_with_one_parameter(self):
+        manager = services.WebServerFarmManager(api)
+        result = manager.list('datacenter1')
+        assert result == []
+
+    def test_webfarm_list_with_all_parameters(self):
+        manager = services.WebServerFarmManager(api)
+        result = manager.list('test', '1')
+        assert result == []
+
+    def test_webfarm_list_with_named_parameters(self):
+        manager = services.WebServerFarmManager(api)
+        result = manager.list(environment_id='test', session_id='1')
+        assert result == []
+
+    def test_webfarm_list_with_named_parameter(self):
+        manager = services.WebServerFarmManager(api)
+        result = manager.list(environment_id='test')
+        assert result == []
+
+    def test_webfarm_list_negative_without_parameters(self):
+        result = 'Exception'
+        manager = services.WebServerFarmManager(api)
+        try:
+            result = manager.list()
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_webfarm_create(self):
+        manager = services.WebServerFarmManager(api)
+        result = manager.create('datacenter1', 'session1', 'test')
+        assert result.headers == {'X-Configuration-Session': 'session1'}
+        assert result.body == 'test'
+
+    def test_webfarm_create_with_named_parameters(self):
+        manager = services.WebServerFarmManager(api)
+        result = manager.create(environment_id='datacenter1',
+                                session_id='session2',
+                                web_server_farm='test2')
+        assert result.headers == {'X-Configuration-Session': 'session2'}
+        assert result.body == 'test2'
+
+    def test_webfarm_create_negative_with_two_parameters(self):
+        result = 'Exception'
+        manager = services.WebServerFarmManager(api)
+        try:
+            result = manager.create('datacenter1', 'session1')
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_webfarm_create_negative_with_one_parameter(self):
+        result = 'Exception'
+        manager = services.WebServerFarmManager(api)
+        try:
+            result = manager.create('datacenter1')
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_webfarm_create_negative_without_parameters(self):
+        result = 'Exception'
+        manager = services.WebServerFarmManager(api)
+        try:
+            result = manager.create()
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_webfarm_delete(self):
+        manager = services.WebServerFarmManager(api)
+        result = manager.delete('datacenter1', 'session1', 'test')
+        assert result is None
+
+    def test_webfarm_delete_with_named_parameters(self):
+        manager = services.WebServerFarmManager(api)
+        result = manager.delete(environment_id='datacenter1',
+                                session_id='session1',
+                                service_id='test')
+        assert result is None
+
+    def test_webfarm_delete_negative_with_two_parameters(self):
+        result = 'Exception'
+        manager = services.WebServerFarmManager(api)
+        try:
+            result = manager.delete('datacenter1', 'session1')
+        except TypeError:
+            pass
+        assert result == 'Exception'
+
+    def test_webfarm_delete_negative_with_one_parameter(self):
+        result = 'Exception'
+        manager = services.WebServerFarmManager(api)
+        try:
+            result = manager.delete('datacenter1')
+        except TypeError:
+            pass
+        assert result == 'Exception'
+
+    def test_webfarm_delete_negative_without_parameters(self):
+        result = 'Exception'
+        manager = services.WebServerFarmManager(api)
+        try:
+            result = manager.delete()
+        except TypeError:
+            pass
+        assert result == 'Exception'
+
+    def test_aspnetapp_list_with_one_parameter(self):
+        manager = services.AspNetAppManager(api)
+        result = manager.list('datacenter1')
+        assert result == []
+
+    def test_aspnetapp_list_with_all_parameters(self):
+        manager = services.AspNetAppManager(api)
+        result = manager.list('test', '1')
+        assert result == []
+
+    def test_aspnetapp_list_with_named_parameters(self):
+        manager = services.AspNetAppManager(api)
+        result = manager.list(environment_id='test', session_id='1')
+        assert result == []
+
+    def test_aspnetapp_list_with_named_parameter(self):
+        manager = services.AspNetAppManager(api)
+        result = manager.list(environment_id='test')
+        assert result == []
+
+    def test_aspnetapp_list_negative_without_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppManager(api)
+        try:
+            result = manager.list()
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_aspnetapp_create(self):
+        manager = services.AspNetAppManager(api)
+        result = manager.create('datacenter1', 'session1', 'test')
+        assert result.headers == {'X-Configuration-Session': 'session1'}
+        assert result.body == 'test'
+
+    def test_aspnetapp_create_with_named_parameters(self):
+        manager = services.AspNetAppManager(api)
+        result = manager.create(environment_id='datacenter1',
+                                session_id='session2',
+                                app='test2')
+        assert result.headers == {'X-Configuration-Session': 'session2'}
+        assert result.body == 'test2'
+
+    def test_aspnetapp_create_negative_with_two_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppManager(api)
+        try:
+            result = manager.create('datacenter1', 'session1')
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_aspnetapp_create_negative_with_one_parameter(self):
+        result = 'Exception'
+        manager = services.AspNetAppManager(api)
+        try:
+            result = manager.create('datacenter1')
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_aspnetapp_create_negative_without_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppManager(api)
+        try:
+            result = manager.create()
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_aspnetapp_delete(self):
+        manager = services.AspNetAppManager(api)
+        result = manager.delete('datacenter1', 'session1', 'test')
+        assert result is None
+
+    def test_aspnetapp_delete_with_named_parameters(self):
+        manager = services.AspNetAppManager(api)
+        result = manager.delete(environment_id='datacenter1',
+                                session_id='session1',
+                                service_id='test')
+        assert result is None
+
+    def test_aspnetapp_delete_negative_with_two_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppManager(api)
+        try:
+            result = manager.delete('datacenter1', 'session1')
+        except TypeError:
+            pass
+        assert result == 'Exception'
+
+    def test_aspnetapp_delete_negative_with_one_parameter(self):
+        result = 'Exception'
+        manager = services.AspNetAppManager(api)
+        try:
+            result = manager.delete('datacenter1')
+        except TypeError:
+            pass
+        assert result == 'Exception'
+
+    def test_aspnetapp_delete_negative_without_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppManager(api)
+        try:
+            result = manager.delete()
+        except TypeError:
+            pass
+        assert result == 'Exception'
+
+    def test_aspnetfarm_list_with_one_parameter(self):
+        manager = services.AspNetAppFarmManager(api)
+        result = manager.list('datacenter1')
+        assert result == []
+
+    def test_aspnetfarm_list_with_all_parameters(self):
+        manager = services.AspNetAppFarmManager(api)
+        result = manager.list('test', '1')
+        assert result == []
+
+    def test_aspnetfarm_list_with_named_parameters(self):
+        manager = services.AspNetAppFarmManager(api)
+        result = manager.list(environment_id='test', session_id='1')
+        assert result == []
+
+    def test_aspnetfarm_list_with_named_parameter(self):
+        manager = services.AspNetAppFarmManager(api)
+        result = manager.list(environment_id='test')
+        assert result == []
+
+    def test_aspnetfarm_list_negative_without_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppFarmManager(api)
+        try:
+            result = manager.list()
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_aspnetfarm_create(self):
+        manager = services.AspNetAppFarmManager(api)
+        result = manager.create('datacenter1', 'session1', 'test')
+        assert result.headers == {'X-Configuration-Session': 'session1'}
+        assert result.body == 'test'
+
+    def test_aspnetfarm_create_with_named_parameters(self):
+        manager = services.AspNetAppFarmManager(api)
+        result = manager.create(environment_id='datacenter1',
+                                session_id='session2',
+                                app_farm='test2')
+        assert result.headers == {'X-Configuration-Session': 'session2'}
+        assert result.body == 'test2'
+
+    def test_aspnetfarm_create_negative_with_two_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppFarmManager(api)
+        try:
+            result = manager.create('datacenter1', 'session1')
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_aspnetfarm_create_negative_with_one_parameter(self):
+        result = 'Exception'
+        manager = services.AspNetAppFarmManager(api)
+        try:
+            result = manager.create('datacenter1')
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_aspnetfarm_create_negative_without_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppFarmManager(api)
+        try:
+            result = manager.create()
+        except TypeError:
+            pass
+        assert result is 'Exception'
+
+    def test_aspnetfarm_delete(self):
+        manager = services.AspNetAppFarmManager(api)
+        result = manager.delete('datacenter1', 'session1', 'test')
+        assert result is None
+
+    def test_aspnetfarm_delete_with_named_parameters(self):
+        manager = services.AspNetAppFarmManager(api)
+        result = manager.delete(environment_id='datacenter1',
+                                session_id='session1',
+                                service_id='test')
+        assert result is None
+
+    def test_aspnetfarm_delete_negative_with_two_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppFarmManager(api)
+        try:
+            result = manager.delete('datacenter1', 'session1')
+        except TypeError:
+            pass
+        assert result == 'Exception'
+
+    def test_aspnetfarm_delete_negative_with_one_parameter(self):
+        result = 'Exception'
+        manager = services.AspNetAppFarmManager(api)
+        try:
+            result = manager.delete('datacenter1')
+        except TypeError:
+            pass
+        assert result == 'Exception'
+
+    def test_aspnetfarm_delete_negative_without_parameters(self):
+        result = 'Exception'
+        manager = services.AspNetAppFarmManager(api)
+        try:
+            result = manager.delete()
         except TypeError:
             pass
         assert result == 'Exception'
