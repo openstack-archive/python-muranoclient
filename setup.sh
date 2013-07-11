@@ -163,5 +163,5 @@ case $COMMAND in
 		echo "Usage: $(basename "$0") command \nCommands:\n\tinstall - Install $SERVICE_SRV_NAME software\n\tuninstall - Uninstall $SERVICE_SRV_NAME software"
 		exit 1
 		;;
-esac
+esac 
 
