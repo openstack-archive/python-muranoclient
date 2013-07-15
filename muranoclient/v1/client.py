@@ -13,7 +13,7 @@
 #    under the License.
 
 from muranoclient.common import http
-from muranoclient.v1 import environments, sessions, services
+from muranoclient.v1 import environments, sessions, services, deployments
 
 
 class Client(http.HTTPClient):
@@ -31,3 +31,4 @@ class Client(http.HTTPClient):
         self.environments = environments.EnvironmentManager(self)
         self.sessions = sessions.SessionManager(self)
         self.services = services.ServiceManager(self)
+        self.deployments = deployments.DeploymentManager(self)
