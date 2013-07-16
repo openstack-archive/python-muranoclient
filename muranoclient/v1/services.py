@@ -19,8 +19,12 @@ from muranoclient.common import base
 def normalize_path(f):
     @wraps(f)
     def f_normalize_path(*args, **kwargs):
-        if kwargs['path'][0] == '/':
+        args = list(args)
+        if len(args) >= 3 and args[2][0] == '/':
+            args[2] = args[2][1:]
+        elif kwargs['path'][0] == '/':
             kwargs['path'] = kwargs['path'][1:]
+
         return f(*args, **kwargs)
 
     return f_normalize_path
@@ -51,7 +55,7 @@ class ServiceManager(base.Manager):
     def post(self, environment_id, path, data, session_id):
         headers = {'X-Configuration-Session': session_id}
 
-        return self._create('environments/{id}/services/{1}'.
+        return self._create('environments/{0}/services/{1}'.
                             format(environment_id, path), data,
                             headers=headers)
 
@@ -59,7 +63,7 @@ class ServiceManager(base.Manager):
     def put(self, environment_id, path, data, session_id):
         headers = {'X-Configuration-Session': session_id}
 
-        return self._update('environments/{id}/services/{1}'.
+        return self._update('environments/{0}/services/{1}'.
                             format(environment_id, path), data,
                             headers=headers)
 
