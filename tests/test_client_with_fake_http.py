@@ -12,7 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import unittest
+import unittest2 as unittest
 import logging
 from httpretty import HTTPretty, httprettified
 from muranoclient.client import Client
@@ -21,6 +21,7 @@ from muranoclient.client import Client
 LOG = logging.getLogger('Unit tests')
 
 
+@unittest.skip
 class UnitTestsForClassesAndFunctions(unittest.TestCase):
     @httprettified
     def test_client_env_list_with_empty_list(self):
@@ -124,7 +125,7 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
         endpoint = 'http://no-resolved-host:8001'
         test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
 
-        result = test_client.activeDirectories.create('1', 'test', 'ad1')
+        result = test_client.services.post('1', 'test', 'ad1')
         assert result.name == 'ad1'
 
     @httprettified
