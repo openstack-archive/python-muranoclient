@@ -35,8 +35,8 @@ class DeploymentManager(base.Manager):
     resource_class = Deployment
 
     def list(self, environment_id):
-        return self._get('environments/{id}/deployments'.
-                         format(id=environment_id))
+        return self._list('environments/{id}/deployments'.
+                          format(id=environment_id), 'deployments')
 
     def reports(self, environment_id, deployment_id, *service_ids):
         path = 'environments/{id}/deployments/{deployment_id}'
