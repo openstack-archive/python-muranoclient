@@ -23,14 +23,6 @@ class Session(base.Resource):
         return self.manager.data(self, **kwargs)
 
 
-class Status(base.Resource):
-    def __repr__(self):
-        return '<Status %s>' % self._info
-
-    def data(self, **kwargs):
-        return self.manager.data(self, **kwargs)
-
-
 class SessionManager(base.Manager):
     resource_class = Session
 
@@ -47,17 +39,6 @@ class SessionManager(base.Manager):
         self.api.json_request('POST',
                               path.format(id=environment_id,
                                           session_id=session_id))
-
-    def reports(self, environment_id, session_id, service_id=None):
-        path = 'environments/{id}/sessions/{session_id}/reports'
-        path = path.format(id=environment_id, session_id=session_id)
-        if service_id:
-            path += '?service_id={0}'.format(service_id)
-
-        resp, body = self.api.json_request('GET', path)
-
-        data = body.get('reports', [])
-        return [Status(self, res, loaded=True) for res in data if res]
 
     def delete(self, environment_id, session_id):
         return self._delete("environments/{id}/sessions/{session_id}".

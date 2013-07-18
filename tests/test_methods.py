@@ -204,32 +204,3 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
         except TypeError:
             pass
         assert result == 'Exception'
-
-    def test_session_manager_reports(self):
-        manager = sessions.SessionManager(api)
-        result = manager.reports('datacenter1', '1')
-        assert result == []
-
-    def test_session_manager_reports_with_named_parameters(self):
-        manager = sessions.SessionManager(api)
-        result = manager.reports(environment_id='datacenter1',
-                                 session_id='1')
-        assert result == []
-
-    def test_session_manager_reports_negative_with_one_parameter(self):
-        result = 'Exception'
-        manager = sessions.SessionManager(api)
-        try:
-            result = manager.reports('datacenter1')
-        except TypeError:
-            pass
-        assert result == 'Exception'
-
-    def test_session_manager_reports_negative_without_parameters(self):
-        result = 'Exception'
-        manager = sessions.SessionManager(api)
-        try:
-            result = manager.reports()
-        except TypeError:
-            pass
-        assert result == 'Exception'
