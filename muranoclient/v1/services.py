@@ -48,14 +48,14 @@ class ServiceManager(base.Manager):
         else:
             headers = {}
 
-        return self._list('environments/{0}/services/{1}'.
+        return self._list('/environments/{0}/services/{1}'.
                           format(environment_id, path), headers=headers)
 
     @normalize_path
     def post(self, environment_id, path, data, session_id):
         headers = {'X-Configuration-Session': session_id}
 
-        return self._create('environments/{0}/services/{1}'.
+        return self._create('/environments/{0}/services/{1}'.
                             format(environment_id, path), data,
                             headers=headers)
 
@@ -63,13 +63,13 @@ class ServiceManager(base.Manager):
     def put(self, environment_id, path, data, session_id):
         headers = {'X-Configuration-Session': session_id}
 
-        return self._update('environments/{0}/services/{1}'.
+        return self._update('/environments/{0}/services/{1}'.
                             format(environment_id, path), data,
                             headers=headers)
 
     @normalize_path
     def delete(self, environment_id, path, session_id):
         headers = {'X-Configuration-Session': session_id}
-        path = 'environments/{0}/services/{1}'.format(environment_id, path)
+        path = '/environments/{0}/services/{1}'.format(environment_id, path)
 
         return self._delete(path, headers=headers)

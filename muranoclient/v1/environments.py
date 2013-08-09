@@ -35,29 +35,29 @@ class EnvironmentManager(base.Manager):
     resource_class = Environment
 
     def list(self):
-        return self._list('environments', 'environments')
+        return self._list('/environments', 'environments')
 
     def create(self, name):
-        return self._create('environments', {'name': name})
+        return self._create('/environments', {'name': name})
 
     def update(self, environment_id, name):
-        return self._update('environments/{id}'.format(id=environment_id),
+        return self._update('/environments/{id}'.format(id=environment_id),
                             {'name': name})
 
     def delete(self, environment_id):
-        return self._delete('environments/{id}'.format(id=environment_id))
+        return self._delete('/environments/{id}'.format(id=environment_id))
 
     def get(self, environment_id, session_id=None):
         if session_id:
             headers = {'X-Configuration-Session': session_id}
         else:
             headers = {}
-        return self._get("environments/{id}".format(id=environment_id),
+        return self._get("/environments/{id}".format(id=environment_id),
                          headers=headers)
 
     def last_status(self, environment_id, session_id):
         headers = {'X-Configuration-Session': session_id}
-        path = 'environments/{id}/lastStatus'
+        path = '/environments/{id}/lastStatus'
         path = path.format(id=environment_id)
         status_dict = self._get(path, return_raw=True,
                                 response_key='lastStatuses',

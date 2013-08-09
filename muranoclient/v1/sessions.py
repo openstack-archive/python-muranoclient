@@ -27,19 +27,19 @@ class SessionManager(base.Manager):
     resource_class = Session
 
     def get(self, environment_id, session_id):
-        return self._get('environments/{id}/sessions/{session_id}'.
+        return self._get('/environments/{id}/sessions/{session_id}'.
                          format(id=environment_id, session_id=session_id))
 
     def configure(self, environment_id):
-        return self._create('environments/{id}/configure'.
+        return self._create('/environments/{id}/configure'.
                             format(id=environment_id), None)
 
     def deploy(self, environment_id, session_id):
-        path = 'environments/{id}/sessions/{session_id}/deploy'
+        path = '/environments/{id}/sessions/{session_id}/deploy'
         self.api.json_request('POST',
                               path.format(id=environment_id,
                                           session_id=session_id))
 
     def delete(self, environment_id, session_id):
-        return self._delete("environments/{id}/sessions/{session_id}".
+        return self._delete("/environments/{id}/sessions/{session_id}".
                             format(id=environment_id, session_id=session_id))

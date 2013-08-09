@@ -1,3 +1,6 @@
+# Copyright 2012 OpenStack LLC.
+# All Rights Reserved.
+#
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -23,7 +26,7 @@ class BaseException(Exception):
 
 
 class CommandError(BaseException):
-    """Invalid usage of CLI"""
+    """Invalid usage of CLI."""
 
 
 class InvalidEndpoint(BaseException):
@@ -35,18 +38,18 @@ class CommunicationError(BaseException):
 
 
 class ClientException(Exception):
-    """DEPRECATED"""
+    """DEPRECATED!"""
 
 
 class HTTPException(ClientException):
-    """Base exception for all HTTP-derived exceptions"""
+    """Base exception for all HTTP-derived exceptions."""
     code = 'N/A'
 
     def __init__(self, details=None):
-        self.details = details
+        self.details = details or self.__class__.__name__
 
     def __str__(self):
-        return "%s (HTTP %s)" % (self.__class__.__name__, self.code)
+        return "%s (HTTP %s)" % (self.details, self.code)
 
 
 class HTTPMultipleChoices(HTTPException):
@@ -60,7 +63,7 @@ class HTTPMultipleChoices(HTTPException):
 
 
 class BadRequest(HTTPException):
-    """DEPRECATED"""
+    """DEPRECATED!"""
     code = 400
 
 
@@ -69,7 +72,7 @@ class HTTPBadRequest(BadRequest):
 
 
 class Unauthorized(HTTPException):
-    """DEPRECATED"""
+    """DEPRECATED!"""
     code = 401
 
 
@@ -78,7 +81,7 @@ class HTTPUnauthorized(Unauthorized):
 
 
 class Forbidden(HTTPException):
-    """DEPRECATED"""
+    """DEPRECATED!"""
     code = 403
 
 
@@ -87,7 +90,7 @@ class HTTPForbidden(Forbidden):
 
 
 class NotFound(HTTPException):
-    """DEPRECATED"""
+    """DEPRECATED!"""
     code = 404
 
 
@@ -100,7 +103,7 @@ class HTTPMethodNotAllowed(HTTPException):
 
 
 class Conflict(HTTPException):
-    """DEPRECATED"""
+    """DEPRECATED!"""
     code = 409
 
 
@@ -109,7 +112,7 @@ class HTTPConflict(Conflict):
 
 
 class OverLimit(HTTPException):
-    """DEPRECATED"""
+    """DEPRECATED!"""
     code = 413
 
 
@@ -130,7 +133,7 @@ class HTTPBadGateway(HTTPException):
 
 
 class ServiceUnavailable(HTTPException):
-    """DEPRECATED"""
+    """DEPRECATED!"""
     code = 503
 
 
@@ -147,17 +150,29 @@ for obj_name in dir(sys.modules[__name__]):
         _code_map[obj.code] = obj
 
 
-def from_response(response):
+def from_response(response, body=None):
     """Return an instance of an HTTPException based on httplib response."""
     cls = _code_map.get(response.status, HTTPException)
+    if body:
+        details = body.replace('\n\n', '\n')
+        return cls(details=details)
+
     return cls()
 
 
 class NoTokenLookupException(Exception):
-    """DEPRECATED"""
+    """DEPRECATED!"""
     pass
 
 
 class EndpointNotFound(Exception):
-    """DEPRECATED"""
+    """DEPRECATED!"""
+    pass
+
+
+class SSLConfigurationError(BaseException):
+    pass
+
+
+class SSLCertificateError(BaseException):
     pass
