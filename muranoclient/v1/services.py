@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+import posixpath
 from functools import wraps
 
 from muranoclient.common import base
@@ -20,14 +22,26 @@ def normalize_path(f):
     @wraps(f)
     def f_normalize_path(*args, **kwargs):
         args = list(args)
-        if len(args) >= 3 and args[2][0] == '/':
+        if len(args) >= 3:
             args[2] = args[2][1:]
-        elif kwargs['path'][0] == '/':
+        else:
             kwargs['path'] = kwargs['path'][1:]
 
         return f(*args, **kwargs)
 
     return f_normalize_path
+
+
+def verify_path(f):
+    @wraps(f)
+    def f_verify_path(*args, **kwargs):
+        path = args[2] if len(args) >= 3 else kwargs['path']
+
+        #path formally is just absolute unix path
+        if not posixpath.isabs(path):
+            raise ValueError("Parameter 'path' should start with '/'")
+
+    return f_verify_path
 
 
 class Service(base.Resource):
@@ -41,6 +55,7 @@ class Service(base.Resource):
 class ServiceManager(base.Manager):
     resource_class = Service
 
+    @verify_path
     @normalize_path
     def get(self, environment_id, path, session_id=None):
         if session_id:
@@ -51,6 +66,7 @@ class ServiceManager(base.Manager):
         return self._list('/environments/{0}/services/{1}'.
                           format(environment_id, path), headers=headers)
 
+    @verify_path
     @normalize_path
     def post(self, environment_id, path, data, session_id):
         headers = {'X-Configuration-Session': session_id}
@@ -59,6 +75,7 @@ class ServiceManager(base.Manager):
                             format(environment_id, path), data,
                             headers=headers)
 
+    @verify_path
     @normalize_path
     def put(self, environment_id, path, data, session_id):
         headers = {'X-Configuration-Session': session_id}
@@ -67,6 +84,7 @@ class ServiceManager(base.Manager):
                             format(environment_id, path), data,
                             headers=headers)
 
+    @verify_path
     @normalize_path
     def delete(self, environment_id, path, session_id):
         headers = {'X-Configuration-Session': session_id}
