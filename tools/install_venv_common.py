@@ -29,12 +29,13 @@ import sys
 
 class InstallVenv(object):
 
-    def __init__(self, root, venv, pip_requires, test_requires, py_version,
+    def __init__(self, root, venv, requirements,
+                 test_requirements, py_version,
                  project):
         self.root = root
         self.venv = venv
-        self.pip_requires = pip_requires
-        self.test_requires = test_requires
+        self.requirements = requirements
+        self.test_requirements = test_requirements
         self.py_version = py_version
         self.project = project
 
@@ -70,11 +71,13 @@ class InstallVenv(object):
     def get_distro(self):
         if (os.path.exists('/etc/fedora-release') or
                 os.path.exists('/etc/redhat-release')):
-            return Fedora(self.root, self.venv, self.pip_requires,
-                          self.test_requires, self.py_version, self.project)
+            return Fedora(
+                self.root, self.venv, self.requirements,
+                self.test_requirements, self.py_version, self.project)
         else:
-            return Distro(self.root, self.venv, self.pip_requires,
-                          self.test_requires, self.py_version, self.project)
+            return Distro(
+                self.root, self.venv, self.requirements,
+                self.test_requirements, self.py_version, self.project)
 
     def check_dependencies(self):
         self.get_distro().install_virtualenv()
@@ -92,11 +95,6 @@ class InstallVenv(object):
                                  self.venv])
             else:
                 self.run_command(['virtualenv', '-q', self.venv])
-            print 'done.'
-            print 'Installing pip in venv...',
-            if not self.run_command(['tools/with_venv.sh', 'easy_install',
-                                    'pip>1.0']).strip():
-                self.die("Failed to install pip.")
             print 'done.'
         else:
             print "venv already exists..."
@@ -116,15 +114,10 @@ class InstallVenv(object):
         # the .venv creation to fail. See:
         # https://bugs.launchpad.net/nova/+bug/1047120
         self.pip_install('pip==1.1')
-        self.pip_install('distribute')
+        self.pip_install('setuptools')
 
-        # Install greenlet by hand - just listing it in the requires file does
-        # not
-        # get it installed in the right order
-        self.pip_install('greenlet')
-
-        self.pip_install('-r', self.pip_requires)
-        self.pip_install('-r', self.test_requires)
+        self.pip_install('-r', self.requirements)
+        self.pip_install('-r', self.test_requirements)
 
     def post_process(self):
         self.get_distro().post_process()

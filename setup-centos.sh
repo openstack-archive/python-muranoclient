@@ -145,7 +145,7 @@ uninst()
 	# Uninstall trough  pip
         find_pip
 	# looking up for python package installed
-	PYPKG=$SERVICE_SRV_NAME
+	PYPKG="muranoclient"
 	_pkg=$($PIPCMD freeze | grep $PYPKG)
 	if [ $? -eq 0 ]; then
 		log "Removing package \"$PYPKG\" with pip"
@@ -166,7 +166,7 @@ case $COMMAND in
 		;;
 
 	uninstall )
-		log "Uninstalling \"$SERVICE_SRV_NAME\" from system..."
+		log "Uninstalling muranoclient \"$SERVICE_SRV_NAME\" from system..."
 		uninst
 		;;
 
