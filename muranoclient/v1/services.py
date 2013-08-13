@@ -27,7 +27,7 @@ def normalize_path(f):
         if not posixpath.isabs(path):
             raise ValueError("Parameter 'path' should start with '/'")
 
-        # args = list(args)
+        args = list(args)
         if len(args) >= 3:
             args[2] = args[2][1:]
         else:
