@@ -14,37 +14,11 @@
 
 import setuptools
 
-from muranoclient.openstack.common import setup
-
-project = 'python-muranoclient'
-
 
 setuptools.setup(
-    name=project,
-    version=setup.get_version(project, '2013.1'),
-    author='Mirantis, Inc.',
-    author_email='smelikyan@mirantis.com',
-    description="Client library for Murano Project",
-    license='Apache',
-    url='http://murano.mirantis.com/',
-    packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
-    include_package_data=True,
-    install_requires=setup.parse_requirements(),
-    test_suite="nose.collector",
-    cmdclass=setup.get_cmdclass(),
-    classifiers=[
-        'Development Status :: 4 - Beta',
-        'Environment :: Console',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Information Technology',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
+    setup_requires=[
+        'd2to1>=0.2.10,<0.3',
+        'pbr>=0.5,<0.6'
     ],
-    entry_points={
-        'console_scripts': ['murano = muranoclient.shell:main']
-    },
-    dependency_links=setup.parse_dependency_links(),
-    tests_require=setup.parse_requirements(['tools/test-requires']),
-    setup_requires=['setuptools-git>=0.4'],
+    d2to1=True,
 )

@@ -13,6 +13,6 @@
 #    under the License.
 
 
-from muranoclient.openstack.common import version as common_version
+from pbr import version
 
-version_info = common_version.VersionInfo('python-muranoclient')
+version_info = version.VersionInfo('python-muranoclient')
