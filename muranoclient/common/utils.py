@@ -117,3 +117,16 @@ def exit(msg=''):
     if msg:
         print >> sys.stderr, msg
     sys.exit(1)
+
+
+def getsockopt(self, *args, **kwargs):
+    """
+    A function which allows us to monkey patch eventlet's
+    GreenSocket, adding a required 'getsockopt' method.
+    TODO: (mclaren) we can remove this once the eventlet fix
+    (https://bitbucket.org/eventlet/eventlet/commits/609f230)
+    lands in mainstream packages.
+    NOTE: Already in 0.13, but we can't be sure that all clients
+    that use python-muranoclient also use newest eventlet
+    """
+    return self.fd.getsockopt(*args, **kwargs)
