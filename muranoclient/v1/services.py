@@ -11,6 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import types
 
 import posixpath
 from functools import wraps
@@ -63,9 +64,14 @@ class ServiceManager(base.Manager):
     def post(self, environment_id, path, data, session_id):
         headers = {'X-Configuration-Session': session_id}
 
-        return self._create('/environments/{0}/services/{1}'.
-                            format(environment_id, path), data,
-                            headers=headers)
+        result = self._create('/environments/{0}/services/{1}'.
+                              format(environment_id, path), data,
+                              headers=headers, return_raw=True)
+
+        if isinstance(result, types.ListType):
+            return [self.resource_class(self, item) for item in result]
+        else:
+            return self.resource_class(self, result)
 
     @normalize_path
     def put(self, environment_id, path, data, session_id):
