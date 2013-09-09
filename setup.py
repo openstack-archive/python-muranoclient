@@ -13,7 +13,7 @@
 #    under the License.
 
 import setuptools
-
+import multiprocessing
 
 setuptools.setup(
     setup_requires=[
