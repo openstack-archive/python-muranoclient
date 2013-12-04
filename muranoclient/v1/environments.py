@@ -40,9 +40,10 @@ class EnvironmentManager(base.Manager):
     def create(self, name):
         return self._create('/environments', {'name': name})
 
-    def update(self, environment_id, name):
+    def update(self, environment_id, name, **kwargs):
+        kwargs.update({'name': name})
         return self._update('/environments/{id}'.format(id=environment_id),
-                            {'name': name})
+                            body=kwargs)
 
     def delete(self, environment_id):
         return self._delete('/environments/{id}'.format(id=environment_id))
