@@ -47,12 +47,12 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
 
     def test_env_manager_create(self):
         manager = environments.EnvironmentManager(api)
-        result = manager.create('test')
+        result = manager.create({'name': 'test'})
         assert result.body == {'name': 'test'}
 
     def test_env_manager_create_with_named_parameters(self):
         manager = environments.EnvironmentManager(api)
-        result = manager.create(name='test')
+        result = manager.create(body={'name': 'test'})
         assert result.body == {'name': 'test'}
 
     def test_env_manager_create_negative_without_parameters(self):
