@@ -14,6 +14,7 @@
 
 from muranoclient.common import http
 from muranoclient.v1 import environments, sessions, services, deployments
+from muranoclient.v1 import statistics
 
 
 class Client(http.HTTPClient):
@@ -32,3 +33,4 @@ class Client(http.HTTPClient):
         self.sessions = sessions.SessionManager(self)
         self.services = services.ServiceManager(self)
         self.deployments = deployments.DeploymentManager(self)
+        self.statistics = statistics.StatisticsManager(self)
