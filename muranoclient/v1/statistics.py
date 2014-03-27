@@ -27,4 +27,4 @@ class StatisticsManager(base.Manager):
     resource_class = Statistic
 
     def list(self):
-        return self._list('/stats', 'stats')
+        return self._list('/v1/stats', 'stats')

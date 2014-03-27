@@ -35,11 +35,11 @@ class DeploymentManager(base.Manager):
     resource_class = Deployment
 
     def list(self, environment_id):
-        return self._list('/environments/{id}/deployments'.
+        return self._list('/v1/environments/{id}/deployments'.
                           format(id=environment_id), 'deployments')
 
     def reports(self, environment_id, deployment_id, *service_ids):
-        path = '/environments/{id}/deployments/{deployment_id}'
+        path = '/v1/environments/{id}/deployments/{deployment_id}'
         path = path.format(id=environment_id, deployment_id=deployment_id)
         if service_ids:
             for service_id in service_ids:
