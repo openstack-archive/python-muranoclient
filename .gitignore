@@ -8,6 +8,9 @@
 build/
 dist/
 *.egg-info/
+.tox
+AUTHORS
+ChangeLog
 
 #Python
 *.pyc
