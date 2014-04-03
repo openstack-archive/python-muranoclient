@@ -18,11 +18,13 @@ import errno
 import hashlib
 import httplib
 import logging
+import os
 import posixpath
 import socket
 import StringIO
 import struct
 import urlparse
+from six.moves.urllib import parse
 
 try:
     import json
@@ -81,6 +83,7 @@ class HTTPClient(object):
             if self.identity_headers.get('X-Auth-Token'):
                 self.auth_token = self.identity_headers.get('X-Auth-Token')
                 del self.identity_headers['X-Auth-Token']
+        self.proxy_url = self.get_proxy_url()
 
     @staticmethod
     def parse_endpoint(endpoint):
@@ -109,8 +112,13 @@ class HTTPClient(object):
     def get_connection(self):
         _class = self.connection_class
         try:
-            return _class(self.endpoint_hostname, self.endpoint_port,
-                          **self.connection_kwargs)
+            if self.proxy_url:
+                proxy_parts = parse.urlparse(self.proxy_url)
+                return _class(proxy_parts.hostname, proxy_parts.port,
+                              **self.connection_kwargs)
+            else:
+                return _class(self.endpoint_hostname, self.endpoint_port,
+                              **self.connection_kwargs)
         except httplib.InvalidURL:
             raise exc.InvalidEndpoint()
 
@@ -190,8 +198,11 @@ class HTTPClient(object):
         kwargs['headers'] = self.encode_headers(kwargs['headers'])
 
         try:
-            if self.endpoint_path:
-                url = '%s/%s' % (self.endpoint_path, url)
+            if self.proxy_url:
+                url = '{0}/{1}'.format(self.endpoint, url)
+            elif self.endpoint_path:
+                url = '{0}/{1}'.format(self.endpoint_path, url)
+
             conn_url = posixpath.normpath(url)
             # Note(flaper87): Ditto, headers / url
             # encoding to make httplib happy.
@@ -280,6 +291,17 @@ class HTTPClient(object):
                 # body size may not always be known in advance.
                 kwargs['headers']['Transfer-Encoding'] = 'chunked'
         return self._http_request(url, method, **kwargs)
+
+    def get_proxy_url(self):
+        scheme = parse.urlparse(self.endpoint).scheme
+        if scheme == 'https':
+            return (os.environ.get('HTTPS_PROXY') or
+                    os.environ.get('https_proxy'))
+        elif scheme == 'http':
+            return (os.environ.get('HTTP_PROXY') or
+                    os.environ.get('http_proxy'))
+        msg = 'Unsupported scheme: %s' % scheme
+        raise exc.InvalidEndpoint(msg)
 
 
 class OpenSSLConnectionDelegator(object):
