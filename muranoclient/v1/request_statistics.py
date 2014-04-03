@@ -15,16 +15,16 @@
 from muranoclient.common import base
 
 
-class Statistic(base.Resource):
+class RequestStatistics(base.Resource):
     def __repr__(self):
-        return "<Statistics %s>" % self._info
+        return "<Request statistics %s>" % self._info
 
     def data(self, **kwargs):
         return self.manager.data(self, **kwargs)
 
 
-class StatisticsManager(base.Manager):
-    resource_class = Statistic
+class RequestStatisticsManager(base.Manager):
+    resource_class = RequestStatistics
 
     def list(self):
         return self._list('/v1/stats', 'stats')
