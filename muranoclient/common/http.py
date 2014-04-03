@@ -240,9 +240,10 @@ class HTTPClient(object):
 
         return resp, body_iter
 
-    def json_request(self, method, url, **kwargs):
+    def base_json_request(self, method, url, content_type='application/json',
+                          **kwargs):
         kwargs.setdefault('headers', {})
-        kwargs['headers'].setdefault('Content-Type', 'application/json')
+        kwargs['headers'].setdefault('Content-Type', content_type)
 
         if 'body' in kwargs:
             kwargs['body'] = json.dumps(kwargs['body'])
@@ -259,6 +260,14 @@ class HTTPClient(object):
             body = None
 
         return resp, body
+
+    def json_request(self, method, url, **kwargs):
+        return self.base_json_request(method, url, **kwargs)
+
+    def json_patch_request(self, url, method='PATCH', **kwargs):
+        content_type = 'application/murano-packages-json-patch'
+        return self.base_json_request(
+            method, url, content_type=content_type, **kwargs)
 
     def raw_request(self, method, url, **kwargs):
         kwargs.setdefault('headers', {})

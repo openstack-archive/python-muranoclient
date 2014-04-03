@@ -61,8 +61,22 @@ class PackageManager(base.Manager):
     def get(self, app_id):
         return self._get('/v1/catalog/packages/{0}'.format(app_id))
 
+    def filter(self, **kwargs):
+        # TODO(tsufiev): make it more bulletproof
+        query_string = '&'.join(['{0}={1}'.format(k, v)
+                                 for (k, v) in kwargs.iteritems()])
+        url = '/v1/catalog/packages?{0}'.format(query_string)
+        return self._list(url, 'packages')
+
     def delete(self, app_id):
         return self._delete('/v1/catalog/packages/{0}'.format(app_id))
+
+    def update(self, app_id, body):
+        url = '/v1/catalog/packages/{0}'.format(app_id)
+        data = []
+        for key, value in body.iteritems():
+            data.append({'op': 'replace', 'path': '/' + key, 'value': value})
+        return self.api.json_patch_request(url, body=data)
 
     def download(self, app_id):
         url = '/v1/catalog/packages/{0}/download'.format(app_id)
@@ -71,6 +85,12 @@ class PackageManager(base.Manager):
             return ''.join(iterator)
         else:
             raise exceptions.from_response(response)
+
+    def toggle_active(self, app_id):
+        url = '/v1/catalog/packages/{0}'.format(app_id)
+        enabled = self.get(app_id).enabled
+        data = [{'op': 'replace', 'path': '/enabled', 'value': not enabled}]
+        return self.api.json_patch_request(url, body=data)
 
     def get_ui(self, app_id):
         url = '/v1/catalog/packages/{0}/ui'.format(app_id)
