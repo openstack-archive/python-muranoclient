@@ -16,6 +16,7 @@ import json
 from muranoclient.common import base
 from muranoclient.common import exceptions
 import requests
+import urllib
 import yaml
 
 
@@ -41,9 +42,6 @@ class Category(base.Resource):
 class PackageManager(base.Manager):
     resource_class = Package
 
-    def list(self):
-        return self._list('/v1/catalog/packages', 'packages')
-
     def categories(self):
         return self._list('/v1/catalog/packages/categories',
                           response_key='categories', obj_class=Category)
@@ -62,11 +60,12 @@ class PackageManager(base.Manager):
         return self._get('/v1/catalog/packages/{0}'.format(app_id))
 
     def filter(self, **kwargs):
-        # TODO(tsufiev): make it more bulletproof
-        query_string = '&'.join(['{0}={1}'.format(k, v)
-                                 for (k, v) in kwargs.iteritems()])
-        url = '/v1/catalog/packages?{0}'.format(query_string)
+        query_str = urllib.urlencode(kwargs, doseq=True)
+        url = '?'.join(['/v1/catalog/packages', query_str])
         return self._list(url, 'packages')
+
+    def list(self):
+        return self.filter()
 
     def delete(self, app_id):
         return self._delete('/v1/catalog/packages/{0}'.format(app_id))
