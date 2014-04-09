@@ -91,11 +91,14 @@ class PackageManager(base.Manager):
         data = [{'op': 'replace', 'path': '/enabled', 'value': not enabled}]
         return self.api.json_patch_request(url, body=data)
 
-    def get_ui(self, app_id):
+    def get_ui(self, app_id, loader_cls=None):
+        if loader_cls is None:
+            loader_cls = yaml.Loader
+
         url = '/v1/catalog/packages/{0}/ui'.format(app_id)
         response, iterator = self.api.raw_request('GET', url)
         if response.status == 200:
-            return yaml.load(''.join(iterator))
+            return yaml.load(''.join(iterator), loader_cls)
         else:
             raise exceptions.from_response(response)
 
