@@ -28,8 +28,15 @@ class InstanceStatisticsManager(base.Manager):
 
     def get(self, environment_id, instance_id=None):
         if instance_id:
-            path = '/v1/environments/{id}/statistics/{instance_id}'.format(
-                id=environment_id, instance_id=instance_id)
+            path = '/v1/environments/{id}/instance-statistics/raw/' \
+                   '{instance_id}'.format(id=environment_id,
+                                          instance_id=instance_id)
         else:
-            path = '/v1/environments/{id}/statistics'.format(id=environment_id)
+            path = '/v1/environments/{id}/instance-statistics/raw'.format(
+                id=environment_id)
+        return self._list(path, None)
+
+    def get_aggregated(self, environment_id):
+        path = '/v1/environments/{id}/instance-statistics/aggregated'.format(
+            id=environment_id)
         return self._list(path, None)
