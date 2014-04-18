@@ -27,4 +27,4 @@ class RequestStatisticsManager(base.Manager):
     resource_class = RequestStatistics
 
     def list(self):
-        return self._list('/v1/stats', 'stats')
+        return self._list('/v1/stats')
