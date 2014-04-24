@@ -65,8 +65,8 @@ class PackageManager(base.Manager):
         url = '?'.join(['/v1/catalog/packages', query_str])
         return self._list(url, 'packages')
 
-    def list(self):
-        return self.filter()
+    def list(self, include_disabled=False):
+        return self.filter(include_disabled=include_disabled)
 
     def delete(self, app_id):
         return self._delete('/v1/catalog/packages/{0}'.format(app_id))
