@@ -13,11 +13,12 @@
 #    under the License.
 
 import json
-from muranoclient.common import base
-from muranoclient.common import exceptions
 import requests
 import urllib
 import yaml
+
+from muranoclient.common import base
+from muranoclient.common import exceptions
 
 
 class Package(base.Resource):
@@ -54,7 +55,7 @@ class PackageManager(base.Manager):
         if not response.ok:
             setattr(response, 'status', response.status_code)
             raise exceptions.from_response(response)
-        return response
+        return self.resource_class(self, json.loads(response.content))
 
     def get(self, app_id):
         return self._get('/v1/catalog/packages/{0}'.format(app_id))
