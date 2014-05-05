@@ -123,6 +123,10 @@ class Resource(object):
         for (k, v) in info.iteritems():
             setattr(self, k, v)
 
+    def __setstate__(self, d):
+        for k, v in d.iteritems():
+            setattr(self, k, v)
+
     def __getattr__(self, k):
         if k not in self.__dict__:
             # NOTE(bcwaldon): disallow lazy-loading if already loaded once
