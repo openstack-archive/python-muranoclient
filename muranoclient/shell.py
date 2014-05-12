@@ -34,7 +34,7 @@ class MuranoShell(object):
         parser = argparse.ArgumentParser(
             prog='murano',
             description=__doc__.strip(),
-            epilog='See murano help COMMAND" '
+            epilog='See "murano help COMMAND" '
                    'for help on a specific command.',
             add_help=False,
             formatter_class=HelpFormatter,
@@ -182,7 +182,7 @@ class MuranoShell(object):
     def _get_endpoint(self, client, **kwargs):
         """Get an endpoint using the provided keystone client."""
         return client.service_catalog.url_for(
-            service_type=kwargs.get('service_type') or 'metering',
+            service_type=kwargs.get('service_type') or 'application_catalog',
             endpoint_type=kwargs.get('endpoint_type') or 'publicURL')
 
     def _setup_debugging(self, debug):
