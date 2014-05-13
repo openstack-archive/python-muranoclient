@@ -24,7 +24,7 @@ def normalize_path(f):
     def f_normalize_path(*args, **kwargs):
         path = args[2] if len(args) >= 3 else kwargs['path']
 
-        #path formally is just absolute unix path
+        # path formally is just absolute unix path
         if not posixpath.isabs(path):
             raise ValueError("Parameter 'path' should start with '/'")
 

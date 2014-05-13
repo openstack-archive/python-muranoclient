@@ -115,7 +115,6 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
     def test_env_manager_get(self):
         manager = environments.EnvironmentManager(api)
         result = manager.get('test')
-        ## WTF?
         assert result.manager is not None
 
     def test_env(self):
