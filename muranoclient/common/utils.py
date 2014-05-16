@@ -13,13 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import print_function
+
+import os
+import prettytable
 import sys
 import uuid
 
-import os
 from muranoclient.common import exceptions
-import prettytable
 from muranoclient.openstack.common import importutils
+from muranoclient.openstack.common import strutils
 
 
 # Decorator for cli-args
@@ -49,7 +52,7 @@ def print_list(objs, fields, field_labels, formatters={}, sortby=0):
                 data = getattr(o, field, None) or ''
                 row.append(data)
         pt.add_row(row)
-    print pt.get_string(sortby=field_labels[sortby])
+    print(strutils.safe_encode(pt.get_string()))
 
 
 def print_dict(d, formatters={}):
@@ -61,7 +64,7 @@ def print_dict(d, formatters={}):
             pt.add_row([field, formatters[field](d[field])])
         else:
             pt.add_row([field, d[field]])
-    print pt.get_string(sortby='Property')
+    print(strutils.safe_encode(pt.get_string(sortby='Property')))
 
 
 def find_resource(manager, name_or_id):
@@ -115,13 +118,12 @@ def import_versioned_module(version, submodule=None):
 
 def exit(msg=''):
     if msg:
-        print >> sys.stderr, msg
+        print(strutils.safe_encode(msg), file=sys.stderr)
     sys.exit(1)
 
 
 def getsockopt(self, *args, **kwargs):
-    """
-    A function which allows us to monkey patch eventlet's
+    """A function which allows us to monkey patch eventlet's
     GreenSocket, adding a required 'getsockopt' method.
     TODO: (mclaren) we can remove this once the eventlet fix
     (https://bitbucket.org/eventlet/eventlet/commits/609f230)

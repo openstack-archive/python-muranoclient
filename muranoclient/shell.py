@@ -16,6 +16,8 @@
 Command-line interface to the Murano Project.
 """
 
+from __future__ import print_function
+
 import argparse
 import logging
 import sys
@@ -23,8 +25,8 @@ import sys
 import httplib2
 from keystoneclient.v2_0 import client as ksclient
 from muranoclient import client as apiclient
-from muranoclient.common import utils, exceptions
-
+from muranoclient.common import exceptions
+from muranoclient.common import utils
 
 logger = logging.getLogger(__name__)
 
@@ -281,8 +283,7 @@ class MuranoShell(object):
     @utils.arg('command', metavar='<subcommand>', nargs='?',
                help='Display help for <subcommand>')
     def do_help(self, args):
-        """
-        Display help about this program or one of its subcommands.
+        """Display help about this program or one of its subcommands.
         """
         if getattr(args, 'command', None):
             if args.command in self.subcommands:
@@ -305,8 +306,11 @@ def main():
     try:
         MuranoShell().main(sys.argv[1:])
 
-    except Exception, e:
-        print >> sys.stderr, e
+    except KeyboardInterrupt:
+        print('... terminating murano client', file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(utils.exception_to_str(e), file=sys.stderr)
         sys.exit(1)
 
 

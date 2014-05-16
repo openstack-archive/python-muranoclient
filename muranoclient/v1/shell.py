@@ -16,7 +16,7 @@ from muranoclient.common import utils
 
 
 def do_environment_list(mc, args={}):
-    """List the environments"""
+    """List the environments."""
     environments = mc.environments.list()
     field_labels = ['ID', 'Name', 'Created', 'Updated']
     fields = ['id', 'name', 'created', 'updated']

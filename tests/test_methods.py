@@ -12,13 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import unittest2 as unittest
 import logging
-from mock import MagicMock
 
-from muranoclient.client import Client
+import mock
+import unittest2 as unittest
+
+from muranoclient import client
 import muranoclient.v1.environments as environments
-import muranoclient.v1.services as services
 import muranoclient.v1.sessions as sessions
 
 
@@ -27,14 +27,15 @@ def my_mock(*a, **b):
 
 
 LOG = logging.getLogger('Unit tests')
-api = MagicMock(json_request=my_mock)
+api = mock.MagicMock(json_request=my_mock)
 
 
 class UnitTestsForClassesAndFunctions(unittest.TestCase):
     def test_create_client_instance(self):
 
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         assert test_client.environments is not None
         assert test_client.sessions is not None

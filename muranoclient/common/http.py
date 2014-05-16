@@ -20,11 +20,12 @@ import httplib
 import logging
 import os
 import posixpath
+from six.moves.urllib import parse
 import socket
 import StringIO
 import struct
 import urlparse
-from six.moves.urllib import parse
+
 
 try:
     import json
@@ -46,16 +47,16 @@ try:
     from eventlet import patcher
     # Handle case where we are running in a monkey patched environment
     if patcher.is_monkey_patched('socket'):
-        from eventlet.green.httplib import HTTPSConnection
-        from eventlet.green.OpenSSL.SSL import GreenConnection as Connection
-        from eventlet.greenio import GreenSocket
+        from eventlet.green.httplib import HTTPSConnection  # noqa
+        from eventlet.green.OpenSSL.SSL import GreenConnection as Connection  # noqa
+        from eventlet.greenio import GreenSocket  # noqa
         # TODO(mclaren): A getsockopt workaround: see 'getsockopt' doc string
         GreenSocket.getsockopt = utils.getsockopt
     else:
         raise ImportError
 except ImportError:
-    from httplib import HTTPSConnection
-    from OpenSSL.SSL import Connection as Connection
+    from httplib import HTTPSConnection  # noqa
+    from OpenSSL.SSL import Connection as Connection  # noqa
 
 
 LOG = logging.getLogger(__name__)
@@ -227,7 +228,7 @@ class HTTPClient(object):
             raise exc.InvalidEndpoint(message=message)
         except (socket.error, socket.timeout) as e:
             endpoint = self.endpoint
-            message = "Error communicating with %(endpoint)s %(e)s" % locals()
+            message = "Error communicating with %s %s" % (endpoint, e)
             raise exc.CommunicationError(message=message)
 
         body_iter = ResponseBodyIterator(resp)
@@ -305,8 +306,7 @@ class HTTPClient(object):
 
 
 class OpenSSLConnectionDelegator(object):
-    """
-    An OpenSSL.SSL.Connection delegator.
+    """An OpenSSL.SSL.Connection delegator.
 
     Supplies an additional 'makefile' method which httplib requires
     and is not present in OpenSSL.SSL.Connection.
@@ -330,8 +330,7 @@ class OpenSSLConnectionDelegator(object):
 
 
 class VerifiedHTTPSConnection(HTTPSConnection):
-    """
-    Extended HTTPSConnection which uses the OpenSSL library
+    """Extended HTTPSConnection which uses the OpenSSL library
     for enhanced SSL support.
     Note: Much of this functionality can eventually be replaced
           with native Python 3.3 code.
@@ -352,8 +351,7 @@ class VerifiedHTTPSConnection(HTTPSConnection):
 
     @staticmethod
     def host_matches_cert(host, x509):
-        """
-        Verify that the the x509 certificate we have received
+        """Verify that the the x509 certificate we have received
         from 'host' correctly identifies the server we are
         connecting to, ie that the certificate's Common Name
         or a Subject Alternative Name matches 'host'.
@@ -403,9 +401,7 @@ class VerifiedHTTPSConnection(HTTPSConnection):
             return preverify_ok
 
     def setcontext(self):
-        """
-        Set up the OpenSSL context.
-        """
+        """Set up the OpenSSL context."""
         self.context = OpenSSL.SSL.Context(OpenSSL.SSL.SSLv23_METHOD)
 
         if self.ssl_compression is False:
@@ -450,8 +446,7 @@ class VerifiedHTTPSConnection(HTTPSConnection):
             self.context.set_default_verify_paths()
 
     def connect(self):
-        """
-        Connect to an SSL port using the OpenSSL library and apply
+        """Connect to an SSL port using the OpenSSL library and apply
         per-connection parameters.
         """
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -475,8 +470,7 @@ class VerifiedHTTPSConnection(HTTPSConnection):
 
 
 class ResponseBodyIterator(object):
-    """
-    A class that acts as an iterator over an HTTP response.
+    """A class that acts as an iterator over an HTTP response.
 
     This class will also check response body integrity when iterating over
     the instance and if a checksum was supplied using `set_checksum` method,
@@ -490,8 +484,7 @@ class ResponseBodyIterator(object):
         self._end_reached = False
 
     def set_checksum(self, checksum):
-        """
-        Set checksum to check against when iterating over this instance.
+        """Set checksum to check against when iterating over this instance.
 
         :raise: AttributeError if iterator is already consumed.
         """
