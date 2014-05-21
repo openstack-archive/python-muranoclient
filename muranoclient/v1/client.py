@@ -33,7 +33,7 @@ class Client(http.HTTPClient):
     """
 
     def __init__(self, *args, **kwargs):
-        """ Initialize a new client for the Murano v1 API. """
+        """Initialize a new client for the Murano v1 API."""
         super(Client, self).__init__(*args, **kwargs)
         self.environments = environments.EnvironmentManager(self)
         self.sessions = sessions.SessionManager(self)

@@ -12,10 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import unittest2 as unittest
 import logging
-from httpretty import HTTPretty, httprettified
-from muranoclient.client import Client
+
+import httpretty as http
+import unittest2 as unittest
+
+from muranoclient import client
 
 
 LOG = logging.getLogger('Unit tests')
@@ -23,20 +25,21 @@ LOG = logging.getLogger('Unit tests')
 
 @unittest.skip
 class UnitTestsForClassesAndFunctions(unittest.TestCase):
-    @httprettified
+    @http.httprettified
     def test_client_env_list_with_empty_list(self):
-        HTTPretty.register_uri(HTTPretty.GET,
-                               "http://no-resolved-host:8001/environments",
-                               body='{"environments": []}',
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET,
+            "http://no-resolved-host:8001/environments",
+            body='{"environments": []}',
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.environments.list()
         assert result == []
 
-    @httprettified
+    @http.httprettified
     def test_client_env_list_with_elements(self):
         body = ('{"environments":['
                 '{"id": "0ce373a477f211e187a55404a662f968",'
@@ -50,37 +53,39 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                 '"updated": "2010-11-30T03:23:44Z",'
                 '"tenant-id": "0849006f7ce94961b3aab4e4626f229a"}'
                 ']}')
-        HTTPretty.register_uri(HTTPretty.GET,
-                               "http://no-resolved-host:8001/environments",
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET,
+            "http://no-resolved-host:8001/environments",
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.environments.list()
         assert result[0].name == 'dc1'
         assert result[-1].name == 'dc2'
 
-    @httprettified
+    @http.httprettified
     def test_client_env_create(self):
         body = ('{"id": "0ce373a477f211e187a55404a662f968",'
                 '"name": "test",'
                 '"created": "2010-11-30T03:23:42Z",'
                 '"updated": "2010-11-30T03:23:44Z",'
                 '"tenant-id": "0849006f7ce94961b3aab4e46d6f229a"}')
-        HTTPretty.register_uri(HTTPretty.POST,
-                               "http://no-resolved-host:8001/environments",
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.POST,
+            "http://no-resolved-host:8001/environments",
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.environments.create('test')
         assert result.name == 'test'
 
-    @httprettified
+    @http.httprettified
     def test_client_ad_list(self):
         body = ('{"activeDirectories": [{'
                 '"id": "1",'
@@ -94,17 +99,18 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                 '"location": "test"}]}]}')
         url = ("http://no-resolved-host:8001/environments"
                "/1/activeDirectories")
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.activeDirectories.list('1', 'test')
         assert result[0].name == 'dc1'
 
-    @httprettified
+    @http.httprettified
     def test_client_ad_create(self):
         body = ('{'
                 '"id": "1",'
@@ -118,32 +124,34 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                 '"location": "test"}]}')
         url = ("http://no-resolved-host:8001/environments"
                "/1/activeDirectories")
-        HTTPretty.register_uri(HTTPretty.POST, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.POST, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.services.post('1', 'test', 'ad1')
         assert result.name == 'ad1'
 
-    @httprettified
+    @http.httprettified
     def test_client_ad_list_without_elements(self):
         body = '{"activeDirectories": []}'
         url = ("http://no-resolved-host:8001/environments"
                "/1/activeDirectories")
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.activeDirectories.list('1', 'test')
         assert result == []
 
-    @httprettified
+    @http.httprettified
     def test_client_iis_list(self):
         body = ('{"webServers": [{'
                 '"id": "1",'
@@ -157,17 +165,18 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                 '"location": "test"}]}]}')
         url = ("http://no-resolved-host:8001/environments"
                "/1/webServers")
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.webServers.list('1', 'test')
         assert result[0].name == 'iis11'
 
-    @httprettified
+    @http.httprettified
     def test_client_iis_create(self):
         body = ('{'
                 '"id": "1",'
@@ -181,32 +190,34 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                 '"location": "test"}]}')
         url = ("http://no-resolved-host:8001/environments"
                "/1/webServers")
-        HTTPretty.register_uri(HTTPretty.POST, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.POST, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.webServers.create('1', 'test', 'iis12')
         assert result.name == 'iis12'
 
-    @httprettified
+    @http.httprettified
     def test_client_iis_list_without_elements(self):
         body = '{"webServers": []}'
         url = ("http://no-resolved-host:8001/environments"
                "/1/webServers")
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.webServers.list('1', 'test')
         assert result == []
 
-    @httprettified
+    @http.httprettified
     def test_client_aspapp_list(self):
         body = '''
 {
@@ -244,17 +255,18 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
 '''
         url = 'http://no-resolved-host:8001/environments' \
               '/1/aspNetApps'
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
-        result = test_client.aspNetApps.list('1', 'test')
+        result = test_client.Client.aspNetApps.list('1', 'test')
         assert result[0].name == 'frontend'
 
-    @httprettified
+    @http.httprettified
     def test_client_aspapp_create(self):
         body = '''
 {
@@ -274,32 +286,34 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
 '''
         url = 'http://no-resolved-host:8001/environments' \
               '/1/aspNetApps'
-        HTTPretty.register_uri(HTTPretty.POST, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.POST, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.aspNetApps.create('1', 'test', 'test')
         assert result.name == 'frontend'
 
-    @httprettified
+    @http.httprettified
     def test_client_aspapp_list_without_elements(self):
         body = '{"aspNetApps": []}'
         url = 'http://no-resolved-host:8001/environments' \
               '/1/aspNetApps'
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.aspNetApps.list('1', 'test')
         assert result == []
 
-    @httprettified
+    @http.httprettified
     def test_client_webfarm_list(self):
         body = '''
 {
@@ -332,17 +346,18 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
 '''
         url = 'http://no-resolved-host:8001/environments' \
               '/1/webServerFarms'
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.webServerFarms.list('1', 'test')
         assert result[0].name == 'frontend'
 
-    @httprettified
+    @http.httprettified
     def test_client_webfarm_create(self):
         body = '''
 {
@@ -359,32 +374,34 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
 '''
         url = 'http://no-resolved-host:8001/environments' \
               '/1/webServerFarms'
-        HTTPretty.register_uri(HTTPretty.POST, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.POST, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.webServerFarms.create('1', 'test', 'test')
         assert result.name == 'frontend'
 
-    @httprettified
+    @http.httprettified
     def test_client_webfarm_list_without_elements(self):
         body = '{"webServerFarms": []}'
         url = 'http://no-resolved-host:8001/environments' \
               '/1/webServerFarms'
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.webServerFarms.list('1', 'test')
         assert result == []
 
-    @httprettified
+    @http.httprettified
     def test_client_aspappfarm_list(self):
         body = '''
 {
@@ -417,17 +434,18 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
 '''
         url = 'http://no-resolved-host:8001/environments' \
               '/1/aspNetAppFarms'
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.aspNetAppFarms.list('1', 'test')
         assert result[0].name == 'frontend'
 
-    @httprettified
+    @http.httprettified
     def test_client_aspappfarm_create(self):
         body = '''
 {
@@ -443,27 +461,29 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
 '''
         url = 'http://no-resolved-host:8001/environments' \
               '/1/aspNetAppFarms'
-        HTTPretty.register_uri(HTTPretty.POST, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.POST, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.aspNetAppFarms.create('1', 'test', 'test')
         assert result.name == 'frontend'
 
-    @httprettified
+    @http.httprettified
     def test_client_aspappfarm_list_without_elements(self):
         body = '{"aspNetAppFarms": []}'
         url = 'http://no-resolved-host:8001/environments' \
               '/1/aspNetAppFarms'
-        HTTPretty.register_uri(HTTPretty.GET, url,
-                               body=body,
-                               adding_headers={
-                                   'Content-Type': 'application/json', })
+        http.HTTPretty.register_uri(
+            http.HTTPretty.GET, url,
+            body=body,
+            adding_headers={'Content-Type': 'application/json', })
         endpoint = 'http://no-resolved-host:8001'
-        test_client = Client('1', endpoint=endpoint, token='1', timeout=10)
+        test_client = client.Client('1', endpoint=endpoint,
+                                    token='1', timeout=10)
 
         result = test_client.aspNetAppFarms.list('1', 'test')
         assert result == []

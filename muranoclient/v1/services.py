@@ -11,16 +11,16 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import types
 
+import functools
 import posixpath
-from functools import wraps
+import types
 
 from muranoclient.common import base
 
 
 def normalize_path(f):
-    @wraps(f)
+    @functools.wraps(f)
     def f_normalize_path(*args, **kwargs):
         path = args[2] if len(args) >= 3 else kwargs['path']
 
