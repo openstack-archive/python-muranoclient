@@ -15,13 +15,16 @@
 
 from __future__ import print_function
 
+
 import os
 import prettytable
 import sys
+import textwrap
 import uuid
 
 from muranoclient.common import exceptions
 from muranoclient.openstack.common import importutils
+from muranoclient.openstack.common import jsonutils
 from muranoclient.openstack.common import strutils
 
 
@@ -33,6 +36,14 @@ def arg(*args, **kwargs):
         func.__dict__.setdefault('arguments', []).insert(0, (args, kwargs))
         return func
     return _decorator
+
+
+def json_formatter(js):
+    return jsonutils.dumps(js, indent=2)
+
+
+def text_wrap_formatter(d):
+    return '\n'.join(textwrap.wrap(d or '', 55))
 
 
 def pretty_choice_list(l):
