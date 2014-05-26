@@ -16,26 +16,31 @@
 import copy
 import errno
 import hashlib
-import httplib
 import logging
 import os
 import posixpath
 from six.moves.urllib import parse
 import socket
-import StringIO
 import struct
-import urlparse
+import sys
 
+if sys.version_info >= (3, 0):
+    import http.client as httplib
+    import io as StringIO
+    import urllib.parse as urlparse
+else:
+    import httplib
+    import StringIO
+    import urlparse
+    # Python 2.5 compat fix
+    if not hasattr(urlparse, 'parse_qsl'):
+        import cgi
+        urlparse.parse_qsl = cgi.parse_qsl
 
 try:
     import json
 except ImportError:
     import simplejson as json
-
-# Python 2.5 compat fix
-if not hasattr(urlparse, 'parse_qsl'):
-    import cgi
-    urlparse.parse_qsl = cgi.parse_qsl
 
 import OpenSSL
 
@@ -48,14 +53,17 @@ try:
     # Handle case where we are running in a monkey patched environment
     if patcher.is_monkey_patched('socket'):
         from eventlet.green.httplib import HTTPSConnection  # noqa
-        from eventlet.green.OpenSSL.SSL import GreenConnection as Connection  # noqa
+        from eventlet.green.OpenSSL.SSL import GreenConnection as Connection
         from eventlet.greenio import GreenSocket  # noqa
         # TODO(mclaren): A getsockopt workaround: see 'getsockopt' doc string
         GreenSocket.getsockopt = utils.getsockopt
     else:
         raise ImportError
 except ImportError:
-    from httplib import HTTPSConnection  # noqa
+    if sys.version_info >= (3, 0):
+        from http.client import HTTPSConnection
+    else:
+        from httplib import HTTPSConnection  # noqa
     from OpenSSL.SSL import Connection as Connection  # noqa
 
 
