@@ -21,6 +21,9 @@ from muranoclient.common import base
 from muranoclient.common import exceptions
 
 
+DEFAULT_PAGE_SIZE = 20
+
+
 class Package(base.Resource):
     def __repr__(self):
         return "<Package %s>" % self._info
@@ -61,9 +64,29 @@ class PackageManager(base.Manager):
         return self._get('/v1/catalog/packages/{0}'.format(app_id))
 
     def filter(self, **kwargs):
+        def paginate(_url):
+            # code from Glance
+            resp, body = self.api.json_request('GET', _url)
+            for image in body['packages']:
+                yield image
+            try:
+                next_url = body['next_marker']
+            except KeyError:
+                return
+            else:
+                for image in paginate(next_url):
+                    yield image
+
+        if 'page_size' not in kwargs:
+            kwargs['limit'] = DEFAULT_PAGE_SIZE
+        else:
+            kwargs['limit'] = kwargs['page_size']
+
         query_str = urllib.urlencode(kwargs, doseq=True)
         url = '?'.join(['/v1/catalog/packages', query_str])
-        return self._list(url, 'packages')
+
+        for package in paginate(url):
+            yield self.resource_class(self, package, loaded=True)
 
     def list(self, include_disabled=False):
         return self.filter(include_disabled=include_disabled)
