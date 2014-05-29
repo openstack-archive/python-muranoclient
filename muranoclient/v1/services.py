@@ -50,6 +50,14 @@ class Service(base.Resource):
 class ServiceManager(base.Manager):
     resource_class = Service
 
+    def list(self, environment_id, session_id=None):
+        if session_id:
+            headers = {'X-Configuration-Session': session_id}
+        else:
+            headers = {}
+        return self._list("/v1/environments/{0}/services".
+                          format(environment_id), headers=headers)
+
     @normalize_path
     def get(self, environment_id, path, session_id=None):
         if session_id:

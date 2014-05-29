@@ -19,14 +19,17 @@ Command-line interface to the Murano Project.
 from __future__ import print_function
 
 import argparse
+import httplib2
 import logging
+import six
 import sys
 
-import httplib2
 from keystoneclient.v2_0 import client as ksclient
 from muranoclient import client as apiclient
 from muranoclient.common import exceptions
 from muranoclient.common import utils
+from muranoclient.openstack.common import strutils
+
 
 logger = logging.getLogger(__name__)
 
@@ -302,15 +305,20 @@ class HelpFormatter(argparse.HelpFormatter):
         super(HelpFormatter, self).start_section(heading)
 
 
-def main():
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
     try:
-        MuranoShell().main(sys.argv[1:])
+        MuranoShell().main(args)
 
     except KeyboardInterrupt:
         print('... terminating murano client', file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        print(utils.exception_to_str(e), file=sys.stderr)
+        if '--debug' in args or '-d' in args:
+            raise
+        else:
+            print(strutils.safe_encode(six.text_type(e)), file=sys.stderr)
         sys.exit(1)
 
 
