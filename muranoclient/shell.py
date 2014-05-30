@@ -200,7 +200,7 @@ class MuranoShell(object):
         else:
             logging.basicConfig(
                 format="%(levelname)s %(message)s",
-                level=logging.INFO)
+                level=logging.WARNING)
 
     def main(self, argv):
         # Parse args once to find version

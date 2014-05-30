@@ -15,12 +15,13 @@
 
 from __future__ import print_function
 
-
 import os
-import prettytable
 import sys
 import textwrap
 import uuid
+
+import prettytable
+import six
 
 from muranoclient.common import exceptions
 from muranoclient.openstack.common import importutils
@@ -143,3 +144,15 @@ def getsockopt(self, *args, **kwargs):
     that use python-muranoclient also use newest eventlet
     """
     return self.fd.getsockopt(*args, **kwargs)
+
+
+def exception_to_str(exc):
+    try:
+        error = six.text_type(exc)
+    except UnicodeError:
+        try:
+            error = str(exc)
+        except UnicodeError:
+            error = ("Caught '%(exception)s' exception." %
+                     {"exception": exc.__class__.__name__})
+    return strutils.safe_encode(error, errors='ignore')
