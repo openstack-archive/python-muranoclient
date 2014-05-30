@@ -15,7 +15,7 @@
 import logging
 
 import httpretty as http
-import unittest2 as unittest
+import testtools
 
 from muranoclient import client
 
@@ -23,8 +23,14 @@ from muranoclient import client
 LOG = logging.getLogger('Unit tests')
 
 
-@unittest.skip
-class UnitTestsForClassesAndFunctions(unittest.TestCase):
+class UnitTestsForClassesAndFunctions(testtools.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super(UnitTestsForClassesAndFunctions, cls).setUpClass()
+
+        raise cls.skipException()
+
     @http.httprettified
     def test_client_env_list_with_empty_list(self):
         http.HTTPretty.register_uri(
@@ -37,7 +43,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.environments.list()
-        assert result == []
+
+        self.assertEqual([], result)
 
     @http.httprettified
     def test_client_env_list_with_elements(self):
@@ -63,8 +70,9 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.environments.list()
-        assert result[0].name == 'dc1'
-        assert result[-1].name == 'dc2'
+
+        self.assertEqual('dc1', result[0].name)
+        self.assertEqual('dc2', result[-1].name)
 
     @http.httprettified
     def test_client_env_create(self):
@@ -83,7 +91,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.environments.create('test')
-        assert result.name == 'test'
+
+        self.assertEqual('test', result.name)
 
     @http.httprettified
     def test_client_ad_list(self):
@@ -108,7 +117,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.activeDirectories.list('1', 'test')
-        assert result[0].name == 'dc1'
+
+        self.assertEqual('dc1', result[0].name)
 
     @http.httprettified
     def test_client_ad_create(self):
@@ -133,7 +143,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.services.post('1', 'test', 'ad1')
-        assert result.name == 'ad1'
+
+        self.assertEqual('ad1', result.name)
 
     @http.httprettified
     def test_client_ad_list_without_elements(self):
@@ -149,7 +160,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.activeDirectories.list('1', 'test')
-        assert result == []
+
+        self.assertEqual([], result)
 
     @http.httprettified
     def test_client_iis_list(self):
@@ -174,7 +186,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.webServers.list('1', 'test')
-        assert result[0].name == 'iis11'
+
+        self.assertEqual('iis11', result[0].name)
 
     @http.httprettified
     def test_client_iis_create(self):
@@ -199,7 +212,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.webServers.create('1', 'test', 'iis12')
-        assert result.name == 'iis12'
+
+        self.assertEqual('iis12', result.name)
 
     @http.httprettified
     def test_client_iis_list_without_elements(self):
@@ -215,7 +229,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.webServers.list('1', 'test')
-        assert result == []
+
+        self.assertEqual([], result)
 
     @http.httprettified
     def test_client_aspapp_list(self):
@@ -264,7 +279,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.Client.aspNetApps.list('1', 'test')
-        assert result[0].name == 'frontend'
+
+        self.assertEqual('frontend', result[0].name)
 
     @http.httprettified
     def test_client_aspapp_create(self):
@@ -295,7 +311,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.aspNetApps.create('1', 'test', 'test')
-        assert result.name == 'frontend'
+
+        self.assertEqual('frontend', result.name)
 
     @http.httprettified
     def test_client_aspapp_list_without_elements(self):
@@ -311,7 +328,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.aspNetApps.list('1', 'test')
-        assert result == []
+
+        self.assertEqual([], result)
 
     @http.httprettified
     def test_client_webfarm_list(self):
@@ -355,7 +373,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.webServerFarms.list('1', 'test')
-        assert result[0].name == 'frontend'
+
+        self.assertEqual('frontend', result[0].name)
 
     @http.httprettified
     def test_client_webfarm_create(self):
@@ -383,7 +402,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.webServerFarms.create('1', 'test', 'test')
-        assert result.name == 'frontend'
+
+        self.assertEqual('frontend', result.name)
 
     @http.httprettified
     def test_client_webfarm_list_without_elements(self):
@@ -399,7 +419,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.webServerFarms.list('1', 'test')
-        assert result == []
+
+        self.assertEqual([], result)
 
     @http.httprettified
     def test_client_aspappfarm_list(self):
@@ -443,7 +464,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.aspNetAppFarms.list('1', 'test')
-        assert result[0].name == 'frontend'
+
+        self.assertEqual('frontend', result[0].name)
 
     @http.httprettified
     def test_client_aspappfarm_create(self):
@@ -470,7 +492,8 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.aspNetAppFarms.create('1', 'test', 'test')
-        assert result.name == 'frontend'
+
+        self.assertEqual('frontend', result.name)
 
     @http.httprettified
     def test_client_aspappfarm_list_without_elements(self):
@@ -486,4 +509,5 @@ class UnitTestsForClassesAndFunctions(unittest.TestCase):
                                     token='1', timeout=10)
 
         result = test_client.aspNetAppFarms.list('1', 'test')
-        assert result == []
+
+        self.assertEqual([], result)

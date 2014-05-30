@@ -9,6 +9,6 @@ nosexcover
 openstack.nose_plugin>=0.7
 nosehtmloutput>=0.0.3
 sphinx>=1.1.2,<1.2
-unittest2
+testtools>=0.9.34
 httpretty>=0.6.3
 
