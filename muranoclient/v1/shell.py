@@ -144,10 +144,16 @@ def do_package_show(mc, args):
             fully_qualified_name=package.fully_qualified_name,
             is_public=package.is_public,
             enabled=package.enabled,
-            class_definitions=", ".join(package.class_definitions)
+            class_definitions=", ".join(package.class_definitions),
+            categories=", ".join(package.categories),
+            tags=", ".join(package.tags),
+            description=package.description
         )
         formatters = {
             'class_definitions': utils.text_wrap_formatter,
+            'categories': utils.text_wrap_formatter,
+            'tags': utils.text_wrap_formatter,
+            'description': utils.text_wrap_formatter,
         }
         utils.print_dict(to_display, formatters)
 
