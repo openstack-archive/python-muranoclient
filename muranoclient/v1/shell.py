@@ -12,10 +12,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
+import shutil
 import sys
+import tempfile
+import zipfile
 
-from muranoclient.common import exceptions
 from muranoclient.common import utils
+from muranoclient.openstack.common.apiclient import exceptions
+from muranoclient.v1.package_creator import hot_package
+from muranoclient.v1.package_creator import mpl_package
 
 
 def do_environment_list(mc, args={}):
@@ -75,7 +81,7 @@ def do_environment_show(mc, args):
         utils.print_dict(environment.to_dict(), formatters=formatters)
 
 
-@utils.arg("environment_id",
+@utils.arg("environment-id",
            help="Environment id for which to list deployments")
 def do_deployment_list(mc, args):
     """List deployments for an environment."""
@@ -107,12 +113,13 @@ def do_package_list(mc, args={}):
     utils.print_list(packages, fields, field_labels, sortby=0)
 
 
-@utils.arg("package_id",
+@utils.arg("package-id",
            help="Package ID to download")
 @utils.arg("filename", metavar="file", nargs="?",
            help="Filename for download (defaults to stdout)")
 def do_package_download(mc, args):
     """Download a package to a filename or stdout."""
+
     def download_to_fh(package_id, fh):
         fh.write(mc.packages.download(package_id))
 
@@ -127,7 +134,7 @@ def do_package_download(mc, args):
         raise exceptions.CommandError("Package %s not found" % args.package_id)
 
 
-@utils.arg("package_id",
+@utils.arg("package-id",
            help="Package ID to show")
 def do_package_show(mc, args):
     """Display details for a package."""
@@ -158,7 +165,7 @@ def do_package_show(mc, args):
         utils.print_dict(to_display, formatters)
 
 
-@utils.arg("package_id",
+@utils.arg("package-id",
            help="Package ID to delete")
 def do_package_delete(mc, args):
     """Delete a package."""
@@ -190,3 +197,62 @@ def do_service_show(mc, args):
         type=getattr(service, '?')['type']
     )
     utils.print_dict(to_display)
+
+
+@utils.arg('-t', '--template', metavar='<HEAT_TEMPLATE>',
+           help='Path to the Heat template to import as '
+                'an Application Definition')
+@utils.arg('-c', '--classes-dir', metavar='<CLASSES_DIRECTORY>',
+           help='Path to the directory containing application classes')
+@utils.arg('-r', '--resources-dir', metavar='<RESOURCES_DIRECTORY>',
+           help='Path to the directory containing application resources')
+@utils.arg('-n', '--name', metavar='<DISPLAY_NAME>',
+           help='Display name of the Application in Catalog')
+@utils.arg('-f', '--full-name', metavar='<full-name>',
+           help='Fully-qualified name of the Application in Catalog')
+@utils.arg('-a', '--author', metavar='<AUTHOR>', help='Name of the publisher')
+@utils.arg('--tags', help='List of keywords connected to the application',
+           metavar='<TAG1 TAG2>', nargs='*')
+@utils.arg('-d', '--description', metavar='<DESCRIPTION>',
+           help='Detailed description for the Application in Catalog')
+@utils.arg('-o', '--output', metavar='<PACKAGE_NAME>',
+           help='The name of the output file archive to save locally')
+@utils.arg('-u', '--ui', metavar='<UI_DEFINITION>',
+           help='Dynamic UI form definition')
+@utils.arg('--type',
+           help='Package type. Possible values: Application or Library')
+@utils.arg('-l', '--logo', metavar='<LOGO>', help='Path to the package logo')
+def do_package_create(mc, args):
+    """Create an application package."""
+    if args.template and (args.classes_dir or args.resources_dir):
+        raise exceptions.CommandError(
+            "Provide --template for a HOT-based package, OR --classes-dir"
+            " and --resources-dir for a MuranoPL-based package")
+    if not args.template and (not args.classes_dir or not args.resources_dir):
+        raise exceptions.CommandError(
+            "Provide --template for a HOT-based package, OR --classes-dir"
+            " and --resources-dir for a MuranoPL-based package")
+    directory_path = None
+    try:
+        if args.template:
+            directory_path = hot_package.prepare_package(args)
+        else:
+            directory_path = mpl_package.prepare_package(args)
+
+        archive_name = args.output or tempfile.mktemp(prefix="murano_")
+
+        _make_archive(archive_name, directory_path)
+        print("Application package is available at " +
+              os.path.abspath(archive_name))
+    finally:
+        if directory_path:
+            shutil.rmtree(directory_path)
+
+
+def _make_archive(archive_name, path):
+    zip_file = zipfile.ZipFile(archive_name, 'w')
+    for root, dirs, files in os.walk(path):
+        for f in files:
+            zip_file.write(os.path.join(root, f),
+                           arcname=os.path.join(os.path.relpath(root, path),
+                                                f))

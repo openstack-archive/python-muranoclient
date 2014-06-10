@@ -16,12 +16,17 @@
 from __future__ import print_function
 
 import os
+import re
 import sys
 import textwrap
+import types
 import uuid
+import yaml
 
 import prettytable
 import six
+import yaql
+import yaql.exceptions
 
 from muranoclient.common import exceptions
 from muranoclient.openstack.common import importutils
@@ -156,3 +161,53 @@ def exception_to_str(exc):
             error = ("Caught '%(exception)s' exception." %
                      {"exception": exc.__class__.__name__})
     return strutils.safe_encode(error, errors='ignore')
+
+
+class YaqlExpression(object):
+    def __init__(self, expression):
+        self._expression = str(expression)
+        self._parsed_expression = yaql.parse(self._expression)
+
+    def expression(self):
+        return self._expression
+
+    def __repr__(self):
+        return 'YAQL(%s)' % self._expression
+
+    def __str__(self):
+        return self._expression
+
+    @staticmethod
+    def match(expr):
+        if not isinstance(expr, types.StringTypes):
+            return False
+        if re.match('^[\s\w\d.:]*$', expr):
+            return False
+        try:
+            yaql.parse(expr)
+            return True
+        except yaql.exceptions.YaqlGrammarException:
+            return False
+        except yaql.exceptions.YaqlLexicalException:
+            return False
+
+    def evaluate(self, data=None, context=None):
+        return self._parsed_expression.evaluate(data=data, context=context)
+
+
+class YaqlYamlLoader(yaml.Loader):
+    pass
+
+# workaround for PyYAML bug: http://pyyaml.org/ticket/221
+resolvers = {}
+for k, v in yaml.Loader.yaml_implicit_resolvers.items():
+    resolvers[k] = v[:]
+YaqlYamlLoader.yaml_implicit_resolvers = resolvers
+
+
+def yaql_constructor(loader, node):
+    value = loader.construct_scalar(node)
+    return YaqlExpression(value)
+
+yaml.add_constructor(u'!yaql', yaql_constructor, YaqlYamlLoader)
+yaml.add_implicit_resolver(u'!yaql', YaqlExpression, Loader=YaqlYamlLoader)
