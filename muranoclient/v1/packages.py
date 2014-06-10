@@ -94,11 +94,19 @@ class PackageManager(base.Manager):
     def delete(self, app_id):
         return self._delete('/v1/catalog/packages/{0}'.format(app_id))
 
-    def update(self, app_id, body):
+    def update(self, app_id, body, operation='replace'):
+        """Translates dictionary to jsonpatch request
+
+        :param app_id: string, id of updating application
+        :param body: dictionary, mapping between keys and values for update
+        :param operation: string, way of updating: replace, remove, add
+
+        :returns: HTTP response
+        """
         url = '/v1/catalog/packages/{0}'.format(app_id)
         data = []
         for key, value in body.iteritems():
-            data.append({'op': 'replace', 'path': '/' + key, 'value': value})
+            data.append({'op': operation, 'path': '/' + key, 'value': value})
         return self.api.json_patch_request(url, body=data)
 
     def download(self, app_id):
