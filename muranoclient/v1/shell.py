@@ -172,3 +172,15 @@ def do_package_import(mc, args):
     data = {"categories": args.category}
     mc.packages.create(data, ((args.filename, open(args.filename, 'rb')),))
     do_package_list(mc)
+
+
+@utils.arg("environment_id")
+@utils.arg("path")
+def do_service_show(mc, args):
+    service = mc.services.get(args.environment_id, args.path)
+    to_display = dict(
+        name=service.name,
+        id=getattr(service, '?')['id'],
+        type=getattr(service, '?')['type']
+    )
+    utils.print_dict(to_display)
