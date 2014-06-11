@@ -13,6 +13,7 @@
 #    under the License.
 
 from muranoclient.common import http
+from muranoclient.v1 import actions
 from muranoclient.v1 import deployments
 from muranoclient.v1 import environments
 from muranoclient.v1 import instance_statistics
@@ -43,3 +44,4 @@ class Client(http.HTTPClient):
         self.instance_statistics = \
             instance_statistics.InstanceStatisticsManager(self)
         self.packages = packages.PackageManager(self)
+        self.actions = actions.ActionManager(self)

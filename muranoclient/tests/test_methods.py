@@ -18,6 +18,7 @@ import mock
 import testtools
 
 from muranoclient import client
+from muranoclient.v1 import actions
 import muranoclient.v1.environments as environments
 import muranoclient.v1.sessions as sessions
 
@@ -192,3 +193,10 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         manager = sessions.SessionManager(api)
 
         self.assertRaises(TypeError, manager.deploy)
+
+    def test_action_manager_call(self):
+        manager = actions.ActionManager(api)
+        result = manager.call('testEnvId', 'testActionId', ['arg1', 'arg2'])
+        self.assertEqual(('POST',
+                          '/v1/environments/testEnvId/actions/testActionId'),
+                         result)
