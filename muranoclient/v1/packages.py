@@ -141,3 +141,11 @@ class PackageManager(base.Manager):
             return ''.join(iterator)
         else:
             raise exceptions.from_response(response)
+
+    def get_supplier_logo(self, app_id):
+        url = '/v1/catalog/packages/{0}/supplier_logo'.format(app_id)
+        response, iterator = self.api.raw_request('GET', url)
+        if response.status == 200:
+            return ''.join(iterator)
+        else:
+            raise exceptions.from_response(response)
