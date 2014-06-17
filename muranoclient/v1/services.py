@@ -65,8 +65,8 @@ class ServiceManager(base.Manager):
         else:
             headers = {}
 
-        return self._list('/v1/environments/{0}/services/{1}'.
-                          format(environment_id, path), headers=headers)
+        return self._get('/v1/environments/{0}/services/{1}'.
+                         format(environment_id, path), headers=headers)
 
     @normalize_path
     def post(self, environment_id, path, data, session_id):
