@@ -19,15 +19,14 @@ Command-line interface to the Murano Project.
 from __future__ import print_function
 
 import argparse
-import httplib2
 import logging
 import six
 import sys
 
 from keystoneclient.v2_0 import client as ksclient
 from muranoclient import client as apiclient
-from muranoclient.common import exceptions
 from muranoclient.common import utils
+from muranoclient.openstack.common.apiclient import exceptions as exc
 from muranoclient.openstack.common import strutils
 
 
@@ -69,6 +68,13 @@ class MuranoShell(object):
                                  "authorities. This option should be used "
                                  "with caution.")
 
+        parser.add_argument('--os-cacert',
+                            metavar='<ca-certificate>',
+                            default=utils.env('OS_CACERT', default=None),
+                            help='Specify a CA bundle file to use in '
+                            'verifying a TLS (https) server certificate. '
+                            'Defaults to env[OS_CACERT]')
+
         parser.add_argument('--cert-file',
                             help='Path of certificate file to use in SSL '
                                  'connection. This file can optionally be '
@@ -85,9 +91,10 @@ class MuranoShell(object):
                                  'this option glance looks for the default '
                                  'system CA certificates.')
 
-        parser.add_argument('--timeout',
-                            default=600,
-                            help='Number of seconds to wait for a response')
+        parser.add_argument('--api-timeout',
+                            help='Number of seconds to wait for an '
+                                 'API response, '
+                                 'defaults to system socket timeout')
 
         parser.add_argument('--os-username',
                             default=utils.env('OS_USERNAME'),
@@ -117,6 +124,12 @@ class MuranoShell(object):
                             default=utils.env('OS_AUTH_TOKEN'),
                             help='Defaults to env[OS_AUTH_TOKEN]')
 
+        parser.add_argument('--os-no-client-auth',
+                            default=utils.env('OS_NO_CLIENT_AUTH'),
+                            action='store_true',
+                            help="Do not contact keystone for a token. "
+                                 "Defaults to env[OS_NO_CLIENT_AUTH].")
+
         parser.add_argument('--murano-url',
                             default=utils.env('MURANO_URL'),
                             help='Defaults to env[MURANO_URL]')
@@ -135,6 +148,11 @@ class MuranoShell(object):
                             default=utils.env('OS_ENDPOINT_TYPE'),
                             help='Defaults to env[OS_ENDPOINT_TYPE]')
 
+        parser.add_argument('--include-password',
+                            default=bool(utils.env('MURANO_INCLUDE_PASSWORD')),
+                            action='store_true',
+                            help='Send os-username and os-password to murano.')
+
         return parser
 
     def get_subcommand_parser(self, version):
@@ -147,6 +165,15 @@ class MuranoShell(object):
         self._find_actions(subparsers, self)
 
         return parser
+
+    def _add_bash_completion_subparser(self, subparsers):
+        subparser = subparsers.add_parser(
+            'bash_completion',
+            add_help=False,
+            formatter_class=HelpFormatter
+        )
+        self.subcommands['bash_completion'] = subparser
+        subparser.set_defaults(func=self.do_bash_completion)
 
     def _find_actions(self, subparsers, actions_module):
         for attr in (a for a in dir(actions_module) if a.startswith('do_')):
@@ -177,12 +204,23 @@ class MuranoShell(object):
         :param tenant_name: name of tenant
         :param auth_url: endpoint to authenticate against
         """
-        return ksclient.Client(username=kwargs.get('username'),
-                               password=kwargs.get('password'),
-                               tenant_id=kwargs.get('tenant_id'),
-                               tenant_name=kwargs.get('tenant_name'),
-                               auth_url=kwargs.get('auth_url'),
-                               insecure=kwargs.get('insecure'))
+        kc_args = {
+            'auth_url': kwargs.get('auth_url'),
+            'insecure': kwargs.get('insecure'),
+            'cacert': kwargs.get('cacert')}
+
+        if kwargs.get('tenant_id'):
+            kc_args['tenant_id'] = kwargs.get('tenant_id')
+        else:
+            kc_args['tenant_name'] = kwargs.get('tenant_name')
+
+        if kwargs.get('token'):
+            kc_args['token'] = kwargs.get('token')
+        else:
+            kc_args['username'] = kwargs.get('username')
+            kc_args['password'] = kwargs.get('password')
+
+        return ksclient.Client(**kc_args)
 
     def _get_endpoint(self, client, **kwargs):
         """Get an endpoint using the provided keystone client."""
@@ -190,23 +228,22 @@ class MuranoShell(object):
             service_type=kwargs.get('service_type') or 'application_catalog',
             endpoint_type=kwargs.get('endpoint_type') or 'publicURL')
 
-    def _setup_debugging(self, debug):
-        if debug:
-            logging.basicConfig(
-                format="%(levelname)s (%(module)s:%(lineno)d) %(message)s",
-                level=logging.DEBUG)
+    def _setup_logging(self, debug):
+        log_lvl = logging.DEBUG if debug else logging.WARNING
+        logging.basicConfig(
+            format="%(levelname)s (%(module)s:%(lineno)d) %(message)s",
+            level=log_lvl)
 
-            httplib2.debuglevel = 1
-        else:
-            logging.basicConfig(
-                format="%(levelname)s %(message)s",
-                level=logging.WARNING)
+    def _setup_verbose(self, verbose):
+        if verbose:
+            exc.verbose = 1
 
     def main(self, argv):
         # Parse args once to find version
         parser = self.get_base_parser()
         (options, args) = parser.parse_known_args(argv)
-        self._setup_debugging(options.debug)
+        self._setup_logging(options.debug)
+        self._setup_verbose(options.verbose)
 
         # build available subcommands based on version
         api_version = options.murano_api_version
@@ -214,74 +251,112 @@ class MuranoShell(object):
         self.parser = subcommand_parser
 
         # Handle top-level --help/-h before attempting to parse
-        # a command off the command line
-        if options.help or not argv:
+        # a command off the command line.
+        if (not args and options.help) or not argv:
             self.do_help(options)
             return 0
 
-        # Parse args again and call whatever callback was selected
+        # Parse args again and call whatever callback was selected.
         args = subcommand_parser.parse_args(argv)
 
         # Short-circuit and deal with help command right away.
         if args.func == self.do_help:
             self.do_help(args)
             return 0
+        elif args.func == self.do_bash_completion:
+            self.do_bash_completion(args)
+            return 0
 
-        if args.os_auth_token and args.murano_url:
-            token = args.os_auth_token
-            endpoint = args.murano_url
+        if not args.os_username and not args.os_auth_token:
+            raise exc.CommandError("You must provide a username via"
+                                   " either --os-username or env[OS_USERNAME]"
+                                   " or a token via --os-auth-token or"
+                                   " env[OS_AUTH_TOKEN]")
+
+        if not args.os_password and not args.os_auth_token:
+            raise exc.CommandError("You must provide a password via"
+                                   " either --os-password or env[OS_PASSWORD]"
+                                   " or a token via --os-auth-token or"
+                                   " env[OS_AUTH_TOKEN]")
+
+        if args.os_no_client_auth:
+            if not args.murano_url:
+                raise exc.CommandError(
+                    "If you specify --os-no-client-auth"
+                    " you must also specify a Murano API URL"
+                    " via either --murano-url or env[MURANO_URL]")
         else:
-            if not args.os_username:
-                raise exceptions.CommandError("You must provide a username "
-                                              "via either --os-username "
-                                              "or via env[OS_USERNAME]")
-
-            if not args.os_password:
-                raise exceptions.CommandError("You must provide a password "
-                                              "via either --os-password "
-                                              "or via env[OS_PASSWORD]")
-
+            # Tenant name or ID is needed to make keystoneclient retrieve a
+            # service catalog, it's not required if os_no_client_auth is
+            # specified, neither is the auth URL.
             if not (args.os_tenant_id or args.os_tenant_name):
-                raise exceptions.CommandError("You must provide a tenant_id "
-                                              "via either --os-tenant-id "
-                                              "or via env[OS_TENANT_ID]")
+                raise exc.CommandError("You must provide a tenant name "
+                                       "or tenant id via --os-tenant-name, "
+                                       "--os-tenant-id, env[OS_TENANT_NAME] "
+                                       "or env[OS_TENANT_ID]")
 
             if not args.os_auth_url:
-                raise exceptions.CommandError("You must provide an auth url "
-                                              "via either --os-auth-url or "
-                                              "via env[OS_AUTH_URL]")
-            kwargs = {
-                'username': args.os_username,
-                'password': args.os_password,
-                'tenant_id': args.os_tenant_id,
-                'tenant_name': args.os_tenant_name,
-                'auth_url': args.os_auth_url,
-                'service_type': args.os_service_type,
-                'endpoint_type': args.os_endpoint_type,
-                'insecure': args.insecure
-            }
+                raise exc.CommandError("You must provide an auth url via"
+                                       " either --os-auth-url or via"
+                                       " env[OS_AUTH_URL]")
+
+        kwargs = {
+            'username': args.os_username,
+            'password': args.os_password,
+            'token': args.os_auth_token,
+            'tenant_id': args.os_tenant_id,
+            'tenant_name': args.os_tenant_name,
+            'auth_url': args.os_auth_url,
+            'service_type': args.os_service_type,
+            'endpoint_type': args.os_endpoint_type,
+            'insecure': args.insecure,
+            'cacert': args.os_cacert,
+            'include_pass': args.include_password
+        }
+
+        endpoint = args.murano_url
+
+        if not args.os_no_client_auth:
             _ksclient = self._get_ksclient(**kwargs)
             token = args.os_auth_token or _ksclient.auth_token
 
-            url = args.murano_url
-            endpoint = url or self._get_endpoint(_ksclient, **kwargs)
+            kwargs = {
+                'token': token,
+                'insecure': args.insecure,
+                'ca_file': args.ca_file,
+                'cert_file': args.cert_file,
+                'key_file': args.key_file,
+                'username': args.os_username,
+                'password': args.os_password,
+                'endpoint_type': args.os_endpoint_type,
+                'include_pass': args.include_password
+            }
 
-        kwargs = {
-            'token': token,
-            'insecure': args.insecure,
-            'timeout': args.timeout,
-            'ca_file': args.ca_file,
-            'cert_file': args.cert_file,
-            'key_file': args.key_file,
-        }
+            if args.os_region_name:
+                kwargs['region_name'] = args.os_region_name
+
+            if not endpoint:
+                endpoint = self._get_endpoint(_ksclient, **kwargs)
+
+        if args.api_timeout:
+            kwargs['timeout'] = args.api_timeout
 
         client = apiclient.Client(api_version, endpoint, **kwargs)
 
-        try:
-            args.func(client, args)
-        except exceptions.Unauthorized:
-            msg = "Invalid OpenStack Identity credentials."
-            raise exceptions.CommandError(msg)
+        args.func(client, args)
+
+    def do_bash_completion(self, args):
+        """Prints all of the commands and options to stdout."""
+        commands = set()
+        options = set()
+        for sc_str, sc in self.subcommands.items():
+            commands.add(sc_str)
+            for option in list(sc._optionals._option_string_actions):
+                options.add(option)
+
+        commands.remove('bash-completion')
+        commands.remove('bash_completion')
+        print(' '.join(commands | options))
 
     @utils.arg('command', metavar='<subcommand>', nargs='?',
                help='Display help for <subcommand>')
@@ -293,7 +368,7 @@ class MuranoShell(object):
                 self.subcommands[args.command].print_help()
             else:
                 msg = "'%s' is not a valid subcommand"
-                raise exceptions.CommandError(msg % args.command)
+                raise exc.CommandError(msg % args.command)
         else:
             self.parser.print_help()
 

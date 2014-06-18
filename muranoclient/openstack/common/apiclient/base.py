@@ -32,6 +32,7 @@ from six.moves.urllib import parse
 from muranoclient.openstack.common.apiclient import exceptions
 from muranoclient.openstack.common.gettextutils import _
 from muranoclient.openstack.common import strutils
+from muranoclient.openstack.common import uuidutils
 
 
 def getid(obj):
@@ -75,8 +76,8 @@ class HookableMixin(object):
 
         :param cls: class that registers hooks
         :param hook_type: hook type, e.g., '__pre_parse_args__'
-        :param **args: args to be passed to every hook function
-        :param **kwargs: kwargs to be passed to every hook function
+        :param args: args to be passed to every hook function
+        :param kwargs: kwargs to be passed to every hook function
         """
         hook_funcs = cls._hooks_map.get(hook_type) or []
         for hook_func in hook_funcs:
@@ -436,6 +437,21 @@ class Resource(object):
         self._info = info
         self._add_details(info)
         self._loaded = loaded
+        self._init_completion_cache()
+
+    def _init_completion_cache(self):
+        cache_write = getattr(self.manager, 'write_to_completion_cache', None)
+        if not cache_write:
+            return
+
+        # NOTE(sirp): ensure `id` is already present because if it isn't we'll
+        # enter an infinite loop of __getattr__ -> get -> __init__ ->
+        # __getattr__ -> ...
+        if 'id' in self.__dict__ and uuidutils.is_uuid_like(self.id):
+            cache_write('uuid', self.id)
+
+        if self.human_id:
+            cache_write('human_id', self.human_id)
 
     def __repr__(self):
         reprkeys = sorted(k
@@ -448,8 +464,10 @@ class Resource(object):
     def human_id(self):
         """Human-readable ID which can be used for bash completion.
         """
-        if self.NAME_ATTR in self.__dict__ and self.HUMAN_ID:
-            return strutils.to_slug(getattr(self, self.NAME_ATTR))
+        if self.HUMAN_ID:
+            name = getattr(self, self.NAME_ATTR, None)
+            if name is not None:
+                return strutils.to_slug(name)
         return None
 
     def _add_details(self, info):
