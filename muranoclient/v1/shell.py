@@ -33,15 +33,21 @@ def do_environment_create(mc, args):
     do_environment_list(mc)
 
 
-@utils.arg("id", help="Environment id")
+@utils.arg("id", nargs="+", help="Id of environment(s) to delete")
 def do_environment_delete(mc, args):
     """Delete an environment."""
-    try:
-        mc.environments.delete(args.id)
-    except exceptions.HTTPNotFound:
-        raise exceptions.CommandError("Environment %s not found" % args.id)
-    else:
-        do_environment_list(mc)
+    failure_count = 0
+    for environment_id in args.id:
+        try:
+            mc.environments.delete(environment_id)
+        except exceptions.HTTPNotFound:
+            failure_count += 1
+            print("Failed to delete '{0}'; environment not found".
+                  format(environment_id))
+    if failure_count == len(args.id):
+        raise exceptions.CommandError("Unable to find and delete any of the "
+                                      "specified environments.")
+    do_environment_list(mc)
 
 
 @utils.arg("id", help="Environment id")
