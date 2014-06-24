@@ -177,12 +177,17 @@ def do_package_delete(mc, args):
         do_package_list(mc)
 
 
-@utils.arg("filename", metavar="file", help="Zip file containing package")
-@utils.arg("category", nargs="+",
-           help="One or more categories to which the package belongs")
+@utils.arg('filename', metavar='<FILE>', help='Zip file containing package')
+@utils.arg('-c', '--categories', metavar='<CAT1 CAT2 CAT3>', nargs='*',
+           help='Category list to attach')
 def do_package_import(mc, args):
-    """Import a package. `file` should be the path to a zip file."""
-    data = {"categories": args.category}
+    """Import a package.
+    `FILE` should be the path to a zip file.
+    `categories` could be separated by a comma
+    """
+    data = None
+    if args.categories:
+        data = {"categories": args.categories}
     mc.packages.create(data, ((args.filename, open(args.filename, 'rb')),))
     do_package_list(mc)
 
