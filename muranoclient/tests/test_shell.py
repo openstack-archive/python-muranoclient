@@ -24,6 +24,7 @@ from testtools import matchers
 from muranoclient.openstack.common.apiclient import exceptions
 import muranoclient.shell
 from muranoclient.tests import base
+from muranoclient.v1 import shell as v1_shell
 
 FIXTURE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'fixture_data'))
@@ -40,6 +41,10 @@ FAKE_ENV2 = {'OS_USERNAME': 'username',
              'OS_AUTH_URL': 'http://no.where'}
 
 
+class TestArgs(object):
+    pass
+
+
 class ShellTest(base.TestCaseShell):
 
     def make_env(self, exclude=None, fake_env=FAKE_ENV):
@@ -50,6 +55,7 @@ class ShellTest(base.TestCaseShell):
         super(ShellTest, self).setUp()
         self.useFixture(fixtures.MonkeyPatch(
             'keystoneclient.v2_0.client.Client', mock.MagicMock))
+        self.client = mock.MagicMock()
 
     def shell(self, argstr, exitcodes=(0,)):
         orig = sys.stdout
@@ -155,6 +161,13 @@ class ShellTest(base.TestCaseShell):
         else:
             self.fail('CommandError not raised')
 
+
+class ShellPackagesOperations(ShellTest):
+    def tearDown(self):
+        super(ShellPackagesOperations, self).tearDown()
+        if os.path.exists(RESULT_PACKAGE):
+            os.remove(RESULT_PACKAGE)
+
     def test_create_hot_based_package(self):
         self.useFixture(fixtures.MonkeyPatch(
             'muranoclient.v1.client.Client', mock.MagicMock))
@@ -182,3 +195,37 @@ class ShellTest(base.TestCaseShell):
         matchers.MatchesRegex((stdout + stderr),
                               "Application package "
                               "is available at {0}".format(RESULT_PACKAGE))
+
+    def test_package_import(self):
+        open(RESULT_PACKAGE, 'a').close()
+        args = TestArgs()
+        args.filename = RESULT_PACKAGE
+        args.categories = ['Cat1', 'Cat2 with space']
+
+        v1_shell.do_package_import(self.client, args)
+
+        self.client.packages.create.assert_called_once_with(
+            {'categories': ['Cat1', 'Cat2 with space']},
+            ((RESULT_PACKAGE, mock.ANY),)
+        )
+
+    def test_package_import_no_categories(self):
+        open(RESULT_PACKAGE, 'a').close()
+        args = TestArgs()
+        args.filename = RESULT_PACKAGE
+        args.categories = None
+
+        v1_shell.do_package_import(self.client, args)
+
+        self.client.packages.create.assert_called_once_with(
+            None,
+            ((RESULT_PACKAGE, mock.ANY),)
+        )
+
+    def test_package_import_wrong_file(self):
+        args = TestArgs()
+        args.filename = '/home/this/path/does/not/exist'
+        args.categories = None
+
+        self.assertRaises(IOError,
+                          v1_shell.do_package_import, self.client, args)
