@@ -1,0 +1,35 @@
+Namespaces:
+  =: io.murano.apps.test
+  std: io.murano
+  res: io.murano.resources
+
+Name: APP
+
+Extends: std:Application
+
+Properties:
+  name:
+    Contract: $.string().notNull()
+
+  instance:
+    Contract: $.class(res:Instance).notNull()
+
+
+Workflow:
+  initialize:
+    Body:
+      - $.environment: $.find(std:Environment).require()
+
+  deploy:
+    Body:
+      - $securityGroupIngress:
+          - ToPort: 23
+            FromPort: 23
+            IpProtocol: tcp
+            External: True
+      - $.environment.securityGroupManager.addGroupIngress($securityGroupIngress)
+      - $.instance.deploy()
+      - $resources: new('io.murano.system.Resources')
+      - $template: $resources.yaml('Deploy.template')
+      - $.instance.agent.call($template, $resources)
+
