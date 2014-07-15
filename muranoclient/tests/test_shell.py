@@ -16,6 +16,7 @@ import os
 import re
 import six
 import sys
+import tempfile
 
 import fixtures
 import mock
@@ -28,7 +29,7 @@ from muranoclient.v1 import shell as v1_shell
 
 FIXTURE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'fixture_data'))
-RESULT_PACKAGE = os.path.join(FIXTURE_DIR, 'test-app.zip')
+#RESULT_PACKAGE = os.path.join(FIXTURE_DIR, 'test-app.zip')
 
 FAKE_ENV = {'OS_USERNAME': 'username',
             'OS_PASSWORD': 'password',
@@ -56,6 +57,13 @@ class ShellTest(base.TestCaseShell):
         self.useFixture(fixtures.MonkeyPatch(
             'keystoneclient.v2_0.client.Client', mock.MagicMock))
         self.client = mock.MagicMock()
+
+        # We don't set an endpoint (client.service_catalog.url_for is a mock)
+        # and get_proxy_url doesn't like that. We don't care about testing
+        # that functionality, so mock it out.
+        self.useFixture(fixtures.MonkeyPatch(
+            'muranoclient.common.http.HTTPClient.get_proxy_url',
+            mock.MagicMock))
 
     def shell(self, argstr, exitcodes=(0,)):
         orig = sys.stdout
@@ -161,12 +169,68 @@ class ShellTest(base.TestCaseShell):
         else:
             self.fail('CommandError not raised')
 
+    @mock.patch('muranoclient.v1.packages.PackageManager')
+    def test_package_list(self, mock_package_manager):
+        self.client.packages = mock_package_manager()
+        self.make_env()
+        self.shell('package-list')
+        self.client.packages.filter.assert_called_once_with(
+            include_disabled=False)
+
+    @mock.patch('muranoclient.v1.packages.PackageManager')
+    def test_package_show(self, mock_package_manager):
+        self.client.packages = mock_package_manager()
+        mock_package = mock.MagicMock()
+        mock_package.class_definitions = ''
+        mock_package.categories = ''
+        mock_package.tags = ''
+        mock_package.description = ''
+        self.client.packages.get.return_value = mock_package
+        self.make_env()
+        self.shell('package-show 1234')
+        self.client.packages.get.assert_called_once_with('1234')
+
+    @mock.patch('muranoclient.v1.packages.PackageManager')
+    def test_package_delete(self, mock_package_manager):
+        self.client.packages = mock_package_manager()
+        self.make_env()
+        self.shell('package-delete 1234')
+        self.client.packages.delete.assert_called_once_with('1234')
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    def test_environment_delete(self, mock_manager):
+        self.client.environments = mock_manager()
+        self.make_env()
+        self.shell('environment-delete env1 env2')
+        self.client.environments.delete.assert_has_calls([
+            mock.call('env1'), mock.call('env2')])
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    def test_environment_rename(self, mock_manager):
+        self.client.environments = mock_manager()
+        self.make_env()
+        self.shell('environment-rename env-id new-name')
+        self.client.environments.update.assert_called_once_with(
+            'env-id', 'new-name')
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    def test_environment_show(self, mock_manager):
+        self.client.environments = mock_manager()
+        self.make_env()
+        self.shell('environment-show env-id')
+        self.client.environments.get.assert_called_once_with('env-id')
+
+    @mock.patch('muranoclient.v1.deployments.DeploymentManager')
+    def test_deployments_show(self, mock_manager):
+        self.client.deployments = mock_manager()
+        self.make_env()
+        self.shell('deployment-list env-id')
+        self.client.deployments.list.assert_called_once_with('env-id')
+
 
 class ShellPackagesOperations(ShellTest):
     def tearDown(self):
         super(ShellPackagesOperations, self).tearDown()
-        if os.path.exists(RESULT_PACKAGE):
-            os.remove(RESULT_PACKAGE)
 
     def test_create_hot_based_package(self):
         self.useFixture(fixtures.MonkeyPatch(
@@ -174,13 +238,14 @@ class ShellPackagesOperations(ShellTest):
         heat_template = os.path.join(FIXTURE_DIR, 'heat-template.yaml')
         logo = os.path.join(FIXTURE_DIR, 'logo.png')
         self.make_env()
-        stdout, stderr = self.shell(
-            "package-create  --template={0} "
-            "--output={1} -l={2}".format(heat_template, RESULT_PACKAGE, logo))
-
-        matchers.MatchesRegex((stdout + stderr),
-                              "Application package "
-                              "is available at {0}".format(RESULT_PACKAGE))
+        with tempfile.NamedTemporaryFile() as f:
+            RESULT_PACKAGE = f.name
+            c = "package-create --template={0} --output={1} -l={2}".format(
+                heat_template, RESULT_PACKAGE, logo)
+            stdout, stderr = self.shell(c)
+            matchers.MatchesRegex((stdout + stderr),
+                                  "Application package "
+                                  "is available at {0}".format(RESULT_PACKAGE))
 
     def test_create_mpl_package(self):
         self.useFixture(fixtures.MonkeyPatch(
@@ -189,38 +254,43 @@ class ShellPackagesOperations(ShellTest):
         resources_dir = os.path.join(FIXTURE_DIR, 'test-app', 'Resources')
         ui = os.path.join(FIXTURE_DIR, 'test-app', 'ui.yaml')
         self.make_env()
-        stdout, stderr = self.shell(
-            "package-create  -c={0} -r={1} -u={2} -o={3}".format(
-                classes_dir, resources_dir, ui, RESULT_PACKAGE))
-        matchers.MatchesRegex((stdout + stderr),
-                              "Application package "
-                              "is available at {0}".format(RESULT_PACKAGE))
+        with tempfile.NamedTemporaryFile() as f:
+            RESULT_PACKAGE = f.name
+            stdout, stderr = self.shell(
+                "package-create  -c={0} -r={1} -u={2} -o={3}".format(
+                    classes_dir, resources_dir, ui, RESULT_PACKAGE))
+            matchers.MatchesRegex((stdout + stderr),
+                                  "Application package "
+                                  "is available at {0}".format(RESULT_PACKAGE))
 
     def test_package_import(self):
-        open(RESULT_PACKAGE, 'a').close()
         args = TestArgs()
-        args.filename = RESULT_PACKAGE
-        args.categories = ['Cat1', 'Cat2 with space']
+        with tempfile.NamedTemporaryFile() as f:
+            RESULT_PACKAGE = f.name
+            args.filename = RESULT_PACKAGE
+            args.categories = ['Cat1', 'Cat2 with space']
 
-        v1_shell.do_package_import(self.client, args)
+            v1_shell.do_package_import(self.client, args)
 
-        self.client.packages.create.assert_called_once_with(
-            {'categories': ['Cat1', 'Cat2 with space']},
-            ((RESULT_PACKAGE, mock.ANY),)
-        )
+            self.client.packages.create.assert_called_once_with(
+                {'categories': ['Cat1', 'Cat2 with space']},
+                ((RESULT_PACKAGE, mock.ANY),)
+            )
 
     def test_package_import_no_categories(self):
-        open(RESULT_PACKAGE, 'a').close()
         args = TestArgs()
-        args.filename = RESULT_PACKAGE
-        args.categories = None
+        with tempfile.NamedTemporaryFile() as f:
+            RESULT_PACKAGE = f.name
 
-        v1_shell.do_package_import(self.client, args)
+            args.filename = RESULT_PACKAGE
+            args.categories = None
 
-        self.client.packages.create.assert_called_once_with(
-            None,
-            ((RESULT_PACKAGE, mock.ANY),)
-        )
+            v1_shell.do_package_import(self.client, args)
+
+            self.client.packages.create.assert_called_once_with(
+                None,
+                ((RESULT_PACKAGE, mock.ANY),)
+            )
 
     def test_package_import_wrong_file(self):
         args = TestArgs()
