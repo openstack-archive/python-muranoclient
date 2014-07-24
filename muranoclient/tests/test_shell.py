@@ -14,12 +14,12 @@
 
 import os
 import re
-import six
 import sys
 import tempfile
 
 import fixtures
 import mock
+import six
 from testtools import matchers
 
 from muranoclient.openstack.common.apiclient import exceptions
@@ -29,7 +29,7 @@ from muranoclient.v1 import shell as v1_shell
 
 FIXTURE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'fixture_data'))
-#RESULT_PACKAGE = os.path.join(FIXTURE_DIR, 'test-app.zip')
+# RESULT_PACKAGE = os.path.join(FIXTURE_DIR, 'test-app.zip')
 
 FAKE_ENV = {'OS_USERNAME': 'username',
             'OS_PASSWORD': 'password',

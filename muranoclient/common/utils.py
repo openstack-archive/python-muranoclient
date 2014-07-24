@@ -21,10 +21,10 @@ import sys
 import textwrap
 import types
 import uuid
-import yaml
 
 import prettytable
 import six
+import yaml
 import yaql
 import yaql.exceptions
 

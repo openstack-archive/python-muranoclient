@@ -13,8 +13,9 @@
 #    under the License.
 
 import json
-import requests
 import urllib
+
+import requests
 import yaml
 
 from muranoclient.common import base

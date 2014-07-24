@@ -173,7 +173,7 @@ class HTTPClient(object):
 
         self.log_http_response(resp)
 
-        if not 'X-Auth-Key' in kwargs['headers'] and \
+        if 'X-Auth-Key' not in kwargs['headers'] and \
                 (resp.status_code == 401 or
                  (resp.status_code == 500 and "(HTTP 401)" in resp.content)):
             raise exc.HTTPUnauthorized("Authentication failed. Please try"

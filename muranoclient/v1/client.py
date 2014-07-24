@@ -13,7 +13,6 @@
 #    under the License.
 
 from muranoclient.common import http
-
 from muranoclient.v1 import deployments
 from muranoclient.v1 import environments
 from muranoclient.v1 import instance_statistics

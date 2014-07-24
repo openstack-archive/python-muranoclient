@@ -15,6 +15,7 @@
 import os
 import shutil
 import tempfile
+
 import yaml
 
 import muranoclient

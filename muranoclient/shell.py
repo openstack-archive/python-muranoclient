@@ -20,10 +20,11 @@ from __future__ import print_function
 
 import argparse
 import logging
-import six
 import sys
 
 from keystoneclient.v2_0 import client as ksclient
+import six
+
 from muranoclient import client as apiclient
 from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions as exc
