@@ -309,7 +309,7 @@ class HTTPClient(object):
         elif scheme == 'http':
             return (os.environ.get('HTTP_PROXY') or
                     os.environ.get('http_proxy'))
-        msg = 'Unsupported scheme: %s' % scheme
+        msg = 'Unsupported scheme: {0} ({1})'.format(scheme, self.endpoint)
         raise exc.InvalidEndpoint(msg)
 
 

@@ -32,21 +32,23 @@ def do_environment_list(mc, args={}):
     utils.print_list(environments, fields, field_labels, sortby=0)
 
 
-@utils.arg("name", help="Environment name")
+@utils.arg("name", metavar="<ENVIRONMENT_NAME>",
+           help="Environment name")
 def do_environment_create(mc, args):
     """Create an environment."""
     mc.environments.create({"name": args.name})
     do_environment_list(mc)
 
 
-@utils.arg("id", nargs="+", help="Id of environment(s) to delete")
+@utils.arg("id", metavar="<ID>",
+           nargs="+", help="Id of environment(s) to delete")
 def do_environment_delete(mc, args):
     """Delete an environment."""
     failure_count = 0
     for environment_id in args.id:
         try:
             mc.environments.delete(environment_id)
-        except exceptions.HTTPNotFound:
+        except exceptions.NotFound:
             failure_count += 1
             print("Failed to delete '{0}'; environment not found".
                   format(environment_id))
@@ -56,24 +58,27 @@ def do_environment_delete(mc, args):
     do_environment_list(mc)
 
 
-@utils.arg("id", help="Environment id")
-@utils.arg("name", help="Name to which the environment will be renamed")
+@utils.arg("id", metavar="<ID>",
+           help="Environment id")
+@utils.arg("name", metavar="<ENVIRONMENT_NAME>",
+           help="Name to which the environment will be renamed")
 def do_environment_rename(mc, args):
     """Rename an environment."""
     try:
         mc.environments.update(args.id, args.name)
-    except exceptions.HTTPNotFound:
+    except exceptions.NotFound:
         raise exceptions.CommandError("Environment %s not found" % args.id)
     else:
         do_environment_list(mc)
 
 
-@utils.arg("id", help="Environment id")
+@utils.arg("id", metavar="<ID>",
+           help="Environment id")
 def do_environment_show(mc, args):
     """Display environment details."""
     try:
         environment = mc.environments.get(args.id)
-    except exceptions.HTTPNotFound:
+    except exceptions.NotFound:
         raise exceptions.CommandError("Environment %s not found" % args.id)
     else:
         formatters = {
@@ -87,13 +92,13 @@ def do_environment_show(mc, args):
         utils.print_dict(environment.to_dict(), formatters=formatters)
 
 
-@utils.arg("environment-id",
+@utils.arg("id", metavar="<ID>",
            help="Environment id for which to list deployments")
 def do_deployment_list(mc, args):
     """List deployments for an environment."""
     try:
-        deployments = mc.deployments.list(args.environment_id)
-    except exceptions.HTTPNotFound:
+        deployments = mc.deployments.list(args.id)
+    except exceptions.NotFound:
         raise exceptions.CommandError("Environment %s not found" % args.id)
     else:
         field_labels = ["ID", "State", "Created", "Updated", "Finished"]
@@ -119,7 +124,7 @@ def do_package_list(mc, args={}):
     utils.print_list(packages, fields, field_labels, sortby=0)
 
 
-@utils.arg("package-id",
+@utils.arg("id", metavar="<ID>",
            help="Package ID to download")
 @utils.arg("filename", metavar="file", nargs="?",
            help="Filename for download (defaults to stdout)")
@@ -131,23 +136,23 @@ def do_package_download(mc, args):
 
     try:
         if not args.filename:
-            download_to_fh(args.package_id, sys.stdout)
+            download_to_fh(args.id, sys.stdout)
         else:
             with open(args.filename, 'wb') as fh:
-                download_to_fh(args.package_id, fh)
+                download_to_fh(args.id, fh)
                 print("Package downloaded to %s" % args.filename)
-    except exceptions.HTTPNotFound:
-        raise exceptions.CommandError("Package %s not found" % args.package_id)
+    except exceptions.NotFound:
+        raise exceptions.CommandError("Package %s not found" % args.id)
 
 
-@utils.arg("package-id",
+@utils.arg("id", metavar="<ID>",
            help="Package ID to show")
 def do_package_show(mc, args):
     """Display details for a package."""
     try:
-        package = mc.packages.get(args.package_id)
-    except exceptions.HTTPNotFound:
-        raise exceptions.CommandError("Package %s not found" % args.package_id)
+        package = mc.packages.get(args.id)
+    except exceptions.NotFound:
+        raise exceptions.CommandError("Package %s not found" % args.id)
     else:
         to_display = dict(
             id=package.id,
@@ -171,14 +176,14 @@ def do_package_show(mc, args):
         utils.print_dict(to_display, formatters)
 
 
-@utils.arg("package-id",
+@utils.arg("id", metavar="<ID>",
            help="Package ID to delete")
 def do_package_delete(mc, args):
     """Delete a package."""
     try:
-        mc.packages.delete(args.package_id)
-    except exceptions.HTTPNotFound:
-        raise exceptions.CommandError("Package %s not found" % args.package_id)
+        mc.packages.delete(args.id)
+    except exceptions.NotFound:
+        raise exceptions.CommandError("Package %s not found" % args.id)
     else:
         do_package_list(mc)
 
@@ -198,10 +203,10 @@ def do_package_import(mc, args):
     do_package_list(mc)
 
 
-@utils.arg("environment_id")
-@utils.arg("path")
+@utils.arg("id", metavar="<ID>")
+@utils.arg("path", metavar="<PATH>")
 def do_service_show(mc, args):
-    service = mc.services.get(args.environment_id, args.path)
+    service = mc.services.get(args.id, args.path)
     to_display = dict(
         name=service.name,
         id=getattr(service, '?')['id'],

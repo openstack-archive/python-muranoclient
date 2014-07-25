@@ -16,6 +16,8 @@
 import sys
 
 
+# TODO(sjmc7): This module is likely redundant because it's replaced
+# by openstack.common.apiclient; should be removed
 class BaseException(Exception):
     """An error occurred."""
     def __init__(self, message=None):
