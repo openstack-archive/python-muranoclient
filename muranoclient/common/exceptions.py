@@ -148,9 +148,10 @@ for obj_name in dir(sys.modules[__name__]):
         _code_map[obj.code] = obj
 
 
-def from_response(response, body=None):
+def from_response(response):
     """Return an instance of an HTTPException based on httplib response."""
-    cls = _code_map.get(response.status, HTTPException)
+    cls = _code_map.get(response.status_code, HTTPException)
+    body = response.content
     if body:
         details = body.replace('\n\n', '\n')
         return cls(details=details)

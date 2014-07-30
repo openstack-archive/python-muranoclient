@@ -107,7 +107,7 @@ class PackageManager(base.Manager):
         data = []
         for key, value in body.iteritems():
             data.append({'op': operation, 'path': '/' + key, 'value': value})
-        return self.api.json_patch_request(url, body=data)
+        return self.api.json_patch_request(url, data=data)
 
     def download(self, app_id):
         url = '/v1/catalog/packages/{0}/download'.format(app_id)
@@ -121,7 +121,7 @@ class PackageManager(base.Manager):
         url = '/v1/catalog/packages/{0}'.format(app_id)
         enabled = self.get(app_id).enabled
         data = [{'op': 'replace', 'path': '/enabled', 'value': not enabled}]
-        return self.api.json_patch_request(url, body=data)
+        return self.api.json_patch_request(url, data=data)
 
     def get_ui(self, app_id, loader_cls=None):
         if loader_cls is None:
