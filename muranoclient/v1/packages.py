@@ -123,6 +123,13 @@ class PackageManager(base.Manager):
         data = [{'op': 'replace', 'path': '/enabled', 'value': not enabled}]
         return self.api.json_patch_request(url, body=data)
 
+    def toggle_public(self, app_id):
+        url = '/v1/catalog/packages/{0}'.format(app_id)
+        is_public = self.get(app_id).is_public
+        data = [{'op': 'replace', 'path': '/is_public',
+                'value': not is_public}]
+        return self.api.json_patch_request(url, body=data)
+
     def get_ui(self, app_id, loader_cls=None):
         if loader_cls is None:
             loader_cls = yaml.Loader
