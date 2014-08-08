@@ -14,177 +14,115 @@
 #    under the License.
 
 import copy
-import errno
-import hashlib
 import logging
 import os
-import posixpath
-from six.moves.urllib import parse
 import socket
-import struct
-import sys
 
-if sys.version_info >= (3, 0):
-    import http.client as httplib
-    import io as StringIO
-    import urllib.parse as urlparse
-else:
-    import httplib
-    import StringIO
-    import urlparse
-    # Python 2.5 compat fix
-    if not hasattr(urlparse, 'parse_qsl'):
-        import cgi
-        urlparse.parse_qsl = cgi.parse_qsl
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
-
-import OpenSSL
+import requests
+import six
+from six.moves.urllib import parse
 
 from muranoclient.common import exceptions as exc
-from muranoclient.common import utils
+from muranoclient.openstack.common import jsonutils
 from muranoclient.openstack.common import strutils
-
-try:
-    from eventlet import patcher
-    # Handle case where we are running in a monkey patched environment
-    if patcher.is_monkey_patched('socket'):
-        from eventlet.green.httplib import HTTPSConnection  # noqa
-        from eventlet.green.OpenSSL.SSL import GreenConnection as Connection
-        from eventlet.greenio import GreenSocket  # noqa
-        # TODO(mclaren): A getsockopt workaround: see 'getsockopt' doc string
-        GreenSocket.getsockopt = utils.getsockopt
-    else:
-        raise ImportError
-except ImportError:
-    if sys.version_info >= (3, 0):
-        from http.client import HTTPSConnection
-    else:
-        from httplib import HTTPSConnection  # noqa
-    from OpenSSL.SSL import Connection as Connection  # noqa
-
 
 LOG = logging.getLogger(__name__)
 USER_AGENT = 'python-muranoclient'
 CHUNKSIZE = 1024 * 64  # 64kB
 
 
+def get_system_ca_file():
+    """Return path to system default CA file."""
+    # Standard CA file locations for Debian/Ubuntu, RedHat/Fedora,
+    # Suse, FreeBSD/OpenBSD, MacOSX, and the bundled ca
+    ca_path = ['/etc/ssl/certs/ca-certificates.crt',
+               '/etc/pki/tls/certs/ca-bundle.crt',
+               '/etc/ssl/ca-bundle.pem',
+               '/etc/ssl/cert.pem',
+               '/System/Library/OpenSSL/certs/cacert.pem',
+               requests.certs.where()]
+    for ca in ca_path:
+        LOG.debug("Looking for ca file %s", ca)
+        if os.path.exists(ca):
+            LOG.debug("Using ca file %s", ca)
+            return ca
+    LOG.warn("System ca file could not be found.")
+
+
 class HTTPClient(object):
 
     def __init__(self, endpoint, **kwargs):
         self.endpoint = endpoint
-        endpoint_parts = self.parse_endpoint(self.endpoint)
-        self.endpoint_scheme = endpoint_parts.scheme
-        self.endpoint_hostname = endpoint_parts.hostname
-        self.endpoint_port = endpoint_parts.port
-        self.endpoint_path = endpoint_parts.path
-
-        self.connection_class = self.get_connection_class(self.endpoint_scheme)
-        self.connection_kwargs = self.get_connection_kwargs(
-            self.endpoint_scheme, **kwargs)
-
-        self.identity_headers = kwargs.get('identity_headers')
+        self.auth_url = kwargs.get('auth_url')
         self.auth_token = kwargs.get('token')
-        if self.identity_headers:
-            if self.identity_headers.get('X-Auth-Token'):
-                self.auth_token = self.identity_headers.get('X-Auth-Token')
-                del self.identity_headers['X-Auth-Token']
-        self.proxy_url = self.get_proxy_url()
+        self.username = kwargs.get('username')
+        self.password = kwargs.get('password')
+        self.region_name = kwargs.get('region_name')
+        self.include_pass = kwargs.get('include_pass')
+        self.endpoint_url = endpoint
 
-    @staticmethod
-    def parse_endpoint(endpoint):
-        return urlparse.urlparse(endpoint)
+        self.cert_file = kwargs.get('cert_file')
+        self.key_file = kwargs.get('key_file')
+        self.timeout = kwargs.get('timeout')
 
-    @staticmethod
-    def get_connection_class(scheme):
-        if scheme == 'https':
-            return VerifiedHTTPSConnection
-        else:
-            return httplib.HTTPConnection
+        self.ssl_connection_params = {
+            'ca_file': kwargs.get('ca_file'),
+            'cert_file': kwargs.get('cert_file'),
+            'key_file': kwargs.get('key_file'),
+            'insecure': kwargs.get('insecure'),
+        }
 
-    @staticmethod
-    def get_connection_kwargs(scheme, **kwargs):
-        _kwargs = {'timeout': float(kwargs.get('timeout', 600))}
-
-        if scheme == 'https':
-            _kwargs['cacert'] = kwargs.get('cacert', None)
-            _kwargs['cert_file'] = kwargs.get('cert_file', None)
-            _kwargs['key_file'] = kwargs.get('key_file', None)
-            _kwargs['insecure'] = kwargs.get('insecure', False)
-            _kwargs['ssl_compression'] = kwargs.get('ssl_compression', True)
-
-        return _kwargs
-
-    def get_connection(self):
-        _class = self.connection_class
-        try:
-            if self.proxy_url:
-                proxy_parts = parse.urlparse(self.proxy_url)
-                return _class(proxy_parts.hostname, proxy_parts.port,
-                              **self.connection_kwargs)
+        self.verify_cert = None
+        if parse.urlparse(endpoint).scheme == "https":
+            if kwargs.get('insecure'):
+                self.verify_cert = False
             else:
-                return _class(self.endpoint_hostname, self.endpoint_port,
-                              **self.connection_kwargs)
-        except httplib.InvalidURL:
-            raise exc.InvalidEndpoint()
+                self.verify_cert = kwargs.get('ca_file', get_system_ca_file())
 
     def log_curl_request(self, method, url, kwargs):
         curl = ['curl -i -X %s' % method]
 
         for (key, value) in kwargs['headers'].items():
-            header = '-H \'%s: %s\'' % (key, value)
+            header = '-H \'%s: %s\'' % (strutils.safe_decode(key),
+                                        strutils.safe_decode(value))
             curl.append(header)
 
         conn_params_fmt = [
             ('key_file', '--key %s'),
             ('cert_file', '--cert %s'),
-            ('cacert', '--cacert %s'),
+            ('ca_file', '--cacert %s'),
         ]
         for (key, fmt) in conn_params_fmt:
-            value = self.connection_kwargs.get(key)
+            value = self.ssl_connection_params.get(key)
             if value:
                 curl.append(fmt % value)
 
-        if self.connection_kwargs.get('insecure'):
+        if self.ssl_connection_params.get('insecure'):
             curl.append('-k')
 
-        if kwargs.get('body') is not None:
-            curl.append('-d \'%s\'' % kwargs['body'])
+        if 'data' in kwargs:
+            curl.append('-d \'%s\'' % kwargs['data'])
 
         curl.append('%s%s' % (self.endpoint, url))
-        LOG.debug(strutils.safe_encode(' '.join(curl)))
+        LOG.debug(' '.join(curl))
 
     @staticmethod
-    def log_http_response(resp, body=None):
-        status = (resp.version / 10.0, resp.status, resp.reason)
+    def log_http_response(resp):
+        status = (resp.raw.version / 10.0, resp.status_code, resp.reason)
         dump = ['\nHTTP/%.1f %s %s' % status]
-        dump.extend(['%s: %s' % (k, v) for k, v in resp.getheaders()])
+        dump.extend(['%s: %s' % (k, v) for k, v in resp.headers.items()])
         dump.append('')
-        if body:
-            dump.extend([body, ''])
-        LOG.debug(strutils.safe_encode('\n'.join(dump)))
-
-    @staticmethod
-    def encode_headers(headers):
-        """Encodes headers.
-
-        Note: This should be used right before
-        sending anything out.
-
-        :param headers: Headers to encode
-        :returns: Dictionary with encoded headers'
-                  names and values
-        """
-        to_str = strutils.safe_encode
-        return dict([(to_str(h), to_str(v)) for h, v in headers.iteritems()])
+        if resp.content:
+            content = resp.content
+            if isinstance(content, six.binary_type):
+                content = content.decode()
+            dump.extend([content, ''])
+        LOG.debug('\n'.join(dump))
 
     def _http_request(self, url, method, **kwargs):
         """Send an http request with the specified characteristics.
 
-        Wrapper around httplib.HTTP(S)Connection.request to handle tasks such
+        Wrapper around requests.request to handle tasks such
         as setting headers and error handling.
         """
         # Copy the kwargs so we can reuse the original in case of redirects
@@ -192,88 +130,114 @@ class HTTPClient(object):
         kwargs['headers'].setdefault('User-Agent', USER_AGENT)
         if self.auth_token:
             kwargs['headers'].setdefault('X-Auth-Token', self.auth_token)
-
-        if self.identity_headers:
-            for k, v in self.identity_headers.iteritems():
-                kwargs['headers'].setdefault(k, v)
+        else:
+            kwargs['headers'].update(self.credentials_headers())
+        if self.auth_url:
+            kwargs['headers'].setdefault('X-Auth-Url', self.auth_url)
+        if self.region_name:
+            kwargs['headers'].setdefault('X-Region-Name', self.region_name)
 
         self.log_curl_request(method, url, kwargs)
-        conn = self.get_connection()
 
-        # Note(flaper87): Before letting headers / url fly,
-        # they should be encoded otherwise httplib will
-        # complain. If we decide to rely on python-request
-        # this wont be necessary anymore.
-        kwargs['headers'] = self.encode_headers(kwargs['headers'])
+        if self.cert_file and self.key_file:
+            kwargs['cert'] = (self.cert_file, self.key_file)
+
+        if self.verify_cert is not None:
+            kwargs['verify'] = self.verify_cert
+
+        if self.timeout is not None:
+            kwargs['timeout'] = float(self.timeout)
+
+        # Allow the option not to follow redirects
+        follow_redirects = kwargs.pop('follow_redirects', True)
+
+        # Since requests does not follow the RFC when doing redirection to sent
+        # back the same method on a redirect we are simply bypassing it.  For
+        # example if we do a DELETE/POST/PUT on a URL and we get a 302 RFC says
+        # that we should follow that URL with the same method as before,
+        # requests doesn't follow that and send a GET instead for the method.
+        # Hopefully this could be fixed as they say in a comment in a future
+        # point version i.e.: 3.x
+        # See issue: https://github.com/kennethreitz/requests/issues/1704
+        allow_redirects = False
 
         try:
-            if self.proxy_url:
-                url = '{0}/{1}'.format(self.endpoint, url)
-            elif self.endpoint_path:
-                url = '{0}/{1}'.format(self.endpoint_path, url)
-
-            conn_url = posixpath.normpath(url)
-            # Note(flaper87): Ditto, headers / url
-            # encoding to make httplib happy.
-            conn_url = strutils.safe_encode(conn_url)
-            if kwargs['headers'].get('Transfer-Encoding') == 'chunked':
-                conn.putrequest(method, conn_url)
-                for header, value in kwargs['headers'].items():
-                    conn.putheader(header, value)
-                conn.endheaders()
-                chunk = kwargs['body'].read(CHUNKSIZE)
-                # Chunk it, baby...
-                while chunk:
-                    conn.send('%x\r\n%s\r\n' % (len(chunk), chunk))
-                    chunk = kwargs['body'].read(CHUNKSIZE)
-                conn.send('0\r\n\r\n')
-            else:
-                conn.request(method, conn_url, **kwargs)
-            resp = conn.getresponse()
+            resp = requests.request(
+                method,
+                self.endpoint_url + url,
+                allow_redirects=allow_redirects,
+                **kwargs)
         except socket.gaierror as e:
-            message = "Error finding address for %s: %s" % (
-                self.endpoint_hostname, e)
+            message = ("Error finding address for %(url)s: %(e)s" %
+                       {'url': self.endpoint_url + url, 'e': e})
             raise exc.InvalidEndpoint(message=message)
         except (socket.error, socket.timeout) as e:
             endpoint = self.endpoint
-            message = "Error communicating with %s %s" % (endpoint, e)
+            message = ("Error communicating with %(endpoint)s %(e)s" %
+                       {'endpoint': endpoint, 'e': e})
             raise exc.CommunicationError(message=message)
 
-        body_iter = ResponseBodyIterator(resp)
+        self.log_http_response(resp)
 
-        # Read body into string if it isn't obviously image data
-        if resp.getheader('content-type', None) != 'application/octet-stream':
-            body_str = ''.join([chunk for chunk in body_iter])
-            self.log_http_response(resp, body_str)
-            body_iter = StringIO.StringIO(body_str)
-        else:
-            self.log_http_response(resp)
-
-        if 400 <= resp.status < 600:
-            LOG.error("Request returned failure status.")
-            raise exc.from_response(resp, body_str)
-        elif resp.status in (301, 302, 305):
-            # Redirected. Reissue the request to the new location.
-            return self._http_request(resp['location'], method, **kwargs)
-        elif resp.status == 300:
+        if not 'X-Auth-Key' in kwargs['headers'] and \
+                (resp.status_code == 401 or
+                 (resp.status_code == 500 and "(HTTP 401)" in resp.content)):
+            raise exc.HTTPUnauthorized("Authentication failed. Please try"
+                                       " again.\n%s"
+                                       % resp.content)
+        elif 400 <= resp.status_code < 600:
+            raise exc.from_response(resp)
+        elif resp.status_code in (301, 302, 305):
+            # Redirected. Reissue the request to the new location,
+            # unless caller specified follow_redirects=False
+            if follow_redirects:
+                location = resp.headers.get('location')
+                path = self.strip_endpoint(location)
+                resp = self._http_request(path, method, **kwargs)
+        elif resp.status_code == 300:
             raise exc.from_response(resp)
 
-        return resp, body_iter
+        return resp
 
-    def base_json_request(self, method, url, content_type='application/json',
-                          **kwargs):
+    def strip_endpoint(self, location):
+        if location is None:
+            message = "Location not returned with 302"
+            raise exc.InvalidEndpoint(message=message)
+        elif location.startswith(self.endpoint):
+            return location[len(self.endpoint):]
+        else:
+            message = "Prohibited endpoint redirect %s" % location
+            raise exc.InvalidEndpoint(message=message)
+
+    def credentials_headers(self):
+        creds = {}
+        if self.username:
+            creds['X-Auth-User'] = self.username
+        if self.password:
+            creds['X-Auth-Key'] = self.password
+        return creds
+
+    def json_request(self, method, url, content_type='application/json',
+                     **kwargs):
         kwargs.setdefault('headers', {})
         kwargs['headers'].setdefault('Content-Type', content_type)
+        # Don't set Accept because we aren't always dealing in JSON
 
         if 'body' in kwargs:
-            kwargs['body'] = json.dumps(kwargs['body'])
+            if 'data' in kwargs:
+                raise ValueError("Can't provide both 'data' and "
+                                 "'body' to a request")
+            LOG.warning("Use of 'body' is deprecated; use 'data' instead")
+            kwargs['data'] = kwargs.pop('body')
+        if 'data' in kwargs:
+            kwargs['data'] = jsonutils.dumps(kwargs['data'])
 
-        resp, body_iter = self._http_request(url, method, **kwargs)
+        resp = self._http_request(url, method, **kwargs)
+        body = resp.content
 
-        if 'application/json' in resp.getheader('content-type', None):
-            body = ''.join([chunk for chunk in body_iter])
+        if 'application/json' in resp.headers.get('content-type', None):
             try:
-                body = json.loads(body)
+                body = resp.json()
             except ValueError:
                 LOG.error('Could not decode response body as JSON')
         else:
@@ -281,12 +245,9 @@ class HTTPClient(object):
 
         return resp, body
 
-    def json_request(self, method, url, **kwargs):
-        return self.base_json_request(method, url, **kwargs)
-
     def json_patch_request(self, url, method='PATCH', **kwargs):
         content_type = 'application/murano-packages-json-patch'
-        return self.base_json_request(
+        return self.json_request(
             method, url, content_type=content_type, **kwargs)
 
     def raw_request(self, method, url, **kwargs):
@@ -294,238 +255,33 @@ class HTTPClient(object):
         kwargs['headers'].setdefault('Content-Type',
                                      'application/octet-stream')
         if 'body' in kwargs:
-            if (hasattr(kwargs['body'], 'read')
-                    and method.lower() in ('post', 'put')):
-                # We use 'Transfer-Encoding: chunked' because
-                # body size may not always be known in advance.
-                kwargs['headers']['Transfer-Encoding'] = 'chunked'
+            if 'data' in kwargs:
+                raise ValueError("Can't provide both 'data' and "
+                                 "'body' to a request")
+            LOG.warning("Use of 'body' is deprecated; use 'data' instead")
+            kwargs['data'] = kwargs.pop('body')
+        # Chunking happens automatically if 'body' is a
+        # file-like object
         return self._http_request(url, method, **kwargs)
 
-    def get_proxy_url(self):
-        scheme = parse.urlparse(self.endpoint).scheme
-        if scheme == 'https':
-            return (os.environ.get('HTTPS_PROXY') or
-                    os.environ.get('https_proxy'))
-        elif scheme == 'http':
-            return (os.environ.get('HTTP_PROXY') or
-                    os.environ.get('http_proxy'))
-        msg = 'Unsupported scheme: {0} ({1})'.format(scheme, self.endpoint)
-        raise exc.InvalidEndpoint(msg)
+    def client_request(self, method, url, **kwargs):
+        resp, body = self.json_request(method, url, **kwargs)
+        return resp
 
+    def head(self, url, **kwargs):
+        return self.client_request("HEAD", url, **kwargs)
 
-class OpenSSLConnectionDelegator(object):
-    """An OpenSSL.SSL.Connection delegator.
+    def get(self, url, **kwargs):
+        return self.client_request("GET", url, **kwargs)
 
-    Supplies an additional 'makefile' method which httplib requires
-    and is not present in OpenSSL.SSL.Connection.
+    def post(self, url, **kwargs):
+        return self.client_request("POST", url, **kwargs)
 
-    Note: Since it is not possible to inherit from OpenSSL.SSL.Connection
-    a delegator must be used.
-    """
-    def __init__(self, *args, **kwargs):
-        self.connection = Connection(*args, **kwargs)
+    def put(self, url, **kwargs):
+        return self.client_request("PUT", url, **kwargs)
 
-    def __getattr__(self, name):
-        return getattr(self.connection, name)
+    def delete(self, url, **kwargs):
+        return self.raw_request("DELETE", url, **kwargs)
 
-    def makefile(self, *args, **kwargs):
-        # Making sure socket is closed when this file is closed
-        # since we now avoid closing socket on connection close
-        # see new close method under VerifiedHTTPSConnection
-        kwargs['close'] = True
-
-        return socket._fileobject(self.connection, *args, **kwargs)
-
-
-class VerifiedHTTPSConnection(HTTPSConnection):
-    """Extended HTTPSConnection which uses the OpenSSL library
-    for enhanced SSL support.
-    Note: Much of this functionality can eventually be replaced
-          with native Python 3.3 code.
-    """
-    def __init__(self, host, port=None, key_file=None, cert_file=None,
-                 cacert=None, timeout=None, insecure=False,
-                 ssl_compression=True):
-        HTTPSConnection.__init__(self, host, port,
-                                 key_file=key_file,
-                                 cert_file=cert_file)
-        self.key_file = key_file
-        self.cert_file = cert_file
-        self.timeout = timeout
-        self.insecure = insecure
-        self.ssl_compression = ssl_compression
-        self.cacert = cacert
-        self.setcontext()
-
-    @staticmethod
-    def host_matches_cert(host, x509):
-        """Verify that the the x509 certificate we have received
-        from 'host' correctly identifies the server we are
-        connecting to, ie that the certificate's Common Name
-        or a Subject Alternative Name matches 'host'.
-        """
-        common_name = x509.get_subject().commonName
-
-        # First see if we can match the CN
-        if common_name == host:
-            return True
-
-        # Support single wildcard matching
-        if common_name.startswith('*.') and host.find('.') > 0:
-            if common_name[2:] == host.split('.', 1)[1]:
-                return True
-
-        # Also try Subject Alternative Names for a match
-        san_list = None
-        for i in xrange(x509.get_extension_count()):
-            ext = x509.get_extension(i)
-            if ext.get_short_name() == 'subjectAltName':
-                san_list = str(ext)
-                for san in ''.join(san_list.split()).split(','):
-                    if san == "DNS:%s" % host:
-                        return True
-
-        # Server certificate does not match host
-        msg = ('Host "%s" does not match x509 certificate contents: '
-               'CommonName "%s"' % (host, x509.get_subject().commonName))
-        if san_list is not None:
-            msg = msg + ', subjectAltName "%s"' % san_list
-        raise exc.SSLCertificateError(msg)
-
-    def verify_callback(self, connection, x509, errnum,
-                        depth, preverify_ok):
-        # NOTE(leaman): preverify_ok may be a non-boolean type
-        preverify_ok = bool(preverify_ok)
-        if x509.has_expired():
-            msg = "SSL Certificate expired on '%s'" % x509.get_notAfter()
-            raise exc.SSLCertificateError(msg)
-
-        if depth == 0 and preverify_ok:
-            # We verify that the host matches against the last
-            # certificate in the chain
-            return self.host_matches_cert(self.host, x509)
-        else:
-            # Pass through OpenSSL's default result
-            return preverify_ok
-
-    def setcontext(self):
-        """Set up the OpenSSL context."""
-        self.context = OpenSSL.SSL.Context(OpenSSL.SSL.SSLv23_METHOD)
-
-        if self.ssl_compression is False:
-            self.context.set_options(0x20000)  # SSL_OP_NO_COMPRESSION
-
-        if self.insecure is not True:
-            self.context.set_verify(OpenSSL.SSL.VERIFY_PEER,
-                                    self.verify_callback)
-        else:
-            self.context.set_verify(OpenSSL.SSL.VERIFY_NONE,
-                                    lambda *args: True)
-
-        if self.cert_file:
-            try:
-                self.context.use_certificate_file(self.cert_file)
-            except Exception as e:
-                msg = 'Unable to load cert from "%s" %s' % (self.cert_file, e)
-                raise exc.SSLConfigurationError(msg)
-            if self.key_file is None:
-                # We support having key and cert in same file
-                try:
-                    self.context.use_privatekey_file(self.cert_file)
-                except Exception as e:
-                    msg = ('No key file specified and unable to load key '
-                           'from "%s" %s' % (self.cert_file, e))
-                    raise exc.SSLConfigurationError(msg)
-
-        if self.key_file:
-            try:
-                self.context.use_privatekey_file(self.key_file)
-            except Exception as e:
-                msg = 'Unable to load key from "%s" %s' % (self.key_file, e)
-                raise exc.SSLConfigurationError(msg)
-
-        if self.cacert:
-            try:
-                self.context.load_verify_locations(self.cacert)
-            except Exception as e:
-                msg = 'Unable to load CA from "%s"' % (self.cacert, e)
-                raise exc.SSLConfigurationError(msg)
-        else:
-            self.context.set_default_verify_paths()
-
-    def connect(self):
-        """Connect to an SSL port using the OpenSSL library and apply
-        per-connection parameters.
-        """
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if self.timeout is not None:
-            # '0' microseconds
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVTIMEO,
-                            struct.pack('fL', self.timeout, 0))
-        self.sock = OpenSSLConnectionDelegator(self.context, sock)
-        self.sock.connect((self.host, self.port))
-
-    def close(self):
-        if self.sock:
-            # Removing reference to socket but don't close it yet.
-            # Response close will close both socket and associated
-            # file. Closing socket too soon will cause response
-            # reads to fail with socket IO error 'Bad file descriptor'.
-            self.sock = None
-
-        # Calling close on HTTPConnection to continue doing that cleanup.
-        HTTPSConnection.close(self)
-
-
-class ResponseBodyIterator(object):
-    """A class that acts as an iterator over an HTTP response.
-
-    This class will also check response body integrity when iterating over
-    the instance and if a checksum was supplied using `set_checksum` method,
-    else by default the class will not do any integrity check.
-    """
-
-    def __init__(self, resp):
-        self._resp = resp
-        self._checksum = None
-        self._size = int(resp.getheader('content-length', 0))
-        self._end_reached = False
-
-    def set_checksum(self, checksum):
-        """Set checksum to check against when iterating over this instance.
-
-        :raise: AttributeError if iterator is already consumed.
-        """
-        if self._end_reached:
-            raise AttributeError("Can't set checksum for an already consumed"
-                                 " iterator")
-        self._checksum = checksum
-
-    def __len__(self):
-        return int(self._size)
-
-    def __iter__(self):
-        md5sum = hashlib.md5()
-        while True:
-            try:
-                chunk = self.next()
-            except StopIteration:
-                self._end_reached = True
-                # NOTE(mouad): Check image integrity when the end of response
-                # body is reached.
-                md5sum = md5sum.hexdigest()
-                if self._checksum is not None and md5sum != self._checksum:
-                    raise IOError(errno.EPIPE,
-                                  'Corrupted image. Checksum was %s '
-                                  'expected %s' % (md5sum, self._checksum))
-                raise
-            else:
-                yield chunk
-                md5sum.update(chunk)
-
-    def next(self):
-        chunk = self._resp.read(CHUNKSIZE)
-        if chunk:
-            return chunk
-        else:
-            raise StopIteration()
+    def patch(self, url, **kwargs):
+        return self.client_request("PATCH", url, **kwargs)

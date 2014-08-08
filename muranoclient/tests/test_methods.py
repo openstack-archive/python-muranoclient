@@ -51,13 +51,13 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         manager = environments.EnvironmentManager(api)
         result = manager.create({'name': 'test'})
 
-        self.assertEqual({'name': 'test'}, result.body)
+        self.assertEqual({'name': 'test'}, result.data)
 
     def test_env_manager_create_with_named_parameters(self):
         manager = environments.EnvironmentManager(api)
-        result = manager.create(body={'name': 'test'})
+        result = manager.create(data={'name': 'test'})
 
-        self.assertEqual({'name': 'test'}, result.body)
+        self.assertEqual({'name': 'test'}, result.data)
 
     def test_env_manager_create_negative_without_parameters(self):
 
@@ -87,14 +87,14 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         manager = environments.EnvironmentManager(api)
         result = manager.update('1', 'test')
 
-        self.assertEqual({'name': 'test'}, result.body)
+        self.assertEqual({'name': 'test'}, result.data)
 
     def test_env_manager_update_with_named_parameters(self):
         manager = environments.EnvironmentManager(api)
         result = manager.update(environment_id='1',
                                 name='test')
 
-        self.assertEqual({'name': 'test'}, result.body)
+        self.assertEqual({'name': 'test'}, result.data)
 
     def test_env_manager_update_negative_with_one_parameter(self):
 

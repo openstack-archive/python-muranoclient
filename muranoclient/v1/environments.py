@@ -37,12 +37,12 @@ class EnvironmentManager(base.Manager):
     def list(self):
         return self._list('/v1/environments', 'environments')
 
-    def create(self, body):
-        return self._create('/v1/environments', body)
+    def create(self, data):
+        return self._create('/v1/environments', data)
 
     def update(self, environment_id, name):
         return self._update('/v1/environments/{id}'.format(id=environment_id),
-                            body={'name': name})
+                            data={'name': name})
 
     def delete(self, environment_id):
         return self._delete('/v1/environments/{id}'.format(id=environment_id))

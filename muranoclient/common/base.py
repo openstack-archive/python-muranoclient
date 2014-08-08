@@ -48,7 +48,7 @@ class Manager(object):
         self.api = api
 
     def _list(self, url, response_key=None, obj_class=None,
-              body=None, headers={}):
+              data=None, headers={}):
 
         resp, body = self.api.json_request('GET', url, headers=headers)
 
@@ -66,8 +66,8 @@ class Manager(object):
     def _delete(self, url, headers={}):
         self.api.raw_request('DELETE', url, headers=headers)
 
-    def _update(self, url, body, response_key=None, headers={}):
-        resp, body = self.api.json_request('PUT', url, body=body,
+    def _update(self, url, data, response_key=None, headers={}):
+        resp, body = self.api.json_request('PUT', url, data=data,
                                            headers=headers)
         # PUT requests may not return a body
         if body:
@@ -75,12 +75,11 @@ class Manager(object):
                 return self.resource_class(self, body[response_key])
             return self.resource_class(self, body)
 
-    def _create(self, url, body=None, response_key=None,
+    def _create(self, url, data=None, response_key=None,
                 return_raw=False, headers={}):
-
-        if body:
+        if data:
             resp, body = self.api.json_request('POST', url,
-                                               body=body, headers=headers)
+                                               data=data, headers=headers)
         else:
             resp, body = self.api.json_request('POST', url, headers=headers)
         if return_raw:
@@ -130,7 +129,6 @@ class Resource(object):
             if not self.is_loaded():
                 self.get()
                 return self.__getattr__(k)
-
             raise AttributeError(k)
         else:
             return self.__dict__[k]
