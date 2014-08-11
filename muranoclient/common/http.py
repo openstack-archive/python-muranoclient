@@ -19,7 +19,6 @@ import os
 import socket
 
 import requests
-import six
 from six.moves.urllib import parse
 
 from muranoclient.common import exceptions as exc
@@ -112,11 +111,6 @@ class HTTPClient(object):
         dump = ['\nHTTP/%.1f %s %s' % status]
         dump.extend(['%s: %s' % (k, v) for k, v in resp.headers.items()])
         dump.append('')
-        if resp.content:
-            content = resp.content
-            if isinstance(content, six.binary_type):
-                content = content.decode()
-            dump.extend([content, ''])
         LOG.debug('\n'.join(dump))
 
     def _http_request(self, url, method, **kwargs):

@@ -111,9 +111,9 @@ class PackageManager(base.Manager):
 
     def download(self, app_id):
         url = '/v1/catalog/packages/{0}/download'.format(app_id)
-        response, iterator = self.api.raw_request('GET', url)
-        if response.status == 200:
-            return ''.join(iterator)
+        response = self.api.raw_request('GET', url)
+        if response.status_code == 200:
+            return response.content
         else:
             raise exceptions.from_response(response)
 
@@ -135,24 +135,24 @@ class PackageManager(base.Manager):
             loader_cls = yaml.Loader
 
         url = '/v1/catalog/packages/{0}/ui'.format(app_id)
-        response, iterator = self.api.raw_request('GET', url)
-        if response.status == 200:
-            return yaml.load(''.join(iterator), loader_cls)
+        response = self.api.raw_request('GET', url)
+        if response.status_code == 200:
+            return yaml.load(response.content, loader_cls)
         else:
             raise exceptions.from_response(response)
 
     def get_logo(self, app_id):
         url = '/v1/catalog/packages/{0}/logo'.format(app_id)
-        response, iterator = self.api.raw_request('GET', url)
-        if response.status == 200:
-            return ''.join(iterator)
+        response = self.api.raw_request('GET', url)
+        if response.status_code == 200:
+            return response.content
         else:
             raise exceptions.from_response(response)
 
     def get_supplier_logo(self, app_id):
         url = '/v1/catalog/packages/{0}/supplier_logo'.format(app_id)
-        response, iterator = self.api.raw_request('GET', url)
-        if response.status == 200:
-            return ''.join(iterator)
+        response = self.api.raw_request('GET', url)
+        if response.status_code == 200:
+            return response.content
         else:
             raise exceptions.from_response(response)
