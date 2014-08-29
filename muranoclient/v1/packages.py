@@ -20,6 +20,7 @@ import yaml
 
 from muranoclient.common import base
 from muranoclient.common import exceptions
+from muranoclient.common import http
 
 
 DEFAULT_PAGE_SIZE = 20
@@ -56,6 +57,7 @@ class PackageManager(base.Manager):
         url = '{0}/v1/catalog/packages'.format(self.api.endpoint)
         headers = {'X-Auth-Token': self.api.auth_token}
         response = requests.post(url, data=data, files=files, headers=headers)
+        http.HTTPClient.log_http_response(response)
         if not response.ok:
             setattr(response, 'status', response.status_code)
             raise exceptions.from_response(response)
