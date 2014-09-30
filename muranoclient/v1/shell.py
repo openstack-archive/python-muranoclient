@@ -40,14 +40,15 @@ def do_environment_create(mc, args):
     do_environment_list(mc)
 
 
-@utils.arg("id", metavar="<ID>",
-           nargs="+", help="Id of environment(s) to delete")
+@utils.arg("id", metavar="<NAME or ID>",
+           nargs="+", help="Id or name of environment(s) to delete")
 def do_environment_delete(mc, args):
     """Delete an environment."""
     failure_count = 0
     for environment_id in args.id:
         try:
-            mc.environments.delete(environment_id)
+            environment = utils.find_resource(mc.environments, environment_id)
+            mc.environments.delete(environment.id)
         except exceptions.NotFound:
             failure_count += 1
             print("Failed to delete '{0}'; environment not found".
@@ -58,26 +59,27 @@ def do_environment_delete(mc, args):
     do_environment_list(mc)
 
 
-@utils.arg("id", metavar="<ID>",
-           help="Environment id")
+@utils.arg("id", metavar="<NAME or ID>",
+           help="Environment id or name")
 @utils.arg("name", metavar="<ENVIRONMENT_NAME>",
            help="Name to which the environment will be renamed")
 def do_environment_rename(mc, args):
     """Rename an environment."""
     try:
-        mc.environments.update(args.id, args.name)
+        environment = utils.find_resource(mc.environments, args.id)
+        mc.environments.update(environment.id, args.name)
     except exceptions.NotFound:
         raise exceptions.CommandError("Environment %s not found" % args.id)
     else:
         do_environment_list(mc)
 
 
-@utils.arg("id", metavar="<ID>",
-           help="Environment id")
+@utils.arg("id", metavar="<NAME or ID>",
+           help="Environment id or name")
 def do_environment_show(mc, args):
     """Display environment details."""
     try:
-        environment = mc.environments.get(args.id)
+        environment = utils.find_resource(mc.environments, args.id)
     except exceptions.NotFound:
         raise exceptions.CommandError("Environment %s not found" % args.id)
     else:
@@ -92,12 +94,13 @@ def do_environment_show(mc, args):
         utils.print_dict(environment.to_dict(), formatters=formatters)
 
 
-@utils.arg("id", metavar="<ID>",
-           help="Environment id for which to list deployments")
+@utils.arg("id", metavar="<NAME or ID>",
+           help="Environment id or name for which to list deployments")
 def do_deployment_list(mc, args):
     """List deployments for an environment."""
     try:
-        deployments = mc.deployments.list(args.id)
+        environment = utils.find_resource(mc.environments, args.id)
+        deployments = mc.deployments.list(environment.id)
     except exceptions.NotFound:
         raise exceptions.CommandError("Environment %s not found" % args.id)
     else:

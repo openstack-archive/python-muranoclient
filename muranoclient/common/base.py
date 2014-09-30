@@ -17,7 +17,12 @@
 Base utilities to build API operation managers and objects on top of.
 """
 
+import abc
 import copy
+
+import six
+
+from muranoclient.openstack.common.apiclient import exceptions
 
 
 # Python 2.4 compat
@@ -99,6 +104,51 @@ class Manager(object):
         if response_key:
             return self.resource_class(self, body[response_key])
         return self.resource_class(self, body)
+
+
+@six.add_metaclass(abc.ABCMeta)
+class ManagerWithFind(Manager):
+    """Manager with additional `find()`/`findall()` methods."""
+
+    @abc.abstractmethod
+    def list(self):
+        pass
+
+    def find(self, **kwargs):
+        """Find a single item with attributes matching ``**kwargs``.
+
+        This isn't very efficient: it loads the entire list then filters on
+        the Python side.
+        """
+        rl = self.findall(**kwargs)
+        num = len(rl)
+
+        if num == 0:
+            msg = "No %s matching %s." % (self.resource_class.__name__, kwargs)
+            raise exceptions.NotFound(msg)
+        elif num > 1:
+            raise exceptions.NoUniqueMatch
+        else:
+            return rl[0]
+
+    def findall(self, **kwargs):
+        """Find all items with attributes matching ``**kwargs``.
+
+        This isn't very efficient: it loads the entire list then filters on
+        the Python side.
+        """
+        found = []
+        searches = kwargs.items()
+
+        for obj in self.list():
+            try:
+                if all(getattr(obj, attr) == value
+                       for (attr, value) in searches):
+                    found.append(obj)
+            except AttributeError:
+                continue
+
+        return found
 
 
 class Resource(object):

@@ -31,7 +31,7 @@ class Status(base.Resource):
         return self.manager.data(self, **kwargs)
 
 
-class EnvironmentManager(base.Manager):
+class EnvironmentManager(base.ManagerWithFind):
     resource_class = Environment
 
     def list(self):
