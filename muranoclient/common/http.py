@@ -175,7 +175,9 @@ class HTTPClient(object):
             message = ("Error finding address for %(url)s: %(e)s" %
                        {'url': self.endpoint_url + url, 'e': e})
             raise exc.InvalidEndpoint(message=message)
-        except (socket.error, socket.timeout) as e:
+        except (socket.error,
+                socket.timeout,
+                requests.exceptions.ConnectionError) as e:
             endpoint = self.endpoint
             message = ("Error communicating with %(endpoint)s %(e)s" %
                        {'endpoint': endpoint, 'e': e})
