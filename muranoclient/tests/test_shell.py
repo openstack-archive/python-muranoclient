@@ -18,7 +18,11 @@ import sys
 import tempfile
 
 import fixtures
+from keystoneclient import fixture
+from keystoneclient.fixture import v2 as ks_v2_fixture
+from keystoneclient.fixture import v3 as ks_v3_fixture
 import mock
+import requests_mock
 import six
 from testtools import matchers
 
@@ -34,12 +38,22 @@ FIXTURE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
 FAKE_ENV = {'OS_USERNAME': 'username',
             'OS_PASSWORD': 'password',
             'OS_TENANT_NAME': 'tenant_name',
-            'OS_AUTH_URL': 'http://no.where'}
+            'OS_AUTH_URL': 'http://no.where/v2.0'}
 
 FAKE_ENV2 = {'OS_USERNAME': 'username',
              'OS_PASSWORD': 'password',
              'OS_TENANT_ID': 'tenant_id',
-             'OS_AUTH_URL': 'http://no.where'}
+             'OS_AUTH_URL': 'http://no.where/v2.0'}
+
+FAKE_ENV_v3 = {'OS_USERNAME': 'username',
+               'OS_PASSWORD': 'password',
+               'OS_TENANT_ID': 'tenant_id',
+               'OS_USER_DOMAIN_NAME': 'domain_name',
+               'OS_AUTH_URL': 'http://no.where/3'}
+
+
+def _create_ver_list(versions):
+    return {'versions': {'values': versions}}
 
 
 class TestArgs(object):
@@ -52,18 +66,24 @@ class ShellTest(base.TestCaseShell):
         env = dict((k, v) for k, v in fake_env.items() if k != exclude)
         self.useFixture(fixtures.MonkeyPatch('os.environ', env))
 
-    def setUp(self):
-        super(ShellTest, self).setUp()
-        self.useFixture(fixtures.MonkeyPatch(
-            'keystoneclient.v2_0.client.Client', mock.MagicMock))
-        self.client = mock.MagicMock()
 
-        # We don't set an endpoint (client.service_catalog.url_for is a mock)
-        # and get_proxy_url doesn't like that. We don't care about testing
-        # that functionality, so mock it out.
+class ShellCommandTest(ShellTest):
+
+    _msg_no_tenant_project = ('You must provide a project name or project'
+                              ' id via --os-project-name, --os-project-id,'
+                              ' env[OS_PROJECT_ID] or env[OS_PROJECT_NAME].'
+                              ' You may use os-project and os-tenant'
+                              ' interchangeably.',)
+
+    def setUp(self):
+        super(ShellCommandTest, self).setUp()
+
+        def get_auth_endpoint(bound_self, args):
+            return ('test', {})
         self.useFixture(fixtures.MonkeyPatch(
-            'muranoclient.common.http.HTTPClient.get_proxy_url',
-            mock.MagicMock))
+            'muranoclient.shell.MuranoShell._get_endpoint_and_kwargs',
+            get_auth_endpoint))
+        self.client = mock.MagicMock()
 
     def shell(self, argstr, exitcodes=(0,)):
         orig = sys.stdout
@@ -84,6 +104,21 @@ class ShellTest(base.TestCaseShell):
             sys.stderr.close()
             sys.stderr = orig_stderr
         return (stdout, stderr)
+
+    def register_keystone_discovery_fixture(self, mreq):
+        v2_url = "http://no.where/v2.0"
+        v2_version = fixture.V2Discovery(v2_url)
+        mreq.register_uri('GET', v2_url, json=_create_ver_list([v2_version]),
+                          status_code=200)
+
+    def register_keystone_token_fixture(self, mreq):
+        v2_token = ks_v2_fixture.Token(token_id='token')
+        service = v2_token.add_service('application_catalog')
+        service.add_endpoint('http://no.where', region='RegionOne')
+        mreq.register_uri('POST',
+                          'http://no.where/v2.0/tokens',
+                          json=v2_token,
+                          status_code=200)
 
     def test_help_unknown_command(self):
         self.assertRaises(exceptions.CommandError, self.shell, 'help foofoo')
@@ -133,10 +168,7 @@ class ShellTest(base.TestCaseShell):
             self.fail('CommandError not raised')
 
     def test_no_tenant_name(self):
-        required = ('You must provide a tenant name '
-                    'or tenant id via --os-tenant-name, '
-                    '--os-tenant-id, env[OS_TENANT_NAME] '
-                    'or env[OS_TENANT_ID]',)
+        required = self._msg_no_tenant_project
         self.make_env(exclude='OS_TENANT_NAME')
         try:
             self.shell('package-list')
@@ -146,10 +178,7 @@ class ShellTest(base.TestCaseShell):
             self.fail('CommandError not raised')
 
     def test_no_tenant_id(self):
-        required = ('You must provide a tenant name '
-                    'or tenant id via --os-tenant-name, '
-                    '--os-tenant-id, env[OS_TENANT_NAME] '
-                    'or env[OS_TENANT_ID]',)
+        required = self._msg_no_tenant_project
         self.make_env(exclude='OS_TENANT_ID', fake_env=FAKE_ENV2)
         try:
             self.shell('package-list')
@@ -170,15 +199,19 @@ class ShellTest(base.TestCaseShell):
             self.fail('CommandError not raised')
 
     @mock.patch('muranoclient.v1.packages.PackageManager')
-    def test_package_list(self, mock_package_manager):
+    @requests_mock.Mocker()
+    def test_package_list(self, mock_package_manager, m_requests):
         self.client.packages = mock_package_manager()
         self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
         self.shell('package-list')
         self.client.packages.filter.assert_called_once_with(
             include_disabled=False)
 
     @mock.patch('muranoclient.v1.packages.PackageManager')
-    def test_package_show(self, mock_package_manager):
+    @requests_mock.Mocker()
+    def test_package_show(self, mock_package_manager, m_requests):
         self.client.packages = mock_package_manager()
         mock_package = mock.MagicMock()
         mock_package.class_definitions = ''
@@ -187,57 +220,77 @@ class ShellTest(base.TestCaseShell):
         mock_package.description = ''
         self.client.packages.get.return_value = mock_package
         self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
         self.shell('package-show 1234')
         self.client.packages.get.assert_called_once_with('1234')
 
     @mock.patch('muranoclient.v1.packages.PackageManager')
-    def test_package_delete(self, mock_package_manager):
+    @requests_mock.Mocker()
+    def test_package_delete(self, mock_package_manager, m_requests):
         self.client.packages = mock_package_manager()
         self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
         self.shell('package-delete 1234')
         self.client.packages.delete.assert_called_once_with('1234')
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
-    def test_environment_delete(self, mock_manager):
+    @requests_mock.Mocker()
+    def test_environment_delete(self, mock_manager, m_requests):
         self.client.environments = mock_manager()
         self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
         self.shell('environment-delete env1 env2')
         self.client.environments.delete.assert_has_calls([
             mock.call('env1'), mock.call('env2')])
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
-    def test_environment_rename(self, mock_manager):
+    @requests_mock.Mocker()
+    def test_environment_rename(self, mock_manager, m_requests):
         self.client.environments = mock_manager()
         self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
         self.shell('environment-rename env-id new-name')
         self.client.environments.update.assert_called_once_with(
             'env-id', 'new-name')
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
-    def test_environment_show(self, mock_manager):
+    @requests_mock.Mocker()
+    def test_environment_show(self, mock_manager, m_requests):
         self.client.environments = mock_manager()
         self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
         self.shell('environment-show env-id')
         self.client.environments.get.assert_called_once_with('env-id')
 
     @mock.patch('muranoclient.v1.deployments.DeploymentManager')
-    def test_deployments_show(self, mock_manager):
+    @requests_mock.Mocker()
+    def test_deployments_show(self, mock_manager, m_requests):
         self.client.deployments = mock_manager()
         self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
         self.shell('deployment-list env-id')
         self.client.deployments.list.assert_called_once_with('env-id')
 
 
-class ShellPackagesOperations(ShellTest):
+class ShellPackagesOperations(ShellCommandTest):
     def tearDown(self):
         super(ShellPackagesOperations, self).tearDown()
 
-    def test_create_hot_based_package(self):
+    @requests_mock.Mocker()
+    def test_create_hot_based_package(self, m_requests):
         self.useFixture(fixtures.MonkeyPatch(
             'muranoclient.v1.client.Client', mock.MagicMock))
         heat_template = os.path.join(FIXTURE_DIR, 'heat-template.yaml')
         logo = os.path.join(FIXTURE_DIR, 'logo.png')
         self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
         with tempfile.NamedTemporaryFile() as f:
             RESULT_PACKAGE = f.name
             c = "package-create --template={0} --output={1} -l={2}".format(
@@ -247,13 +300,16 @@ class ShellPackagesOperations(ShellTest):
                                   "Application package "
                                   "is available at {0}".format(RESULT_PACKAGE))
 
-    def test_create_mpl_package(self):
+    @requests_mock.Mocker()
+    def test_create_mpl_package(self, m_requests):
         self.useFixture(fixtures.MonkeyPatch(
             'muranoclient.v1.client.Client', mock.MagicMock))
         classes_dir = os.path.join(FIXTURE_DIR, 'test-app', 'Classes')
         resources_dir = os.path.join(FIXTURE_DIR, 'test-app', 'Resources')
         ui = os.path.join(FIXTURE_DIR, 'test-app', 'ui.yaml')
         self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
         with tempfile.NamedTemporaryFile() as f:
             RESULT_PACKAGE = f.name
             stdout, stderr = self.shell(
@@ -299,3 +355,27 @@ class ShellPackagesOperations(ShellTest):
 
         self.assertRaises(IOError,
                           v1_shell.do_package_import, self.client, args)
+
+
+class ShellPackagesOperationsV3(ShellPackagesOperations):
+    def make_env(self, exclude=None, fake_env=FAKE_ENV):
+        if 'OS_AUTH_URL' in fake_env:
+            fake_env.update({'OS_AUTH_URL': 'http://no.where/v3'})
+        env = dict((k, v) for k, v in fake_env.items() if k != exclude)
+        self.useFixture(fixtures.MonkeyPatch('os.environ', env))
+
+    def register_keystone_discovery_fixture(self, mreq):
+        v3_url = "http://no.where/v3"
+        v3_version = fixture.V3Discovery(v3_url)
+        mreq.register_uri('GET', v3_url, json=_create_ver_list([v3_version]),
+                          status_code=200)
+
+    def register_keystone_token_fixture(self, mreq):
+        v3_token = ks_v3_fixture.Token()
+        service = v3_token.add_service('application_catalog')
+        service.add_standard_endpoints(public='http://no.where')
+        mreq.register_uri('POST',
+                          'http://no.where/v3/auth/tokens',
+                          json=v3_token,
+                          headers={'X-Subject-Token': 'tokenid'},
+                          status_code=200)

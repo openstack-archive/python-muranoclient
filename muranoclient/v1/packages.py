@@ -12,16 +12,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
 import urllib
 
-import requests
 import yaml
 
 from muranoclient.common import base
 from muranoclient.common import exceptions
-from muranoclient.common import http
-
+from muranoclient.openstack.common import jsonutils
 
 DEFAULT_PAGE_SIZE = 20
 
@@ -53,15 +50,16 @@ class PackageManager(base.Manager):
                           response_key='categories', obj_class=Category)
 
     def create(self, data, files):
-        data = {'data': json.dumps(data)}
-        url = '{0}/v1/catalog/packages'.format(self.api.endpoint)
-        headers = {'X-Auth-Token': self.api.auth_token}
-        response = requests.post(url, data=data, files=files, headers=headers)
-        http.HTTPClient.log_http_response(response)
+        response, body = self.api.raw_request(
+            'POST',
+            '/v1/catalog/packages',
+            body=data,
+            files=files)
         if not response.ok:
             setattr(response, 'status', response.status_code)
             raise exceptions.from_response(response)
-        return self.resource_class(self, json.loads(response.content))
+        body = jsonutils.loads(response.text)
+        return self.resource_class(self, body)
 
     def get(self, app_id):
         return self._get('/v1/catalog/packages/{0}'.format(app_id))
