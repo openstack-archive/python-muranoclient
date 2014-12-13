@@ -23,7 +23,7 @@ from muranoclient.v1 import services
 from muranoclient.v1 import sessions
 
 
-class Client(object):
+class Client(http.HTTPClient):
     """Client for the Murano v1 API.
 
     :param string endpoint: A user-supplied endpoint URL for the service.
@@ -34,14 +34,14 @@ class Client(object):
 
     def __init__(self, *args, **kwargs):
         """Initialize a new client for the Murano v1 API."""
-        self.http_client = http._construct_http_client(*args, **kwargs)
-        self.environments = environments.EnvironmentManager(self.http_client)
-        self.sessions = sessions.SessionManager(self.http_client)
-        self.services = services.ServiceManager(self.http_client)
-        self.deployments = deployments.DeploymentManager(self.http_client)
+        super(Client, self).__init__(*args, **kwargs)
+        self.environments = environments.EnvironmentManager(self)
+        self.sessions = sessions.SessionManager(self)
+        self.services = services.ServiceManager(self)
+        self.deployments = deployments.DeploymentManager(self)
         self.request_statistics = \
-            request_statistics.RequestStatisticsManager(self.http_client)
+            request_statistics.RequestStatisticsManager(self)
         self.instance_statistics = \
-            instance_statistics.InstanceStatisticsManager(self.http_client)
-        self.packages = packages.PackageManager(self.http_client)
-        self.actions = actions.ActionManager(self.http_client)
+            instance_statistics.InstanceStatisticsManager(self)
+        self.packages = packages.PackageManager(self)
+        self.actions = actions.ActionManager(self)
