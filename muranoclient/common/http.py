@@ -18,7 +18,6 @@ import logging
 import os
 import socket
 
-import keystoneclient.adapter as keystone_adapter
 import requests
 import six
 from six.moves.urllib import parse
@@ -292,79 +291,3 @@ class HTTPClient(object):
 
     def patch(self, url, **kwargs):
         return self.client_request("PATCH", url, **kwargs)
-
-
-class SessionClient(keystone_adapter.LegacyJsonAdapter):
-
-    def request(self, url, method, **kwargs):
-        raise_exc = kwargs.pop('raise_exc', True)
-        resp, body = super(SessionClient, self).request(url,
-                                                        method,
-                                                        raise_exc=False,
-                                                        **kwargs)
-
-        if raise_exc and resp.status_code >= 400:
-            raise exc.from_response(resp)
-
-        return resp, body
-
-    def json_request(self, method, url, **kwargs):
-        # Legacy adapter expects the payload in 'body', but
-        # will pass it to the non-legacy adapter in the
-        # 'json' spot so encoding happens later
-        if 'data' in kwargs:
-            if 'body' in kwargs:
-                raise ValueError("Can't provide both 'data' and "
-                                 "'body' to a request")
-            kwargs['body'] = kwargs.pop('data')
-
-        # The argument order is different, beware
-        return self.request(url, method, **kwargs)
-
-    def json_patch_request(self, url, method='PATCH', **kwargs):
-        content_type = 'application/murano-packages-json-patch'
-        return self.json_request(
-            method, url, content_type=content_type, **kwargs)
-
-    def raw_request(self, method, url, **kwargs):
-        # A non-json request; instead of calling
-        # super.request, need to call the grandparent
-        # adapter.request
-        raise_exc = kwargs.pop('raise_exc', True)
-        if 'body' in kwargs:
-            if 'data' in kwargs:
-                raise ValueError("Can't provide both 'data' and "
-                                 "'body' to a request")
-            kwargs['data'] = kwargs.pop('body')
-        resp = keystone_adapter.Adapter.request(self,
-                                                url,
-                                                method,
-                                                raise_exc=False,
-                                                **kwargs)
-        body = resp.text
-
-        if raise_exc and resp.status_code >= 400:
-            raise exc.from_response(resp)
-
-        return resp, body
-
-
-def _construct_http_client(*args, **kwargs):
-    session = kwargs.pop('session', None)
-    auth = kwargs.pop('auth', None)
-
-    if session:
-        service_type = kwargs.pop('service_type', None)
-        endpoint_type = kwargs.pop('endpoint_type', None)
-        region_name = kwargs.pop('region_name', None)
-        service_name = kwargs.pop('service_name', None)
-        return SessionClient(session=session,
-                             auth=auth,
-                             interface=endpoint_type,
-                             service_type=service_type,
-                             region_name=region_name,
-                             service_name=service_name,
-                             user_agent='python-muranoclient',
-                             **kwargs)
-    else:
-        return HTTPClient(*args, **kwargs)
