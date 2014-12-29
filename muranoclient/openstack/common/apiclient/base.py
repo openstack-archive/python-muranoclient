@@ -26,13 +26,13 @@ Base utilities to build API operation managers and objects on top of.
 import abc
 import copy
 
+from oslo.utils import strutils
+from oslo.utils import uuidutils
 import six
 from six.moves.urllib import parse
 
 from muranoclient.openstack.common.apiclient import exceptions
 from muranoclient.openstack.common.gettextutils import _
-from muranoclient.openstack.common import strutils
-from muranoclient.openstack.common import uuidutils
 
 
 def getid(obj):

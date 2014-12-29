@@ -23,12 +23,12 @@ import logging
 import sys
 
 from keystoneclient.v2_0 import client as ksclient
+from oslo.utils import encodeutils
 import six
 
 from muranoclient import client as apiclient
 from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions as exc
-from muranoclient.openstack.common import strutils
 
 
 logger = logging.getLogger(__name__)
@@ -394,7 +394,7 @@ def main(args=None):
         if '--debug' in args or '-d' in args:
             raise
         else:
-            print(strutils.safe_encode(six.text_type(e)), file=sys.stderr)
+            print(encodeutils.safe_encode(six.text_type(e)), file=sys.stderr)
         sys.exit(1)
 
 

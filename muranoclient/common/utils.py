@@ -22,6 +22,9 @@ import textwrap
 import types
 import uuid
 
+from oslo.serialization import jsonutils
+from oslo.utils import encodeutils
+from oslo.utils import importutils
 import prettytable
 import six
 import yaml
@@ -29,9 +32,6 @@ import yaql
 import yaql.exceptions
 
 from muranoclient.common import exceptions
-from muranoclient.openstack.common import importutils
-from muranoclient.openstack.common import jsonutils
-from muranoclient.openstack.common import strutils
 
 
 # Decorator for cli-args
@@ -69,7 +69,7 @@ def print_list(objs, fields, field_labels, formatters={}, sortby=0):
                 data = getattr(o, field, None) or ''
                 row.append(data)
         pt.add_row(row)
-    print(strutils.safe_encode(pt.get_string()))
+    print(encodeutils.safe_encode(pt.get_string()))
 
 
 def print_dict(d, formatters={}):
@@ -81,7 +81,7 @@ def print_dict(d, formatters={}):
             pt.add_row([field, formatters[field](d[field])])
         else:
             pt.add_row([field, d[field]])
-    print(strutils.safe_encode(pt.get_string(sortby='Property')))
+    print(encodeutils.safe_encode(pt.get_string(sortby='Property')))
 
 
 def find_resource(manager, name_or_id):
@@ -135,7 +135,7 @@ def import_versioned_module(version, submodule=None):
 
 def exit(msg=''):
     if msg:
-        print(strutils.safe_encode(msg), file=sys.stderr)
+        print(encodeutils.safe_encode(msg), file=sys.stderr)
     sys.exit(1)
 
 
@@ -160,7 +160,7 @@ def exception_to_str(exc):
         except UnicodeError:
             error = ("Caught '%(exception)s' exception." %
                      {"exception": exc.__class__.__name__})
-    return strutils.safe_encode(error, errors='ignore')
+    return encodeutils.safe_encode(error, errors='ignore')
 
 
 class YaqlExpression(object):

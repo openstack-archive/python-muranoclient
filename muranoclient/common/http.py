@@ -18,13 +18,13 @@ import logging
 import os
 import socket
 
+from oslo.serialization import jsonutils
+from oslo.utils import encodeutils
 import requests
 import six
 from six.moves.urllib import parse
 
 from muranoclient.common import exceptions as exc
-from muranoclient.openstack.common import jsonutils
-from muranoclient.openstack.common import strutils
 
 LOG = logging.getLogger(__name__)
 USER_AGENT = 'python-muranoclient'
@@ -83,8 +83,8 @@ class HTTPClient(object):
         curl = ['curl -i -X %s' % method]
 
         for (key, value) in kwargs['headers'].items():
-            header = '-H \'%s: %s\'' % (strutils.safe_decode(key),
-                                        strutils.safe_decode(value))
+            header = '-H \'%s: %s\'' % (encodeutils.safe_decode(key),
+                                        encodeutils.safe_decode(value))
             curl.append(header)
 
         conn_params_fmt = [
@@ -116,7 +116,7 @@ class HTTPClient(object):
             content = resp.content
             if isinstance(content, six.binary_type):
                 try:
-                    content = strutils.safe_decode(resp.content)
+                    content = encodeutils.safe_decode(resp.content)
                 except UnicodeDecodeError:
                     pass
                 else:

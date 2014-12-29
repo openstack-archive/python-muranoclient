@@ -35,9 +35,10 @@ except ImportError:
 
 import requests
 
+from oslo.utils import importutils
+
 from muranoclient.openstack.common.apiclient import exceptions
 from muranoclient.openstack.common.gettextutils import _
-from muranoclient.openstack.common import importutils
 
 
 _logger = logging.getLogger(__name__)

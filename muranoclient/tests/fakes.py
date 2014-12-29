@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from muranoclient.openstack.common import jsonutils
+from oslo.serialization import jsonutils
 
 
 class FakeHTTPResponse():
