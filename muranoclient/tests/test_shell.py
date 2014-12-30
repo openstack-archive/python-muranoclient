@@ -269,11 +269,12 @@ class ShellPackagesOperations(ShellTest):
             RESULT_PACKAGE = f.name
             args.filename = RESULT_PACKAGE
             args.categories = ['Cat1', 'Cat2 with space']
+            args.is_public = True
 
             v1_shell.do_package_import(self.client, args)
 
             self.client.packages.create.assert_called_once_with(
-                {'categories': ['Cat1', 'Cat2 with space']},
+                {'categories': ['Cat1', 'Cat2 with space'], 'is_public': True},
                 ((RESULT_PACKAGE, mock.ANY),)
             )
 
@@ -284,11 +285,12 @@ class ShellPackagesOperations(ShellTest):
 
             args.filename = RESULT_PACKAGE
             args.categories = None
+            args.is_public = False
 
             v1_shell.do_package_import(self.client, args)
 
             self.client.packages.create.assert_called_once_with(
-                None,
+                {'is_public': False},
                 ((RESULT_PACKAGE, mock.ANY),)
             )
 
@@ -296,6 +298,7 @@ class ShellPackagesOperations(ShellTest):
         args = TestArgs()
         args.filename = '/home/this/path/does/not/exist'
         args.categories = None
+        args.is_public = False
 
         self.assertRaises(IOError,
                           v1_shell.do_package_import, self.client, args)

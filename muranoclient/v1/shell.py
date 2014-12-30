@@ -191,14 +191,18 @@ def do_package_delete(mc, args):
 @utils.arg('filename', metavar='<FILE>', help='Zip file containing package')
 @utils.arg('-c', '--categories', metavar='<CAT1 CAT2 CAT3>', nargs='*',
            help='Category list to attach')
+@utils.arg('--is-public', action='store_true', default=False,
+           help='Make package available for user from other tenants')
 def do_package_import(mc, args):
     """Import a package.
     `FILE` should be the path to a zip file.
     `categories` could be separated by a comma
     """
-    data = None
+    data = {"is_public": args.is_public}
+
     if args.categories:
-        data = {"categories": args.categories}
+        data["categories"] = args.categories
+
     mc.packages.create(data, ((args.filename, open(args.filename, 'rb')),))
     do_package_list(mc)
 
