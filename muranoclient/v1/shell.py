@@ -106,12 +106,6 @@ def do_deployment_list(mc, args):
         utils.print_list(deployments, fields, field_labels, sortby=0)
 
 
-def do_category_list(mc, args):
-    """List all available categories."""
-    categories = mc.packages.categories()
-    print(categories)
-
-
 @utils.arg("--include-disabled", default=False, action="store_true")
 def do_package_list(mc, args={}):
     """List available packages."""
@@ -276,3 +270,41 @@ def _make_archive(archive_name, path):
             zip_file.write(os.path.join(root, f),
                            arcname=os.path.join(os.path.relpath(root, path),
                                                 f))
+
+
+def do_category_list(mc, args={}):
+    """List all available categories."""
+    categories = mc.categories.list()
+
+    field_labels = ["ID", "Name", "Packages Assigned"]
+    fields = ["id", "name", "packages"]
+    utils.print_list(categories, fields,
+                     field_labels,
+                     formatters={'packages':
+                                 lambda c: '\n'.join(c.packages)})
+
+
+@utils.arg("name", metavar="<CATEGORY_NAME>",
+           help="Category name")
+def do_category_create(mc, args):
+    """Create a category."""
+    mc.categories.add({"name": args.name})
+    do_category_list(mc)
+
+
+@utils.arg("id", metavar="<ID>",
+           nargs="+", help="Id of a category(s) to delete")
+def do_category_delete(mc, args):
+    """Delete a category."""
+    failure_count = 0
+    for category_id in args.id:
+        try:
+            mc.categories.delete(category_id)
+        except exceptions.NotFound:
+            failure_count += 1
+            print("Failed to delete '{0}'; category not found".
+                  format(category_id))
+    if failure_count == len(args.id):
+        raise exceptions.CommandError("Unable to find and delete any of the "
+                                      "specified categories.")
+    do_category_list(mc)
