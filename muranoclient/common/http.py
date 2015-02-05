@@ -241,7 +241,7 @@ class HTTPClient(object):
         resp = self._http_request(url, method, **kwargs)
         body = resp.content
 
-        if 'application/json' in resp.headers.get('content-type', None):
+        if body and 'application/json' in resp.headers['content-type']:
             try:
                 body = resp.json()
             except ValueError:
