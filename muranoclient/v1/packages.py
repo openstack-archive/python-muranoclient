@@ -56,7 +56,8 @@ class PackageManager(base.Manager):
         data = {'data': json.dumps(data)}
         url = '{0}/v1/catalog/packages'.format(self.api.endpoint)
         headers = {'X-Auth-Token': self.api.auth_token}
-        response = requests.post(url, data=data, files=files, headers=headers)
+        response = requests.post(url, data=data, files=files, headers=headers,
+                                 verify=self.api.verify_cert)
         http.HTTPClient.log_http_response(response)
         if not response.ok:
             setattr(response, 'status', response.status_code)
