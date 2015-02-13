@@ -68,13 +68,21 @@ class PackageManager(base.Manager):
         return self._get('/v1/catalog/packages/{0}'.format(app_id))
 
     def filter(self, **kwargs):
+        def construct_url(params):
+            return '?'.join(
+                ['/v1/catalog/packages', urllib.urlencode(params, doseq=True)]
+            )
+
         def paginate(_url):
             # code from Glance
             resp, body = self.api.json_request('GET', _url)
             for image in body['packages']:
                 yield image
             try:
-                next_url = body['next_marker']
+                next_url = construct_url(
+                    dict(kwargs.items() +
+                         {'next_marker': body['next_marker']}.items())
+                )
             except KeyError:
                 return
             else:
@@ -86,8 +94,7 @@ class PackageManager(base.Manager):
         else:
             kwargs['limit'] = kwargs['page_size']
 
-        query_str = urllib.urlencode(kwargs, doseq=True)
-        url = '?'.join(['/v1/catalog/packages', query_str])
+        url = construct_url(kwargs)
 
         for package in paginate(url):
             yield self.resource_class(self, package, loaded=True)

@@ -20,6 +20,7 @@ import testtools
 from muranoclient import client
 from muranoclient.v1 import actions
 import muranoclient.v1.environments as environments
+from muranoclient.v1 import packages
 import muranoclient.v1.sessions as sessions
 
 
@@ -200,3 +201,27 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         self.assertEqual(('POST',
                           '/v1/environments/testEnvId/actions/testActionId'),
                          result)
+
+    def test_package_filter_pagination_next_marker(self):
+        """``PackageManager.filter`` handles `next_marker` parameter related
+        to pagination in API correctly.
+        """
+        responses = [
+            {'next_marker': 'test_marker',
+             'packages': [{'name': 'test_package_1'}]},
+            {'packages': [{'name': 'test_package_2'}]}
+        ]
+
+        def json_request(method, url, *args, **kwargs):
+            self.assertIn('/v1/catalog/packages', url)
+
+            return mock.MagicMock(), responses.pop(0)
+
+        api = mock.MagicMock()
+
+        api.configure_mock(**{'json_request.side_effect': json_request})
+
+        manager = packages.PackageManager(api)
+        list(manager.filter())
+
+        self.assertEqual(api.json_request.call_count, 2)
