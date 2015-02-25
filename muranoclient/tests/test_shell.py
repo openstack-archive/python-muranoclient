@@ -19,6 +19,7 @@ import tempfile
 
 import fixtures
 import mock
+import requests
 import six
 from testtools import matchers
 
@@ -302,11 +303,23 @@ class ShellPackagesOperations(ShellTest):
                 ((RESULT_PACKAGE, mock.ANY),)
             )
 
-    def test_package_import_wrong_file(self):
+    def test_package_import_url(self):
         args = TestArgs()
-        args.filename = '/home/this/path/does/not/exist'
+
+        args.filename = "http://127.0.0.1/test_package.zip"
         args.categories = None
         args.is_public = False
 
-        self.assertRaises(IOError,
-                          v1_shell.do_package_import, self.client, args)
+        resp = requests.Response()
+        resp.status_code = 200
+        resp.raw = True
+        with mock.patch(
+                'requests.get',
+                mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
+
+            v1_shell.do_package_import(self.client, args)
+
+        self.client.packages.create.assert_called_once_with(
+            {'is_public': False},
+            ((args.filename, mock.ANY),)
+        )
