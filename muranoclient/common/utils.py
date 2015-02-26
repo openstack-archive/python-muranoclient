@@ -207,6 +207,18 @@ class File(object):
             raise ValueError("Can't open {0}".format(self.name))
 
 
+def to_url(filename, base_url, version='', path='/', extension=''):
+    if urlparse.urlparse(filename).scheme in ('http', 'https'):
+        return filename
+    if not base_url:
+        raise ValueError("No base_url for repository supplied")
+    if '/' in filename or filename in ('.', '..'):
+        raise ValueError("Invalid filename path supplied: {0}".format(
+            filename))
+    version = '.' + version if version else ''
+    return urlparse.urljoin(base_url, path + filename + version + extension)
+
+
 class Package(object):
     """Represents murano package contents."""
 

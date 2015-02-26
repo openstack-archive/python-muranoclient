@@ -44,7 +44,8 @@ FAKE_ENV2 = {'OS_USERNAME': 'username',
 
 
 class TestArgs(object):
-    pass
+    version = ''
+    murano_repo_url = ''
 
 
 class ShellTest(base.TestCaseShell):
@@ -284,7 +285,9 @@ class ShellPackagesOperations(ShellTest):
 
             self.client.packages.create.assert_called_once_with(
                 {'categories': ['Cat1', 'Cat2 with space'], 'is_public': True},
-                ((RESULT_PACKAGE, mock.ANY),)
+                ((RESULT_PACKAGE, mock.ANY),),
+                murano_repo_url=args.murano_repo_url,
+                version=args.version,
             )
 
     def test_package_import_no_categories(self):
@@ -300,7 +303,9 @@ class ShellPackagesOperations(ShellTest):
 
             self.client.packages.create.assert_called_once_with(
                 {'is_public': False},
-                ((RESULT_PACKAGE, mock.ANY),)
+                ((RESULT_PACKAGE, mock.ANY),),
+                murano_repo_url=args.murano_repo_url,
+                version=args.version,
             )
 
     def test_package_import_url(self):
@@ -321,5 +326,32 @@ class ShellPackagesOperations(ShellTest):
 
         self.client.packages.create.assert_called_once_with(
             {'is_public': False},
-            ((args.filename, mock.ANY),)
+            ((args.filename, mock.ANY),),
+            murano_repo_url=args.murano_repo_url,
+            version=args.version,
+        )
+
+    def test_package_import_fqpn(self):
+        args = TestArgs()
+
+        args.filename = "io.test.apps.test_application"
+        args.categories = None
+        args.is_public = False
+        args.murano_repo_url = "http://127.0.0.1"
+
+        resp = requests.Response()
+        resp.status_code = 200
+        resp.raw = True
+        with mock.patch(
+                'requests.get',
+                mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
+
+            v1_shell.do_package_import(self.client, args)
+
+        self.assertTrue(self.client.packages.create.called)
+        self.client.packages.create.assert_called_once_with(
+            {'is_public': False},
+            ((args.filename, mock.ANY),),
+            murano_repo_url=args.murano_repo_url,
+            version=args.version,
         )
