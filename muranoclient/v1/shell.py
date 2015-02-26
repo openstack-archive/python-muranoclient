@@ -199,7 +199,7 @@ def do_package_delete(mc, args):
            help='Make package available for user from other tenants')
 @utils.arg('--version', default='',
            help='Version of the package to use from repository')
-def do_package_import(mc, args):
+def do_package_import(mc, args, list_packages=True):
     """Import a package.
     `FILE` can be either a path to a zip file, url or a FQPN.
     `categories` could be separated by a comma
@@ -216,6 +216,35 @@ def do_package_import(mc, args):
     mc.packages.create(data, ((args.filename, filename),),
                        version=args.version,
                        murano_repo_url=args.murano_repo_url)
+    if list_packages:
+        do_package_list(mc)
+
+
+@utils.arg('filename', metavar='<FILE>',
+           help='Bundle url, bundle name, or path to the bundle file')
+@utils.arg('--is-public', action='store_true', default=False,
+           help='Make packages available to users from other tenants')
+def do_bundle_import(mc, args):
+    """Import a bundle.
+    `FILE` can be either a path to a zip file, url or name from repo.
+    """
+    if os.path.isfile(args.filename):
+        bundle_file = utils.Bundle.fromFile(args.filename)
+    else:
+        bundle_file = utils.Bundle.fromFile(utils.to_url(
+            args.filename, base_url=args.murano_repo_url, path='/bundles/'))
+
+    data = {"is_public": args.is_public}
+
+    for package in bundle_file.packages():
+        try:
+            mc.packages.create(data, ((package['Name'], package['Name']),),
+                               version=package.get('Version'),
+                               murano_repo_url=args.murano_repo_url)
+        except Exception as e:
+            print("Error '{0}' occurred during import of {1} package".format(
+                e, package['Name']))
+
     do_package_list(mc)
 
 
