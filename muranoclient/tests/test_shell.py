@@ -14,6 +14,7 @@
 
 import os
 import re
+import StringIO
 import sys
 import tempfile
 
@@ -23,6 +24,7 @@ import requests
 import six
 from testtools import matchers
 
+from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions
 import muranoclient.shell
 from muranoclient.tests import base
@@ -281,13 +283,16 @@ class ShellPackagesOperations(ShellTest):
             args.categories = ['Cat1', 'Cat2 with space']
             args.is_public = True
 
-            v1_shell.do_package_import(self.client, args)
+            result = {RESULT_PACKAGE: utils.Package.fromFile(
+                StringIO.StringIO("123"))}
+            with mock.patch(
+                    'muranoclient.common.utils.Package.requirements',
+                    mock.Mock(side_effect=lambda *args, **kwargs: result)):
+                v1_shell.do_package_import(self.client, args)
 
             self.client.packages.create.assert_called_once_with(
                 {'categories': ['Cat1', 'Cat2 with space'], 'is_public': True},
-                ((RESULT_PACKAGE, mock.ANY),),
-                murano_repo_url=args.murano_repo_url,
-                version=args.version,
+                {RESULT_PACKAGE: mock.ANY},
             )
 
     def test_package_import_no_categories(self):
@@ -299,13 +304,17 @@ class ShellPackagesOperations(ShellTest):
             args.categories = None
             args.is_public = False
 
-            v1_shell.do_package_import(self.client, args)
+            result = {RESULT_PACKAGE: utils.Package.fromFile(
+                StringIO.StringIO("123"))}
+
+            with mock.patch(
+                    'muranoclient.common.utils.Package.requirements',
+                    mock.Mock(side_effect=lambda *args, **kwargs: result)):
+                v1_shell.do_package_import(self.client, args)
 
             self.client.packages.create.assert_called_once_with(
                 {'is_public': False},
-                ((RESULT_PACKAGE, mock.ANY),),
-                murano_repo_url=args.murano_repo_url,
-                version=args.version,
+                {RESULT_PACKAGE: mock.ANY},
             )
 
     def test_package_import_url(self):
@@ -317,21 +326,24 @@ class ShellPackagesOperations(ShellTest):
 
         resp = requests.Response()
         resp.status_code = 200
-        resp.raw = True
+        resp.raw = StringIO.StringIO("123")
+        result = {args.filename: utils.Package.fromFile(
+            StringIO.StringIO("123"))}
         with mock.patch(
                 'requests.get',
                 mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
+            with mock.patch(
+                    'muranoclient.common.utils.Package.requirements',
+                    mock.Mock(side_effect=lambda *args, **kwargs: result)):
 
-            v1_shell.do_package_import(self.client, args)
+                v1_shell.do_package_import(self.client, args)
 
         self.client.packages.create.assert_called_once_with(
             {'is_public': False},
-            ((args.filename, mock.ANY),),
-            murano_repo_url=args.murano_repo_url,
-            version=args.version,
+            {args.filename: mock.ANY},
         )
 
-    def test_package_import_fqpn(self):
+    def test_package_import_by_name(self):
         args = TestArgs()
 
         args.filename = "io.test.apps.test_application"
@@ -341,17 +353,19 @@ class ShellPackagesOperations(ShellTest):
 
         resp = requests.Response()
         resp.status_code = 200
-        resp.raw = True
+        resp.raw = StringIO.StringIO("123")
+        result = {args.filename: utils.Package.fromFile(
+            StringIO.StringIO("123"))}
         with mock.patch(
                 'requests.get',
                 mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
-
-            v1_shell.do_package_import(self.client, args)
+            with mock.patch(
+                    'muranoclient.common.utils.Package.requirements',
+                    mock.Mock(side_effect=lambda *args, **kwargs: result)):
+                    v1_shell.do_package_import(self.client, args)
 
         self.assertTrue(self.client.packages.create.called)
         self.client.packages.create.assert_called_once_with(
             {'is_public': False},
-            ((args.filename, mock.ANY),),
-            murano_repo_url=args.murano_repo_url,
-            version=args.version,
+            {args.filename: mock.ANY},
         )

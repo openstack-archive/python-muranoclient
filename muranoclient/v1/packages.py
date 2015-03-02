@@ -12,18 +12,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import logging
 import urllib
 
 from oslo.serialization import jsonutils
 import requests
-import six
 import yaml
 
 from muranoclient.common import base
 from muranoclient.common import exceptions
 from muranoclient.common import http
-from muranoclient.common import utils
 
+
+LOG = logging.getLogger(__name__)
 
 DEFAULT_PAGE_SIZE = 20
 
@@ -49,27 +50,13 @@ class Category(base.Resource):
 
 class PackageManager(base.Manager):
     resource_class = Package
+    _tracked_packages = set()
 
     def categories(self):
         return self._list('/v1/catalog/packages/categories',
                           response_key='categories', obj_class=Category)
 
-    def create(self, data, files, version='', murano_repo_url=None):
-
-        files = requests.utils.to_key_val_list(files)
-        if not files:
-            raise ValueError("No files to import")
-        name, file_name = files[0]
-        if isinstance(file_name, six.string_types):
-            file_name = utils.to_url(
-                file_name,
-                base_url=murano_repo_url,
-                version=version,
-                path='/apps/',
-                extension='.zip')
-        package = utils.Package.fromFile(file_name)
-
-        files = [(name, package.file(), )]
+    def create(self, data, files):
         data = {'data': jsonutils.dumps(data)}
         url = '{0}/v1/catalog/packages'.format(self.api.endpoint)
         headers = {'X-Auth-Token': self.api.auth_token}
