@@ -81,7 +81,7 @@ class PackageManager(base.Manager):
             try:
                 next_url = construct_url(
                     dict(kwargs.items() +
-                         {'next_marker': body['next_marker']}.items())
+                         {'marker': body['next_marker']}.items())
                 )
             except KeyError:
                 return
