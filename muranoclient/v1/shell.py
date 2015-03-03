@@ -95,8 +95,95 @@ def do_environment_show(mc, args):
         utils.print_dict(environment.to_dict(), formatters=formatters)
 
 
-@utils.arg("id", metavar="<NAME or ID>",
-           help="Environment id or name for which to list deployments")
+def do_env_template_list(mc, args={}):
+    """List the environments templates."""
+    env_templates = mc.env_templates.list()
+    field_labels = ['ID', 'Name', 'Created', 'Updated']
+    fields = ['id', 'name', 'created', 'updated']
+    utils.print_list(env_templates, fields, field_labels, sortby=0)
+
+
+@utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
+           help="Environment Template name")
+def do_env_template_create(mc, args):
+    """Create an environment template."""
+    mc.env_templates.create({"name": args.name})
+    do_env_template_list(mc)
+
+
+@utils.arg("id", metavar="<ID>",
+           help="Environment Template id")
+def do_env_template_show(mc, args):
+    """Display environment template details."""
+    try:
+        env_template = mc.env_templates.get(args.id)
+    except exceptions.NotFound:
+        raise exceptions.CommandError("Environment template %s not found"
+                                      % args.id)
+    else:
+        formatters = {
+            "id": utils.text_wrap_formatter,
+            "created": utils.text_wrap_formatter,
+            "name": utils.text_wrap_formatter,
+            "tenant_id": utils.text_wrap_formatter,
+            "services": utils.json_formatter,
+
+        }
+        utils.print_dict(env_template.to_dict(), formatters=formatters)
+
+
+@utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
+           help="Environment Template name")
+@utils.arg('app_template_file', metavar='<FILE>',
+           help='Path to the template.')
+def do_env_template_add_app(mc, args):
+    """Add application to the environment template."""
+    with open(args.app_template_file, "r") as myfile:
+        app_file = myfile.readlines()
+    mc.env_templates.create_app(args.name, app_file)
+    do_env_template_list(mc)
+
+
+@utils.arg("id", metavar="<ENV_TEMPLATE_ID>",
+           help="Environment Template ID")
+@utils.arg("service_id", metavar="<ENV_TEMPLATE_APP_ID>",
+           help="Application Id")
+def do_env_template_del_app(mc, args):
+    """Delete application to the environment template."""
+    mc.env_templates.delete_app(args.name, args.service_id)
+    do_env_template_list(mc)
+
+
+@utils.arg("id", metavar="<ID>",
+           help="Environment Template id")
+@utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
+           help="Environment Template name")
+def do_env_template_update(mc, args):
+    """Update an environment template."""
+    mc.env_templates.update(args.id, args.name)
+    do_env_template_list(mc)
+
+
+@utils.arg("id", metavar="<ID>",
+           nargs="+", help="Id of environment(s) template to delete")
+def do_env_template_delete(mc, args):
+    """Delete an environment template."""
+    failure_count = 0
+    for env_template_id in args.id:
+        try:
+            mc.env_templates.delete(env_template_id)
+        except exceptions.NotFound:
+            failure_count += 1
+            mns = "Failed to delete '{0}'; environment template not found".\
+                format(env_template_id)
+
+    if failure_count == len(args.id):
+        raise exceptions.CommandError(mns)
+    do_env_template_list(mc)
+
+
+@utils.arg("id", metavar="<ID>",
+           help="Environment id for which to list deployments")
 def do_deployment_list(mc, args):
     """List deployments for an environment."""
     try:

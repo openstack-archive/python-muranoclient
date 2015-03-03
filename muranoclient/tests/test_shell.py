@@ -229,6 +229,29 @@ class ShellTest(base.TestCaseShell):
             name='env-id-or-name')
         self.client.environments.get.assert_called_once()
 
+    @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
+    def test_env_template_delete(self, mock_manager):
+        self.client.env_templates = mock_manager()
+        self.make_env()
+        self.shell('env-template-delete env1 env2')
+        self.client.env_templates.delete.assert_has_calls([
+            mock.call('env1'), mock.call('env2')])
+
+    @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
+    def test_env_template_create(self, mock_manager):
+        self.client.env_templates = mock_manager()
+        self.make_env()
+        self.shell('env-template-create env-name')
+        self.client.env_templates.create.assert_called_once_with(
+            {'name': 'env-name'})
+
+    @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
+    def test_env_template_show(self, mock_manager):
+        self.client.env_templates = mock_manager()
+        self.make_env()
+        self.shell('env-template-show env-id')
+        self.client.env_templates.get.assert_called_once_with('env-id')
+
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     @mock.patch('muranoclient.v1.deployments.DeploymentManager')
     def test_deployments_show(self, mock_deployment_manager, mock_env_manager):

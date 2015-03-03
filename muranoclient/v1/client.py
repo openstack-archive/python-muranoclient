@@ -22,6 +22,7 @@ from muranoclient.v1 import packages
 from muranoclient.v1 import request_statistics
 from muranoclient.v1 import services
 from muranoclient.v1 import sessions
+from muranoclient.v1 import templates
 
 
 class Client(http.HTTPClient):
@@ -38,6 +39,7 @@ class Client(http.HTTPClient):
         self.glance_client = kwargs.pop('glance_client', None)
         super(Client, self).__init__(*args, **kwargs)
         self.environments = environments.EnvironmentManager(self)
+        self.env_templates = templates.EnvTemplateManager(self)
         self.sessions = sessions.SessionManager(self)
         self.services = services.ServiceManager(self)
         self.deployments = deployments.DeploymentManager(self)

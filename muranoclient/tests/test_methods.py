@@ -22,6 +22,7 @@ from muranoclient.v1 import actions
 import muranoclient.v1.environments as environments
 from muranoclient.v1 import packages
 import muranoclient.v1.sessions as sessions
+import muranoclient.v1.templates as templates
 
 
 def my_mock(*a, **b):
@@ -231,3 +232,76 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         manager = actions.ActionManager(api_mock)
         result = manager.get_result('testEnvId', '1234')
         self.assertEqual({'a': 'b'}, result)
+
+    def test_env_template_manager_list(self):
+        """It tests the list of environment templates.
+        """
+        manager = templates.EnvTemplateManager(api)
+        result = manager.list()
+
+        self.assertEqual([], result)
+
+    def test_env_template_manager_create(self):
+        manager = templates.EnvTemplateManager(api)
+        result = manager.create({'name': 'test'})
+
+        self.assertEqual({'name': 'test'}, result.data)
+
+    def test_env_template_manager_create_with_named_parameters(self):
+        manager = templates.EnvTemplateManager(api)
+        result = manager.create(data={'name': 'test'})
+
+        self.assertEqual({'name': 'test'}, result.data)
+
+    def test_env_template_manager_create_negative_without_parameters(self):
+        manager = templates.EnvTemplateManager(api)
+        self.assertRaises(TypeError, manager.create)
+
+    def test_env_template_manager_delete(self):
+        manager = templates.EnvTemplateManager(api)
+        result = manager.delete('test')
+
+        self.assertIsNone(result)
+
+    def test_env_template_manager_delete_with_named_parameters(self):
+        manager = templates.EnvTemplateManager(api)
+        result = manager.delete(env_template_id='1')
+
+        self.assertIsNone(result)
+
+    def test_env_template_manager_delete_negative_without_parameters(self):
+
+        manager = templates.EnvTemplateManager(api)
+
+        self.assertRaises(TypeError, manager.delete)
+
+    def test_env_template_manager_update(self):
+        manager = templates.EnvTemplateManager(api)
+        result = manager.update('1', 'test')
+
+        self.assertEqual({'name': 'test'}, result.data)
+
+    def test_env_template_manager_update_with_named_parameters(self):
+        manager = templates.EnvTemplateManager(api)
+        result = manager.update(env_template_id='1',
+                                name='test')
+
+        self.assertEqual({'name': 'test'}, result.data)
+
+    def test_env_template_manager_update_negative_with_one_parameter(self):
+
+        manager = templates.EnvTemplateManager(api)
+
+        self.assertRaises(TypeError, manager.update, 'test')
+
+    def test_env_template_manager_update_negative_without_parameters(self):
+
+        manager = templates.EnvTemplateManager(api)
+
+        self.assertRaises(TypeError, manager.update)
+
+    def test_env_template_manager_get(self):
+        manager = templates.EnvTemplateManager(api)
+        result = manager.get('test')
+
+        self.assertIsNotNone(result.manager)
