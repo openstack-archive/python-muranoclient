@@ -22,6 +22,7 @@ import argparse
 import logging
 import sys
 
+import glanceclient
 from keystoneclient.v2_0 import client as ksclient
 from oslo.utils import encodeutils
 import six
@@ -134,6 +135,10 @@ class MuranoShell(object):
         parser.add_argument('--murano-url',
                             default=utils.env('MURANO_URL'),
                             help='Defaults to env[MURANO_URL]')
+
+        parser.add_argument('--glance-url',
+                            default=utils.env('GLANCE_URL'),
+                            help='Defaults to env[GLANCE_URL]')
 
         parser.add_argument('--murano-api-version',
                             default=utils.env(
@@ -320,8 +325,11 @@ class MuranoShell(object):
             'cacert': args.os_cacert,
             'include_pass': args.include_password
         }
+        glance_kwargs = kwargs
+        glance_kwargs = kwargs.copy()
 
         endpoint = args.murano_url
+        glance_endpoint = args.glance_url
 
         if not args.os_no_client_auth:
             _ksclient = self._get_ksclient(**kwargs)
@@ -338,15 +346,38 @@ class MuranoShell(object):
                 'endpoint_type': args.os_endpoint_type,
                 'include_pass': args.include_password
             }
+            glance_kwargs = kwargs.copy()
 
             if args.os_region_name:
                 kwargs['region_name'] = args.os_region_name
+                glance_kwargs['region_name'] = args.os_region_name
 
             if not endpoint:
                 endpoint = self._get_endpoint(_ksclient, **kwargs)
 
         if args.api_timeout:
             kwargs['timeout'] = args.api_timeout
+
+        if not glance_endpoint:
+            try:
+                glance_endpoint = self._get_endpoint(
+                    _ksclient, service_type='image')
+            except Exception:
+                pass
+
+        glance_client = None
+        if glance_endpoint:
+            try:
+                glance_client = glanceclient.Client(
+                    '1', glance_endpoint, **glance_kwargs)
+            except Exception:
+                pass
+        if glance_client:
+            kwargs['glance_client'] = glance_client
+        else:
+            logger.warning("Could not initialise glance client. "
+                           "Image creation will be unavailable.")
+            kwargs['glance_client'] = None
 
         client = apiclient.Client(api_version, endpoint, **kwargs)
 

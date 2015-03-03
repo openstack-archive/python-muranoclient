@@ -256,24 +256,46 @@ class Package(FileWrapperMixin):
         return Package(file_obj)
 
     @property
+    def contents(self):
+        """Contents of a package."""
+        if not hasattr(self, '_contents'):
+            try:
+                self._file.seek(0)
+                self._zip_obj = zipfile.ZipFile(
+                    StringIO.StringIO(self._file.read()))
+            except Exception:
+                LOG.exception("An error occurred,"
+                              " while parsint the package")
+                raise
+        return self._zip_obj
+
+    @property
     def manifest(self):
         """Parsed manifest file of a package."""
         if not hasattr(self, '_manifest'):
             try:
-                self._file.seek(0)
-                zip_obj = zipfile.ZipFile(
-                    StringIO.StringIO(self._file.read()))
-                self._manifest = yaml.safe_load(zip_obj.open('manifest.yaml'))
-            except (zipfile.BadZipfile, KeyError, yaml.error.YAMLError) as e:
+                self._manifest = yaml.safe_load(
+                    self.contents.open('manifest.yaml'))
+            except Exception:
                 LOG.exception("An error occurred,"
                               " while extracting manifest from package")
-                raise ValueError(e)
+                raise
         return self._manifest
+
+    def images(self):
+        """Returns a list of required image specifications."""
+        if 'images.lst' not in self.contents.namelist():
+            return []
+        try:
+            return yaml.safe_load(
+                self.contents.open('images.lst')).get('Images', [])
+        except Exception:
+            return []
 
     def requirements(self, base_url, dep_dict=None):
         """Recursively scan Require section of manifests of all the
         dependencies. Returns a dict with FQPNs as keys and respective
-        PackageFiles as values
+        Package objects as values
         """
         if not dep_dict:
             dep_dict = {}
@@ -295,6 +317,76 @@ class Package(FileWrapperMixin):
                                       self.manifest['FullName']))
                     continue
         return dep_dict
+
+
+def ensure_images(glance_client, image_specs, base_url):
+    """Ensure that images from image_specs are available in glance. If not
+    attempts: instructs glance to download the images and sets murano-specific
+    metadata for it.
+    """
+    def _image_valid(image, keys):
+        for key in keys:
+            if key not in image:
+                LOG.warning("Image specification invalid: "
+                            "No {0} key in image ".format(key))
+                return False
+        return True
+
+    keys = ['Name', 'Hash', 'DiskFormat', 'ContainerFormat', ]
+    for image_spec in image_specs:
+        if not _image_valid(image_spec, keys):
+            continue
+        filters = {
+            'name': image_spec["Name"],
+            'disk_format': image_spec["DiskFormat"],
+            'container_format': image_spec["ContainerFormat"],
+        }
+        # NOTE(kzaitsev): glance v1 client does not allow checksum in
+        # a filter, so we have to filter ourselves
+        for img_obj in glance_client.images.list(filters=filters):
+            img = img_obj.to_dict()
+            if img['checksum'] == image_spec['Hash']:
+                break
+        else:
+            img = None
+
+        update_metadata = False
+        if img:
+            LOG.info("Found desired image {0}, id {1}".format(
+                img['name'], img['id']))
+            # check for murano meta-data
+            if 'murano_image_info' in img.get('properties', {}):
+                LOG.info("Image {0} already has murano meta-data".format(
+                    image_spec['Name']))
+            else:
+                update_metadata = True
+        else:
+            LOG.info("Desired image {0} not found attempting "
+                     "to download".format(image_spec['Name']))
+            update_metadata = True
+
+            download_url = to_url(
+                image_spec.get("Url", image_spec['Name']),
+                base_url=base_url,
+                path='/images/',
+            )
+
+            LOG.info("Instructing glance to download image {0}".format(
+                image_spec['Name']))
+            img = glance_client.images.create(
+                name=image_spec["Name"],
+                container_format=image_spec['ContainerFormat'],
+                disk_format=image_spec['DiskFormat'],
+                copy_from=download_url)
+            img = img.to_dict()
+
+        if update_metadata and 'Meta' in image_spec:
+            LOG.info("Updating image {0} metadata".format(
+                image_spec['Name']))
+            murano_image_info = jsonutils.dumps(image_spec['Meta'])
+            glance_client.images.update(
+                img['id'], properties={'murano_image_info':
+                                       murano_image_info})
 
 
 class Bundle(FileWrapperMixin):

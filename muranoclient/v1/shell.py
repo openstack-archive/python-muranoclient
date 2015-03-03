@@ -218,6 +218,14 @@ def do_package_import(mc, args):
     reqs = package.requirements(base_url=args.murano_repo_url)
     for name, package in reqs.iteritems():
         try:
+            utils.ensure_images(
+                glance_client=mc.glance_client,
+                image_specs=package.images(),
+                base_url=args.murano_repo_url)
+        except Exception as e:
+            print("Error {0} occurred while installing "
+                  "images for {1}".format(e, name))
+        try:
             mc.packages.create(data, {name: package.file()})
         except Exception as e:
             print("Error {0} occurred while installing package {1}".format(
@@ -254,10 +262,19 @@ def do_bundle_import(mc, args):
         except Exception as e:
             print("Error {0} occurred while "
                   "parsing package {1}".format(e, package_info['Name']))
+
         reqs = package.requirements(base_url=args.murano_repo_url)
-        for name, package in reqs.iteritems():
+        for name, dep_package in reqs.iteritems():
             try:
-                mc.packages.create(data, {name: package.file()})
+                utils.ensure_images(
+                    glance_client=mc.glance_client,
+                    image_specs=dep_package.images(),
+                    base_url=args.murano_repo_url)
+            except Exception as e:
+                print("Error {0} occurred while installing "
+                      "images for {1}".format(e, name))
+            try:
+                mc.packages.create(data, {name: dep_package.file()})
             except Exception as e:
                 print("Error {0} occurred while "
                       "installing package {1}".format(e, name))
