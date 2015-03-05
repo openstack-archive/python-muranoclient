@@ -188,44 +188,52 @@ class ShellTest(base.TestCaseShell):
         self.client.packages.get.return_value = mock_package
         self.make_env()
         self.shell('package-show 1234')
-        self.client.packages.get.assert_called_once_with('1234')
+        self.client.packages.get.assert_called_with('1234')
 
     @mock.patch('muranoclient.v1.packages.PackageManager')
     def test_package_delete(self, mock_package_manager):
         self.client.packages = mock_package_manager()
         self.make_env()
         self.shell('package-delete 1234')
-        self.client.packages.delete.assert_called_once_with('1234')
+        self.client.packages.delete.assert_called_with('1234')
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_delete(self, mock_manager):
         self.client.environments = mock_manager()
         self.make_env()
         self.shell('environment-delete env1 env2')
-        self.client.environments.delete.assert_has_calls([
-            mock.call('env1'), mock.call('env2')])
+        self.client.environments.find.assert_has_calls([
+            mock.call(name='env1'), mock.call(name='env2')])
+        self.client.environments.delete.assert_called_twice()
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_rename(self, mock_manager):
         self.client.environments = mock_manager()
         self.make_env()
-        self.shell('environment-rename env-id new-name')
-        self.client.environments.update.assert_called_once_with(
-            'env-id', 'new-name')
+        self.shell('environment-rename old-name-or-id new-name')
+        self.client.environments.find.assert_called_once_with(
+            name='old-name-or-id')
+        self.client.environments.update.assert_called_once()
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_show(self, mock_manager):
         self.client.environments = mock_manager()
         self.make_env()
-        self.shell('environment-show env-id')
-        self.client.environments.get.assert_called_once_with('env-id')
+        self.shell('environment-show env-id-or-name')
+        self.client.environments.find.assert_called_once_with(
+            name='env-id-or-name')
+        self.client.environments.get.assert_called_once()
 
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     @mock.patch('muranoclient.v1.deployments.DeploymentManager')
-    def test_deployments_show(self, mock_manager):
-        self.client.deployments = mock_manager()
+    def test_deployments_show(self, mock_deployment_manager, mock_env_manager):
+        self.client.deployments = mock_deployment_manager()
+        self.client.environments = mock_env_manager()
         self.make_env()
-        self.shell('deployment-list env-id')
-        self.client.deployments.list.assert_called_once_with('env-id')
+        self.shell('deployment-list env-id-or-name')
+        self.client.environments.find.assert_called_once_with(
+            name='env-id-or-name')
+        self.client.deployments.list.assert_called_once()
 
 
 class ShellPackagesOperations(ShellTest):
