@@ -48,6 +48,7 @@ FAKE_ENV2 = {'OS_USERNAME': 'username',
 class TestArgs(object):
     version = ''
     murano_repo_url = ''
+    exists_action = ''
 
 
 class ShellTest(base.TestCaseShell):
@@ -286,9 +287,12 @@ class ShellPackagesOperations(ShellTest):
             result = {RESULT_PACKAGE: utils.Package.fromFile(
                 StringIO.StringIO("123"))}
             with mock.patch(
-                    'muranoclient.common.utils.Package.requirements',
-                    mock.Mock(side_effect=lambda *args, **kwargs: result)):
-                v1_shell.do_package_import(self.client, args)
+                    'muranoclient.common.utils.Package.manifest') as man_mock:
+                man_mock.__getitem__.side_effect = [args.filename]
+                with mock.patch(
+                        'muranoclient.common.utils.Package.requirements',
+                        mock.Mock(side_effect=lambda *args, **kw: result)):
+                    v1_shell.do_package_import(self.client, args)
 
             self.client.packages.create.assert_called_once_with(
                 {'categories': ['Cat1', 'Cat2 with space'], 'is_public': True},
@@ -308,9 +312,12 @@ class ShellPackagesOperations(ShellTest):
                 StringIO.StringIO("123"))}
 
             with mock.patch(
-                    'muranoclient.common.utils.Package.requirements',
-                    mock.Mock(side_effect=lambda *args, **kwargs: result)):
-                v1_shell.do_package_import(self.client, args)
+                    'muranoclient.common.utils.Package.manifest') as man_mock:
+                man_mock.__getitem__.side_effect = [args.filename]
+                with mock.patch(
+                        'muranoclient.common.utils.Package.requirements',
+                        mock.Mock(side_effect=lambda *args, **kw: result)):
+                    v1_shell.do_package_import(self.client, args)
 
             self.client.packages.create.assert_called_once_with(
                 {'is_public': False},
@@ -330,13 +337,16 @@ class ShellPackagesOperations(ShellTest):
         result = {args.filename: utils.Package.fromFile(
             StringIO.StringIO("123"))}
         with mock.patch(
-                'requests.get',
-                mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
+                'muranoclient.common.utils.Package.manifest') as man_mock:
+            man_mock.__getitem__.side_effect = [args.filename]
             with mock.patch(
-                    'muranoclient.common.utils.Package.requirements',
-                    mock.Mock(side_effect=lambda *args, **kwargs: result)):
+                    'requests.get',
+                    mock.Mock(side_effect=lambda k, *args, **kw: resp)):
+                with mock.patch(
+                        'muranoclient.common.utils.Package.requirements',
+                        mock.Mock(side_effect=lambda *args, **kw: result)):
 
-                v1_shell.do_package_import(self.client, args)
+                    v1_shell.do_package_import(self.client, args)
 
         self.client.packages.create.assert_called_once_with(
             {'is_public': False},
@@ -357,12 +367,16 @@ class ShellPackagesOperations(ShellTest):
         result = {args.filename: utils.Package.fromFile(
             StringIO.StringIO("123"))}
         with mock.patch(
-                'requests.get',
-                mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
+                'muranoclient.common.utils.Package.manifest') as man_mock:
+            man_mock.__getitem__.side_effect = [args.filename]
             with mock.patch(
-                    'muranoclient.common.utils.Package.requirements',
-                    mock.Mock(side_effect=lambda *args, **kwargs: result)):
-                    v1_shell.do_package_import(self.client, args)
+                    'requests.get',
+                    mock.Mock(side_effect=lambda k, *args, **kw: resp)):
+                with mock.patch(
+                        'muranoclient.common.utils.Package.requirements',
+                        mock.Mock(side_effect=lambda *args, **kw: result)):
+
+                        v1_shell.do_package_import(self.client, args)
 
         self.assertTrue(self.client.packages.create.called)
         self.client.packages.create.assert_called_once_with(

@@ -18,6 +18,7 @@ import sys
 import tempfile
 import zipfile
 
+from muranoclient.common import exceptions as common_exceptions
 from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions
 from muranoclient.v1.package_creator import hot_package
@@ -185,6 +186,34 @@ def do_package_delete(mc, args):
         do_package_list(mc)
 
 
+def _handle_package_exists(mc, data, package, exists_action):
+    name = package.manifest['FullName']
+    while True:
+        print("Importing package {0}".format(name))
+        try:
+            return mc.packages.create(data, {name: package.file()})
+        except common_exceptions.HTTPConflict:
+            print("Package with name {0} is already registered.".format(name))
+            allowed_results = ['s', 'u', 'a']
+            res = exists_action
+            if not res:
+                while True:
+                    print("What do you want to do? (s)kip, (u)pdate, (a)bort")
+                    res = raw_input()
+                    if res in allowed_results:
+                        break
+            if res == 's':
+                print("Skipping.")
+                return
+            elif res == 'a':
+                print("Exiting.")
+                sys.exit()
+            elif res == 'u':
+                print("Deleting package {0}".format(name))
+                mc.packages.delete(name)
+                continue
+
+
 @utils.arg('filename', metavar='<FILE>',
            help='Url of the murano zip package, FQPN, or path to zip package')
 @utils.arg('-c', '--categories', metavar='<CAT1 CAT2 CAT3>', nargs='*',
@@ -193,6 +222,8 @@ def do_package_delete(mc, args):
            help='Make package available for user from other tenants')
 @utils.arg('--version', default='',
            help='Version of the package to use from repository')
+@utils.arg('--exists-action', default='', choices=['a', 's', 'u'],
+           help='Default action when package already exists')
 def do_package_import(mc, args):
     """Import a package.
     `FILE` can be either a path to a zip file, url or a FQPN.
@@ -226,7 +257,7 @@ def do_package_import(mc, args):
             print("Error {0} occurred while installing "
                   "images for {1}".format(e, name))
         try:
-            mc.packages.create(data, {name: package.file()})
+            _handle_package_exists(mc, data, package, args.exists_action)
         except Exception as e:
             print("Error {0} occurred while installing package {1}".format(
                 e, name))
@@ -237,6 +268,8 @@ def do_package_import(mc, args):
            help='Bundle url, bundle name, or path to the bundle file')
 @utils.arg('--is-public', action='store_true', default=False,
            help='Make packages available to users from other tenants')
+@utils.arg('--exists-action', default='', choices=['a', 's', 'u'],
+           help='Default action when package already exists')
 def do_bundle_import(mc, args):
     """Import a bundle.
     `FILE` can be either a path to a zip file, url or name from repo.
@@ -274,7 +307,7 @@ def do_bundle_import(mc, args):
                 print("Error {0} occurred while installing "
                       "images for {1}".format(e, name))
             try:
-                mc.packages.create(data, {name: dep_package.file()})
+                _handle_package_exists(mc, data, package, args.exists_action)
             except Exception as e:
                 print("Error {0} occurred while "
                       "installing package {1}".format(e, name))
