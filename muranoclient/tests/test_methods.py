@@ -196,11 +196,11 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         self.assertRaises(TypeError, manager.deploy)
 
     def test_action_manager_call(self):
-        manager = actions.ActionManager(api)
+        api_mock = mock.MagicMock(
+            json_request=lambda *args, **kwargs: (None, {'task_id': '1234'}))
+        manager = actions.ActionManager(api_mock)
         result = manager.call('testEnvId', 'testActionId', ['arg1', 'arg2'])
-        self.assertEqual(('POST',
-                          '/v1/environments/testEnvId/actions/testActionId'),
-                         result)
+        self.assertEqual('1234', result)
 
     def test_package_filter_pagination_next_marker(self):
         """``PackageManager.filter`` handles `next_marker` parameter related
@@ -218,10 +218,16 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
             return mock.MagicMock(), responses.pop(0)
 
         api = mock.MagicMock()
-
         api.configure_mock(**{'json_request.side_effect': json_request})
 
         manager = packages.PackageManager(api)
         list(manager.filter())
 
         self.assertEqual(api.json_request.call_count, 2)
+
+    def test_action_manager_get_result(self):
+        api_mock = mock.MagicMock(
+            json_request=lambda *args, **kwargs: (None, {'a': 'b'}))
+        manager = actions.ActionManager(api_mock)
+        result = manager.get_result('testEnvId', '1234')
+        self.assertEqual({'a': 'b'}, result)
