@@ -219,15 +219,7 @@ def to_url(filename, base_url, version='', path='/', extension=''):
     return urlparse.urljoin(base_url, path + filename + version + extension)
 
 
-class Package(object):
-    """Represents murano package contents."""
-
-    @staticmethod
-    def fromFile(file_obj):
-        if not isinstance(file_obj, File):
-            file_obj = File(file_obj)
-        return Package(file_obj)
-
+class FileWrapperMixin(object):
     def __init__(self, file_wrapper):
         self.file_wrapper = file_wrapper
         try:
@@ -247,6 +239,50 @@ class Package(object):
 
     def __del__(self):
         self.close()
+
+
+class Package(FileWrapperMixin):
+    """Represents murano package contents."""
+
+    @staticmethod
+    def fromFile(file_obj):
+        if not isinstance(file_obj, File):
+            file_obj = File(file_obj)
+        return Package(file_obj)
+
+
+class Bundle(FileWrapperMixin):
+    """Represents murano bundle contents."""
+    @staticmethod
+    def fromFile(file_obj):
+        if not isinstance(file_obj, File):
+            file_obj = File(file_obj)
+        return Bundle(file_obj)
+
+    def packages(self):
+        """Returns a generator, yielding packages found in the bundle."""
+        self._file.seek(0)
+        bundle = None
+        try:
+            bundle = jsonutils.load(self._file)
+        except ValueError:
+            pass
+        if bundle is None:
+            try:
+                bundle = yaml.load(self._file)
+            except yaml.error.YAMLError:
+                pass
+
+        if bundle is None:
+            raise ValueError("Can't parse bundle contents")
+
+        if 'Packages' not in bundle:
+            return
+
+        for package in bundle['Packages']:
+            if 'Name' not in package:
+                continue
+            yield package
 
 
 class YaqlExpression(object):
