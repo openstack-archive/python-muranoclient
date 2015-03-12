@@ -186,14 +186,16 @@ def do_package_delete(mc, args):
 
 
 @utils.arg('filename', metavar='<FILE>',
-           help='Url of the murano zip package or path to zip package')
+           help='Url of the murano zip package, FQPN, or path to zip package')
 @utils.arg('-c', '--categories', metavar='<CAT1 CAT2 CAT3>', nargs='*',
            help='Category list to attach')
 @utils.arg('--is-public', action='store_true', default=False,
            help='Make package available for user from other tenants')
+@utils.arg('--version', default='',
+           help='Version of the package to use from repository')
 def do_package_import(mc, args):
     """Import a package.
-    `FILE` should be the path to a zip file.
+    `FILE` can be either a path to a zip file, url or a FQPN.
     `categories` could be separated by a comma
     """
     data = {"is_public": args.is_public}
@@ -201,7 +203,13 @@ def do_package_import(mc, args):
     if args.categories:
         data["categories"] = args.categories
 
-    mc.packages.create(data, ((args.filename, args.filename),))
+    filename = args.filename
+    if os.path.isfile(filename):
+        filename = open(filename, 'rb')
+
+    mc.packages.create(data, ((args.filename, filename),),
+                       version=args.version,
+                       murano_repo_url=args.murano_repo_url)
     do_package_list(mc)
 
 

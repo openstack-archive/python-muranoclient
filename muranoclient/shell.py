@@ -154,6 +154,12 @@ class MuranoShell(object):
                             action='store_true',
                             help='Send os-username and os-password to murano.')
 
+        parser.add_argument('--murano-repo-url',
+                            default=utils.env('MURANO_REPO_URL',
+                                              default='http://127.0.0.1'),
+                            help=('Defaults to env[MURANO_REPO_URL] '
+                                  'or 127.0.0.1'))
+
         return parser
 
     def get_subcommand_parser(self, version):

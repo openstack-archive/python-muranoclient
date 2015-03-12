@@ -50,10 +50,37 @@ class UtilsTest(testtools.TestCase):
 
     def test_file_object_url(self):
         resp = requests.Response()
-        resp.status_code = 200
         resp.raw = StringIO.StringIO("123")
+        resp.status_code = 200
         with mock.patch(
                 'requests.get',
                 mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
             new_f_obj = utils.File('http://127.0.0.1/').open()
+            self.assertTrue(hasattr(new_f_obj, 'read'))
+
+    def test_file_object_repo_fails(self):
+
+        resp = requests.Response()
+        resp.raw = StringIO.StringIO("123")
+        resp.status_code = 400
+        with mock.patch(
+                'requests.get',
+                mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
+            self.assertRaises(
+                ValueError, utils.Package.fromFile,
+                utils.to_url('foo.bar.baz', base_url='http://127.0.0.1'))
+
+    def test_no_repo_url_fails(self):
+        self.assertRaises(ValueError, utils.to_url,
+                          'foo.bar.baz', base_url='')
+
+    def test_file_object_repo(self):
+        resp = requests.Response()
+        resp.raw = StringIO.StringIO("123")
+        resp.status_code = 200
+        with mock.patch(
+                'requests.get',
+                mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
+            new_f_obj = utils.Package.fromFile(utils.to_url(
+                'foo.bar.baz', base_url='http://')).file()
             self.assertTrue(hasattr(new_f_obj, 'read'))

@@ -16,6 +16,7 @@ import urllib
 
 from oslo.serialization import jsonutils
 import requests
+import six
 import yaml
 
 from muranoclient.common import base
@@ -53,13 +54,22 @@ class PackageManager(base.Manager):
         return self._list('/v1/catalog/packages/categories',
                           response_key='categories', obj_class=Category)
 
-    def create(self, data, files):
+    def create(self, data, files, version='', murano_repo_url=None):
+
         files = requests.utils.to_key_val_list(files)
         if not files:
             raise ValueError("No files to import")
-        packages = [(k, utils.Package.fromFile(v)) for (k, v) in files]
-        files = [(k, package.file()) for (k, package) in packages]
+        name, file_name = files[0]
+        if isinstance(file_name, six.string_types):
+            file_name = utils.to_url(
+                file_name,
+                base_url=murano_repo_url,
+                version=version,
+                path='/apps/',
+                extension='.zip')
+        package = utils.Package.fromFile(file_name)
 
+        files = [(name, package.file(), )]
         data = {'data': jsonutils.dumps(data)}
         url = '{0}/v1/catalog/packages'.format(self.api.endpoint)
         headers = {'X-Auth-Token': self.api.auth_token}
