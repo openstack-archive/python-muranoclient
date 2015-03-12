@@ -185,7 +185,8 @@ def do_package_delete(mc, args):
         do_package_list(mc)
 
 
-@utils.arg('filename', metavar='<FILE>', help='Zip file containing package')
+@utils.arg('filename', metavar='<FILE>',
+           help='Url of the murano zip package or path to zip package')
 @utils.arg('-c', '--categories', metavar='<CAT1 CAT2 CAT3>', nargs='*',
            help='Category list to attach')
 @utils.arg('--is-public', action='store_true', default=False,
@@ -200,7 +201,7 @@ def do_package_import(mc, args):
     if args.categories:
         data["categories"] = args.categories
 
-    mc.packages.create(data, ((args.filename, open(args.filename, 'rb')),))
+    mc.packages.create(data, ((args.filename, args.filename),))
     do_package_list(mc)
 
 

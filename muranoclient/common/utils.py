@@ -18,14 +18,17 @@ from __future__ import print_function
 import os
 import re
 import sys
+import tempfile
 import textwrap
 import types
+import urlparse
 import uuid
 
 from oslo.serialization import jsonutils
 from oslo.utils import encodeutils
 from oslo.utils import importutils
 import prettytable
+import requests
 import six
 import yaml
 import yaql
@@ -161,6 +164,77 @@ def exception_to_str(exc):
             error = ("Caught '%(exception)s' exception." %
                      {"exception": exc.__class__.__name__})
     return encodeutils.safe_encode(error, errors='ignore')
+
+
+class NoCloseProxy(object):
+    """A proxy object, that does nothing on close."""
+    def __init__(self, obj):
+        self.obj = obj
+
+    def close(self):
+        return
+
+    def __getattr__(self, name):
+        return getattr(self.obj, name)
+
+
+class File(object):
+    def __init__(self, name):
+        self.name = name
+
+    def open(self):
+        if hasattr(self.name, 'read'):
+            # NOTE(kzaitsev) We do not want to close a file object
+            # passed to File wrapper. The caller should be responsible
+            # for closing it
+            return NoCloseProxy(self.name)
+        else:
+            if os.path.isfile(self.name):
+                return open(self.name)
+            url = urlparse.urlparse(self.name)
+            if url.scheme in ('http', 'https'):
+                resp = requests.get(self.name, stream=True)
+                if not resp.ok:
+                    raise ValueError("Got non-ok status({0}) "
+                                     "while connecting to {1}".format(
+                                         resp.status_code, self.name))
+                temp_file = tempfile.NamedTemporaryFile()
+                for chunk in resp.iter_content(1024 * 1024):
+                    temp_file.write(chunk)
+                temp_file.flush()
+                temp_file.seek(0)
+                return temp_file
+            raise ValueError("Can't open {0}".format(self.name))
+
+
+class Package(object):
+    """Represents murano package contents."""
+
+    @staticmethod
+    def fromFile(file_obj):
+        if not isinstance(file_obj, File):
+            file_obj = File(file_obj)
+        return Package(file_obj)
+
+    def __init__(self, file_wrapper):
+        self.file_wrapper = file_wrapper
+        try:
+            self._file = self.file_wrapper.open()
+        except Exception:
+            # NOTE(kzaitsev): We need to have _file available at __del__ time.
+            self._file = None
+            raise
+
+    def file(self):
+        self._file.seek(0)
+        return self._file
+
+    def close(self):
+        if self._file and not self._file.closed:
+            self._file.close()
+
+    def __del__(self):
+        self.close()
 
 
 class YaqlExpression(object):
