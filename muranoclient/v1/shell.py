@@ -193,7 +193,7 @@ def do_package_delete(mc, args):
            help='Make package available for user from other tenants')
 @utils.arg('--version', default='',
            help='Version of the package to use from repository')
-def do_package_import(mc, args, list_packages=True):
+def do_package_import(mc, args):
     """Import a package.
     `FILE` can be either a path to a zip file, url or a FQPN.
     `categories` could be separated by a comma
@@ -206,12 +206,23 @@ def do_package_import(mc, args, list_packages=True):
     filename = args.filename
     if os.path.isfile(filename):
         filename = open(filename, 'rb')
-
-    mc.packages.create(data, ((args.filename, filename),),
-                       version=args.version,
-                       murano_repo_url=args.murano_repo_url)
-    if list_packages:
-        do_package_list(mc)
+    else:
+        filename = utils.to_url(
+            filename,
+            version=args.version,
+            base_url=args.murano_repo_url,
+            extension='.zip',
+            path='apps/',
+        )
+    package = utils.Package.fromFile(filename)
+    reqs = package.requirements(base_url=args.murano_repo_url)
+    for name, package in reqs.iteritems():
+        try:
+            mc.packages.create(data, {name: package.file()})
+        except Exception as e:
+            print("Error {0} occurred while installing package {1}".format(
+                e, name))
+    do_package_list(mc)
 
 
 @utils.arg('filename', metavar='<FILE>',
@@ -230,15 +241,26 @@ def do_bundle_import(mc, args):
 
     data = {"is_public": args.is_public}
 
-    for package in bundle_file.packages():
+    for package_info in bundle_file.packages():
         try:
-            mc.packages.create(data, ((package['Name'], package['Name']),),
-                               version=package.get('Version'),
-                               murano_repo_url=args.murano_repo_url)
+            package = utils.Package.fromFile(
+                utils.to_url(
+                    package_info['Name'],
+                    version=package_info.get('Version'),
+                    base_url=args.murano_repo_url,
+                    extension='.zip',
+                    path='apps/',
+                ))
         except Exception as e:
-            print("Error '{0}' occurred during import of {1} package".format(
-                e, package['Name']))
-
+            print("Error {0} occurred while "
+                  "parsing package {1}".format(e, package_info['Name']))
+        reqs = package.requirements(base_url=args.murano_repo_url)
+        for name, package in reqs.iteritems():
+            try:
+                mc.packages.create(data, {name: package.file()})
+            except Exception as e:
+                print("Error {0} occurred while "
+                      "installing package {1}".format(e, name))
     do_package_list(mc)
 
 

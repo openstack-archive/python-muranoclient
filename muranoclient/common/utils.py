@@ -15,14 +15,17 @@
 
 from __future__ import print_function
 
+import logging
 import os
 import re
+import StringIO
 import sys
 import tempfile
 import textwrap
 import types
 import urlparse
 import uuid
+import zipfile
 
 from oslo.serialization import jsonutils
 from oslo.utils import encodeutils
@@ -35,6 +38,8 @@ import yaql
 import yaql.exceptions
 
 from muranoclient.common import exceptions
+
+LOG = logging.getLogger(__name__)
 
 
 # Decorator for cli-args
@@ -250,6 +255,47 @@ class Package(FileWrapperMixin):
             file_obj = File(file_obj)
         return Package(file_obj)
 
+    @property
+    def manifest(self):
+        """Parsed manifest file of a package."""
+        if not hasattr(self, '_manifest'):
+            try:
+                self._file.seek(0)
+                zip_obj = zipfile.ZipFile(
+                    StringIO.StringIO(self._file.read()))
+                self._manifest = yaml.safe_load(zip_obj.open('manifest.yaml'))
+            except (zipfile.BadZipfile, KeyError, yaml.error.YAMLError) as e:
+                LOG.exception("An error occurred,"
+                              " while extracting manifest from package")
+                raise ValueError(e)
+        return self._manifest
+
+    def requirements(self, base_url, dep_dict=None):
+        """Recursively scan Require section of manifests of all the
+        dependencies. Returns a dict with FQPNs as keys and respective
+        PackageFiles as values
+        """
+        if not dep_dict:
+            dep_dict = {}
+        dep_dict[self.manifest['FullName']] = self
+        if 'Require' in self.manifest:
+            for dep_name, ver in self.manifest['Require'].iteritems():
+                if dep_name in dep_dict:
+                    continue
+                try:
+                    dep_url = to_url(dep_name, base_url, version=ver,
+                                     path='/apps/', extension='.zip')
+                    req_file = Package.fromFile(dep_url)
+
+                    dep_dict.update(req_file.requirements(
+                        base_url=base_url, dep_dict=dep_dict))
+                except Exception:
+                    LOG.exception("Error occured during parsing dependecies "
+                                  "of {0} requirement".format(
+                                      self.manifest['FullName']))
+                    continue
+        return dep_dict
+
 
 class Bundle(FileWrapperMixin):
     """Represents murano bundle contents."""
@@ -269,7 +315,7 @@ class Bundle(FileWrapperMixin):
             pass
         if bundle is None:
             try:
-                bundle = yaml.load(self._file)
+                bundle = yaml.safe_load(self._file)
             except yaml.error.YAMLError:
                 pass
 
