@@ -397,8 +397,10 @@ class Bundle(FileWrapperMixin):
             file_obj = File(file_obj)
         return Bundle(file_obj)
 
-    def packages(self):
-        """Returns a generator, yielding packages found in the bundle."""
+    def package_specs(self):
+        """Returns a generator yeilding package specifications i.e.
+        dicts with 'Name' and 'Version' fields
+        """
         self._file.seek(0)
         bundle = None
         try:
@@ -421,6 +423,24 @@ class Bundle(FileWrapperMixin):
             if 'Name' not in package:
                 continue
             yield package
+
+    def packages(self, base_url=''):
+        """Returns a generator, yielding Package objects for each package
+        found in the bundle.
+        """
+        for package in self.package_specs():
+            try:
+                url = to_url(package['Name'], base_url,
+                             version=package.get('Version'),
+                             path='/apps/', extension='.zip')
+                pkg_obj = Package.fromFile(url)
+
+            except Exception:
+                LOG.exception("Error occured during parsing dependecies "
+                              "of {0} requirement".format(
+                                  package['Name']))
+                continue
+            yield pkg_obj
 
 
 class YaqlExpression(object):
