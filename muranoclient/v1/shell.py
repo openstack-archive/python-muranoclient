@@ -369,20 +369,7 @@ def do_bundle_import(mc, args):
 
     data = {"is_public": args.is_public}
 
-    for package_info in bundle_file.packages():
-        try:
-            package = utils.Package.fromFile(
-                utils.to_url(
-                    package_info['Name'],
-                    version=package_info.get('Version'),
-                    base_url=args.murano_repo_url,
-                    extension='.zip',
-                    path='apps/',
-                ))
-        except Exception as e:
-            print("Error {0} occurred while "
-                  "parsing package {1}".format(e, package_info['Name']))
-
+    for package in bundle_file.packages(base_url=args.murano_repo_url):
         reqs = package.requirements(base_url=args.murano_repo_url)
         for name, dep_package in reqs.iteritems():
             try:
