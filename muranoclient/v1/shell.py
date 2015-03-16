@@ -462,13 +462,22 @@ def _make_archive(archive_name, path):
 def do_category_list(mc, args={}):
     """List all available categories."""
     categories = mc.categories.list()
+    field_labels = ["ID", "Name"]
+    fields = ["id", "name"]
+    utils.print_list(categories, fields, field_labels)
 
-    field_labels = ["ID", "Name", "Packages Assigned"]
-    fields = ["id", "name", "packages"]
-    utils.print_list(categories, fields,
-                     field_labels,
-                     formatters={'packages':
-                                 lambda c: '\n'.join(c.packages)})
+
+@utils.arg("id", metavar="<ID>",
+           help="Id of a category(s) to show")
+def do_category_show(mc, args):
+    category = mc.categories.get(args.id)
+    # field_labels = ["ID", "Name", "Packages Assigned"]
+    # fields = ["id", "name", "packages"]
+    to_display = dict(id=category.id,
+                      name=category.name,
+                      packages=', '.join(p['name'] for p in category.packages))
+    formatters = {'packages': utils.text_wrap_formatter}
+    utils.print_dict(to_display, formatters)
 
 
 @utils.arg("name", metavar="<CATEGORY_NAME>",
