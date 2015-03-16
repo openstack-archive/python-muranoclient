@@ -46,6 +46,11 @@ class Service(base.Resource):
     def data(self, **kwargs):
         return self.manager.data(self, **kwargs)
 
+    def _add_details(self, info):
+        if isinstance(info, dict):
+            for k, v in info.items():
+                setattr(self, k, v)
+
 
 class ServiceManager(base.Manager):
     resource_class = Service
