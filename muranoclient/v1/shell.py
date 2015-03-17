@@ -388,16 +388,30 @@ def do_bundle_import(mc, args):
     do_package_list(mc)
 
 
-@utils.arg("id", metavar="<ID>")
-@utils.arg("path", metavar="<PATH>")
+@utils.arg('id', metavar='<ID>',
+           help='Environment ID to show applications from')
+@utils.arg('-p', '--path', metavar='<PATH>',
+           help='Level of detalization to show. '
+                'Leave empty to browse all services in the environment',
+           default='/')
 def do_service_show(mc, args):
-    service = mc.services.get(args.id, args.path)
-    to_display = dict(
-        name=service.name,
-        id=getattr(service, '?')['id'],
-        type=getattr(service, '?')['type']
-    )
-    utils.print_dict(to_display)
+    if args.path == '/':
+        services = mc.services.list(args.id)
+    else:
+        if not args.path.startswith('/'):
+            args.path = '/' + args.path
+            services = [mc.services.get(args.id, args.path)]
+
+    field_labels = ['Id', 'Name', 'Type']
+    fields = ['id', 'name', 'type']
+    formatters = {}
+
+    # If services is empty, first element exists and it's None
+    if hasattr(services[0], '?'):
+        formatters = {'id': lambda x: getattr(x, '?')['id'],
+                      'type': lambda x: getattr(x, '?')['type']}
+
+    utils.print_list(services, fields, field_labels, formatters=formatters)
 
 
 @utils.arg('-t', '--template', metavar='<HEAT_TEMPLATE>',
