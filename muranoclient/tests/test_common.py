@@ -67,7 +67,7 @@ class UtilsTest(testtools.TestCase):
                 'requests.get',
                 mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
             self.assertRaises(
-                ValueError, utils.Package.fromFile,
+                ValueError, utils.Package.from_file,
                 utils.to_url('foo.bar.baz', base_url='http://127.0.0.1'))
 
     def test_no_repo_url_fails(self):
@@ -81,6 +81,6 @@ class UtilsTest(testtools.TestCase):
         with mock.patch(
                 'requests.get',
                 mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):
-            new_f_obj = utils.Package.fromFile(utils.to_url(
+            new_f_obj = utils.Package.from_file(utils.to_url(
                 'foo.bar.baz', base_url='http://')).file()
             self.assertTrue(hasattr(new_f_obj, 'read'))

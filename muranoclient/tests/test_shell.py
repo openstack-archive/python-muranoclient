@@ -307,7 +307,7 @@ class ShellPackagesOperations(ShellTest):
             args.categories = ['Cat1', 'Cat2 with space']
             args.is_public = True
 
-            result = {RESULT_PACKAGE: utils.Package.fromFile(
+            result = {RESULT_PACKAGE: utils.Package.from_file(
                 StringIO.StringIO("123"))}
             with mock.patch(
                     'muranoclient.common.utils.Package.manifest') as man_mock:
@@ -331,7 +331,7 @@ class ShellPackagesOperations(ShellTest):
             args.categories = None
             args.is_public = False
 
-            result = {RESULT_PACKAGE: utils.Package.fromFile(
+            result = {RESULT_PACKAGE: utils.Package.from_file(
                 StringIO.StringIO("123"))}
 
             with mock.patch(
@@ -357,7 +357,7 @@ class ShellPackagesOperations(ShellTest):
         resp = requests.Response()
         resp.status_code = 200
         resp.raw = StringIO.StringIO("123")
-        result = {args.filename: utils.Package.fromFile(
+        result = {args.filename: utils.Package.from_file(
             StringIO.StringIO("123"))}
         with mock.patch(
                 'muranoclient.common.utils.Package.manifest') as man_mock:
@@ -387,7 +387,7 @@ class ShellPackagesOperations(ShellTest):
         resp = requests.Response()
         resp.status_code = 200
         resp.raw = StringIO.StringIO("123")
-        result = {args.filename: utils.Package.fromFile(
+        result = {args.filename: utils.Package.from_file(
             StringIO.StringIO("123"))}
         with mock.patch(
                 'muranoclient.common.utils.Package.manifest') as man_mock:

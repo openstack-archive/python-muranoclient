@@ -25,6 +25,7 @@ import textwrap
 import types
 import urlparse
 import uuid
+import warnings
 import zipfile
 
 from oslo.serialization import jsonutils
@@ -250,10 +251,41 @@ class Package(FileWrapperMixin):
     """Represents murano package contents."""
 
     @staticmethod
-    def fromFile(file_obj):
+    def from_file(file_obj):
         if not isinstance(file_obj, File):
             file_obj = File(file_obj)
         return Package(file_obj)
+
+    @staticmethod
+    def fromFile(file_obj):
+        warnings.warn("Use from_file function", DeprecationWarning)
+        return Package.from_file(file_obj)
+
+    @staticmethod
+    def from_location(name, base_url='', version='', url='', path=None):
+        """If path is supplied search for name file in the path, otherwise
+        if url is supplied - open that url and finally search murano
+        repository for the package.
+        """
+        if path:
+            pkg_name = os.path.join(path, name)
+            file_name = None
+            for f in [pkg_name, pkg_name + '.zip']:
+                if os.path.exists(f):
+                    file_name = f
+            if file_name:
+                return Package.from_file(file_name)
+            LOG.error("Couldn't find file for package {0}, tried {1}".format(
+                name, [pkg_name, pkg_name + '.zip']))
+        if url:
+            return Package.from_file(url)
+        return Package.from_file(to_url(
+            name,
+            base_url=base_url,
+            version=version,
+            path='/apps/',
+            extension='.zip')
+        )
 
     @property
     def contents(self):
@@ -292,7 +324,7 @@ class Package(FileWrapperMixin):
         except Exception:
             return []
 
-    def requirements(self, base_url, dep_dict=None):
+    def requirements(self, base_url, path=None, dep_dict=None):
         """Recursively scan Require section of manifests of all the
         dependencies. Returns a dict with FQPNs as keys and respective
         Package objects as values
@@ -305,21 +337,26 @@ class Package(FileWrapperMixin):
                 if dep_name in dep_dict:
                     continue
                 try:
-                    dep_url = to_url(dep_name, base_url, version=ver,
-                                     path='/apps/', extension='.zip')
-                    req_file = Package.fromFile(dep_url)
-
-                    dep_dict.update(req_file.requirements(
-                        base_url=base_url, dep_dict=dep_dict))
+                    req_file = Package.from_location(
+                        dep_name,
+                        version=ver,
+                        path=path,
+                        base_url=base_url,
+                    )
                 except Exception:
-                    LOG.exception("Error occured during parsing dependecies "
+                    LOG.exception("Error occured while parsing dependecies "
                                   "of {0} requirement".format(
                                       self.manifest['FullName']))
                     continue
+                dep_dict.update(req_file.requirements(
+                    base_url=base_url,
+                    path=path,
+                    dep_dict=dep_dict,
+                ))
         return dep_dict
 
 
-def ensure_images(glance_client, image_specs, base_url):
+def ensure_images(glance_client, image_specs, base_url, local_path=None):
     """Ensure that images from image_specs are available in glance. If not
     attempts: instructs glance to download the images and sets murano-specific
     metadata for it.
@@ -333,6 +370,7 @@ def ensure_images(glance_client, image_specs, base_url):
         return True
 
     keys = ['Name', 'Hash', 'DiskFormat', 'ContainerFormat', ]
+    installed_images = []
     for image_spec in image_specs:
         if not _image_valid(image_spec, keys):
             continue
@@ -365,37 +403,61 @@ def ensure_images(glance_client, image_specs, base_url):
                      "to download".format(image_spec['Name']))
             update_metadata = True
 
-            download_url = to_url(
-                image_spec.get("Url", image_spec['Name']),
-                base_url=base_url,
-                path='/images/',
-            )
+            img_file = None
+            if local_path:
+                img_file = os.path.join(local_path, image_spec['Name'])
 
-            LOG.info("Instructing glance to download image {0}".format(
-                image_spec['Name']))
-            img = glance_client.images.create(
-                name=image_spec["Name"],
-                container_format=image_spec['ContainerFormat'],
-                disk_format=image_spec['DiskFormat'],
-                copy_from=download_url)
-            img = img.to_dict()
+            if img_file and not os.path.exists(img_file):
+                LOG.error("Image file {0} does not exist."
+                          .format(img_file))
 
-        if update_metadata and 'Meta' in image_spec:
-            LOG.info("Updating image {0} metadata".format(
-                image_spec['Name']))
-            murano_image_info = jsonutils.dumps(image_spec['Meta'])
-            glance_client.images.update(
-                img['id'], properties={'murano_image_info':
-                                       murano_image_info})
+            if img_file and os.path.exists(img_file):
+                img = glance_client.images.create(
+                    name=image_spec['Name'],
+                    container_format=image_spec['ContainerFormat'],
+                    disk_format=image_spec['DiskFormat'],
+                    data=open(img_file, 'rb'),
+                )
+                img = img.to_dict()
+            else:
+                download_url = to_url(
+                    image_spec.get("Url", image_spec['Name']),
+                    base_url=base_url,
+                    path='/images/',
+                )
+                LOG.info("Instructing glance to download image {0}".format(
+                    image_spec['Name']))
+                img = glance_client.images.create(
+                    name=image_spec["Name"],
+                    container_format=image_spec['ContainerFormat'],
+                    disk_format=image_spec['DiskFormat'],
+                    copy_from=download_url)
+                img = img.to_dict()
+            installed_images.append(img)
+
+            if update_metadata and 'Meta' in image_spec:
+                LOG.info("Updating image {0} metadata".format(
+                    image_spec['Name']))
+                murano_image_info = jsonutils.dumps(image_spec['Meta'])
+                glance_client.images.update(
+                    img['id'], properties={'murano_image_info':
+                                           murano_image_info})
+    return installed_images
 
 
 class Bundle(FileWrapperMixin):
     """Represents murano bundle contents."""
+
     @staticmethod
-    def fromFile(file_obj):
+    def from_file(file_obj):
         if not isinstance(file_obj, File):
             file_obj = File(file_obj)
         return Bundle(file_obj)
+
+    @staticmethod
+    def fromFile(file_obj):
+        warnings.warn("Use from_file function", DeprecationWarning)
+        return Bundle.from_file(file_obj)
 
     def package_specs(self):
         """Returns a generator yeilding package specifications i.e.
@@ -424,16 +486,19 @@ class Bundle(FileWrapperMixin):
                 continue
             yield package
 
-    def packages(self, base_url=''):
+    def packages(self, base_url='', path=None):
         """Returns a generator, yielding Package objects for each package
         found in the bundle.
         """
         for package in self.package_specs():
             try:
-                url = to_url(package['Name'], base_url,
-                             version=package.get('Version'),
-                             path='/apps/', extension='.zip')
-                pkg_obj = Package.fromFile(url)
+                pkg_obj = Package.from_location(
+                    package['Name'],
+                    version=package.get('Version'),
+                    url=package.get('Url'),
+                    path=path,
+                    base_url=base_url,
+                )
 
             except Exception:
                 LOG.exception("Error occured during parsing dependecies "

@@ -332,7 +332,7 @@ def do_package_import(mc, args):
             extension='.zip',
             path='apps/',
         )
-    package = utils.Package.fromFile(filename)
+    package = utils.Package.from_file(filename)
     reqs = package.requirements(base_url=args.murano_repo_url)
     for name, package in reqs.iteritems():
         try:
@@ -360,28 +360,45 @@ def do_package_import(mc, args):
 def do_bundle_import(mc, args):
     """Import a bundle.
     `FILE` can be either a path to a zip file, url or name from repo.
+    if `FILE` is a local file does not attempt to parse requirements and
+    treat Names of packages in a bundle as file names, relative to location
+    of bundle file.
     """
+    local_path = None
     if os.path.isfile(args.filename):
-        bundle_file = utils.Bundle.fromFile(args.filename)
+        bundle_file = utils.Bundle.from_file(args.filename)
+        local_path = os.path.dirname(os.path.abspath(args.filename))
     else:
-        bundle_file = utils.Bundle.fromFile(utils.to_url(
+        bundle_file = utils.Bundle.from_file(utils.to_url(
             args.filename, base_url=args.murano_repo_url, path='/bundles/'))
 
     data = {"is_public": args.is_public}
 
-    for package in bundle_file.packages(base_url=args.murano_repo_url):
-        reqs = package.requirements(base_url=args.murano_repo_url)
-        for name, dep_package in reqs.iteritems():
+    for package in bundle_file.packages(
+            base_url=args.murano_repo_url, path=local_path):
+
+        requirements = package.requirements(
+            base_url=args.murano_repo_url,
+            path=local_path,
+        )
+        for name, dep_package in requirements.iteritems():
             try:
-                utils.ensure_images(
+                imgs = utils.ensure_images(
                     glance_client=mc.glance_client,
                     image_specs=dep_package.images(),
-                    base_url=args.murano_repo_url)
+                    base_url=args.murano_repo_url,
+                    local_path=local_path)
+                if imgs:
+                    print("Installed {0} image{1}".format(
+                        ','.join(
+                            map(lambda x: x['name'] + ',' + x['id'], imgs)),
+                        's' if len(imgs) > 1 else '',))
             except Exception as e:
                 print("Error {0} occurred while installing "
                       "images for {1}".format(e, name))
             try:
-                _handle_package_exists(mc, data, package, args.exists_action)
+                _handle_package_exists(
+                    mc, data, dep_package, args.exists_action)
             except Exception as e:
                 print("Error {0} occurred while "
                       "installing package {1}".format(e, name))
