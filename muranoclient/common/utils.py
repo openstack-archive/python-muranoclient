@@ -295,9 +295,9 @@ class Package(FileWrapperMixin):
                 self._file.seek(0)
                 self._zip_obj = zipfile.ZipFile(
                     StringIO.StringIO(self._file.read()))
-            except Exception:
-                LOG.exception("An error occurred,"
-                              " while parsint the package")
+            except Exception as e:
+                LOG.error("Error {0} occurred,"
+                          " while parsing the package".format(e))
                 raise
         return self._zip_obj
 
@@ -308,9 +308,9 @@ class Package(FileWrapperMixin):
             try:
                 self._manifest = yaml.safe_load(
                     self.contents.open('manifest.yaml'))
-            except Exception:
-                LOG.exception("An error occurred,"
-                              " while extracting manifest from package")
+            except Exception as e:
+                LOG.error("Error {0} occurred, while extracting "
+                          "manifest from package".format(e))
                 raise
         return self._manifest
 
@@ -343,10 +343,11 @@ class Package(FileWrapperMixin):
                         path=path,
                         base_url=base_url,
                     )
-                except Exception:
-                    LOG.exception("Error occured while parsing dependecies "
-                                  "of {0} requirement".format(
-                                      self.manifest['FullName']))
+                except Exception as e:
+                    LOG.error("Error {0} occured while parsing package {1}, "
+                              "required by {2} package".format(
+                                  e, dep_name,
+                                  self.manifest['FullName']))
                     continue
                 dep_dict.update(req_file.requirements(
                     base_url=base_url,
@@ -500,10 +501,9 @@ class Bundle(FileWrapperMixin):
                     base_url=base_url,
                 )
 
-            except Exception:
-                LOG.exception("Error occured during parsing dependecies "
-                              "of {0} requirement".format(
-                                  package['Name']))
+            except Exception as e:
+                LOG.error("Error {0} occured while obtaining "
+                          "package {1}".format(e, package['Name']))
                 continue
             yield pkg_obj
 

@@ -299,7 +299,9 @@ class ShellPackagesOperations(ShellTest):
                                   "Application package "
                                   "is available at {0}".format(RESULT_PACKAGE))
 
-    def test_package_import(self):
+    @mock.patch('muranoclient.common.utils.Package.images')
+    def test_package_import(self, mock_images):
+        mock_images.return_value = []
         args = TestArgs()
         with tempfile.NamedTemporaryFile() as f:
             RESULT_PACKAGE = f.name
@@ -322,7 +324,9 @@ class ShellPackagesOperations(ShellTest):
                 {RESULT_PACKAGE: mock.ANY},
             )
 
-    def test_package_import_no_categories(self):
+    @mock.patch('muranoclient.common.utils.Package.images')
+    def test_package_import_no_categories(self, mock_images):
+        mock_images.return_value = []
         args = TestArgs()
         with tempfile.NamedTemporaryFile() as f:
             RESULT_PACKAGE = f.name
@@ -347,7 +351,9 @@ class ShellPackagesOperations(ShellTest):
                 {RESULT_PACKAGE: mock.ANY},
             )
 
-    def test_package_import_url(self):
+    @mock.patch('muranoclient.common.utils.Package.images')
+    def test_package_import_url(self, mock_images):
+        mock_images.return_value = []
         args = TestArgs()
 
         args.filename = "http://127.0.0.1/test_package.zip"
@@ -376,7 +382,9 @@ class ShellPackagesOperations(ShellTest):
             {args.filename: mock.ANY},
         )
 
-    def test_package_import_by_name(self):
+    @mock.patch('muranoclient.common.utils.Package.images')
+    def test_package_import_by_name(self, mock_images):
+        mock_images.return_value = []
         args = TestArgs()
 
         args.filename = "io.test.apps.test_application"

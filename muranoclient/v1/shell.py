@@ -335,14 +335,20 @@ def do_package_import(mc, args):
     package = utils.Package.from_file(filename)
     reqs = package.requirements(base_url=args.murano_repo_url)
     for name, package in reqs.iteritems():
-        try:
-            utils.ensure_images(
-                glance_client=mc.glance_client,
-                image_specs=package.images(),
-                base_url=args.murano_repo_url)
-        except Exception as e:
-            print("Error {0} occurred while installing "
-                  "images for {1}".format(e, name))
+        image_specs = package.images()
+        if image_specs:
+            print("Inspecting required images")
+            try:
+                imgs = utils.ensure_images(
+                    glance_client=mc.glance_client,
+                    image_specs=image_specs,
+                    base_url=args.murano_repo_url)
+                for img in imgs:
+                    print("Added {0}, {1} image".format(
+                        img['name'], img['id']))
+            except Exception as e:
+                print("Error {0} occurred while installing "
+                      "images for {1}".format(e, name))
         try:
             _handle_package_exists(mc, data, package, args.exists_action)
         except Exception as e:
@@ -370,7 +376,11 @@ def do_bundle_import(mc, args):
         local_path = os.path.dirname(os.path.abspath(args.filename))
     else:
         bundle_file = utils.Bundle.from_file(utils.to_url(
-            args.filename, base_url=args.murano_repo_url, path='/bundles/'))
+            args.filename,
+            base_url=args.murano_repo_url,
+            path='/bundles/',
+            extension='.bundle',
+        ))
 
     data = {"is_public": args.is_public}
 
@@ -382,20 +392,21 @@ def do_bundle_import(mc, args):
             path=local_path,
         )
         for name, dep_package in requirements.iteritems():
-            try:
-                imgs = utils.ensure_images(
-                    glance_client=mc.glance_client,
-                    image_specs=dep_package.images(),
-                    base_url=args.murano_repo_url,
-                    local_path=local_path)
-                if imgs:
-                    print("Installed {0} image{1}".format(
-                        ','.join(
-                            map(lambda x: x['name'] + ',' + x['id'], imgs)),
-                        's' if len(imgs) > 1 else '',))
-            except Exception as e:
-                print("Error {0} occurred while installing "
-                      "images for {1}".format(e, name))
+            image_specs = dep_package.images()
+            if image_specs:
+                print("Inspecting required images")
+                try:
+                    imgs = utils.ensure_images(
+                        glance_client=mc.glance_client,
+                        image_specs=image_specs,
+                        base_url=args.murano_repo_url,
+                        local_path=local_path)
+                    for img in imgs:
+                        print("Added {0}, {1} image".format(
+                            img['name'], img['id']))
+                except Exception as e:
+                    print("Error {0} occurred while installing "
+                          "images for {1}".format(e, name))
             try:
                 _handle_package_exists(
                     mc, data, dep_package, args.exists_action)
