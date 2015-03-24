@@ -257,9 +257,6 @@ class HTTPClient(object):
             method, url, content_type=content_type, **kwargs)
 
     def raw_request(self, method, url, **kwargs):
-        kwargs.setdefault('headers', {})
-        kwargs['headers'].setdefault('Content-Type',
-                                     'application/octet-stream')
         if 'body' in kwargs:
             if 'data' in kwargs:
                 raise ValueError("Can't provide both 'data' and "

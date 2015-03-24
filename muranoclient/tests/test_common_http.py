@@ -30,13 +30,11 @@ class HttpClientTest(testtools.TestCase):
         super(HttpClientTest, self).setUp()
 
     def test_http_raw_request(self, mock_request):
-        headers = {'Content-Type': 'application/octet-stream',
-                   'User-Agent': 'python-muranoclient'}
-
+        headers = {'User-Agent': 'python-muranoclient'}
         mock_request.return_value = \
             fakes.FakeHTTPResponse(
                 200, 'OK',
-                {'content-type': 'application/octet-stream'},
+                {},
                 '')
 
         client = http.HTTPClient('http://example.com:8082')
@@ -51,7 +49,7 @@ class HttpClientTest(testtools.TestCase):
         # Record a 200
         fake200 = fakes.FakeHTTPResponse(
             200, 'OK',
-            {'content-type': 'application/octet-stream'},
+            {},
             '')
 
         mock_request.side_effect = [fake200, fake200, fake200]
@@ -74,18 +72,15 @@ class HttpClientTest(testtools.TestCase):
         mock_request.assert_has_calls([
             mock.call('GET', 'http://example.com:8082',
                       allow_redirects=False,
-                      headers={'Content-Type': 'application/octet-stream',
-                               'User-Agent': 'python-muranoclient'}),
+                      headers={'User-Agent': 'python-muranoclient'}),
             mock.call('GET', 'http://example.com:8082',
                       allow_redirects=False,
-                      headers={'Content-Type': 'application/octet-stream',
-                               'User-Agent': 'python-muranoclient',
+                      headers={'User-Agent': 'python-muranoclient',
                                'X-Auth-Key': 'pass',
                                'X-Auth-User': 'user'}),
             mock.call('GET', 'http://example.com:8082',
                       allow_redirects=False,
-                      headers={'Content-Type': 'application/octet-stream',
-                               'User-Agent': 'python-muranoclient',
+                      headers={'User-Agent': 'python-muranoclient',
                                'X-Auth-Token': 'abcd1234'})
         ])
 
@@ -93,7 +88,7 @@ class HttpClientTest(testtools.TestCase):
         # Record a 200
         fake200 = fakes.FakeHTTPResponse(
             200, 'OK',
-            {'content-type': 'application/octet-stream'},
+            {},
             '')
 
         mock_request.return_value = fake200
@@ -106,8 +101,7 @@ class HttpClientTest(testtools.TestCase):
         mock_request.assert_called_once_with(
             'GET', 'http://example.com:8082',
             allow_redirects=False,
-            headers={'Content-Type': 'application/octet-stream',
-                     'X-Region-Name': 'RegionOne',
+            headers={'X-Region-Name': 'RegionOne',
                      'User-Agent': 'python-muranoclient'})
 
     def test_http_json_request(self, mock_request):
