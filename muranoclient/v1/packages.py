@@ -16,13 +16,10 @@ import logging
 import urllib
 
 from oslo.serialization import jsonutils
-import requests
 import yaml
 
 from muranoclient.common import base
 from muranoclient.common import exceptions
-from muranoclient.common import http
-
 
 LOG = logging.getLogger(__name__)
 
@@ -57,17 +54,17 @@ class PackageManager(base.Manager):
                           response_key='categories', obj_class=Category)
 
     def create(self, data, files):
-        data = {'data': jsonutils.dumps(data)}
-        url = '{0}/v1/catalog/packages'.format(self.api.endpoint)
-        headers = {'X-Auth-Token': self.api.auth_token}
-        response = requests.post(url, data=data, files=files, headers=headers,
-                                 verify=self.api.verify_cert)
-        http.HTTPClient.log_http_response(response)
-
+        response = self.api.raw_request(
+            'POST',
+            '/v1/catalog/packages',
+            data={'__metadata__': jsonutils.dumps(data)},
+            files=files
+        )
         if not response.ok:
             setattr(response, 'status', response.status_code)
             raise exceptions.from_response(response)
-        return self.resource_class(self, jsonutils.loads(response.content))
+        body = jsonutils.loads(response.text)
+        return self.resource_class(self, body)
 
     def get(self, app_id):
         return self._get('/v1/catalog/packages/{0}'.format(app_id))
