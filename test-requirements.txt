@@ -7,10 +7,10 @@ coverage>=3.6
 discover
 fixtures>=0.3.14
 mock>=1.0
-tempest-lib
+tempest-lib>=0.4.0
 testrepository>=0.0.18
 testscenarios>=0.4
-testtools>=0.9.34
+testtools>=0.9.36,!=1.2.0
 
 # doc build requirements
-sphinx>=1.1.2,<1.2
+sphinx>=1.1.2,!=1.2.0,!=1.3b1,<1.3
