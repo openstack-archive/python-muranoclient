@@ -84,7 +84,7 @@ def prepare_package(args):
 
     logo_file = os.path.join(temp_dir, 'logo.png')
     if not args.logo:
-        shutil.copyfile(muranoclient.get_resource('heatlogo.png'), logo_file)
+        shutil.copyfile(muranoclient.get_resource('heat_logo.png'), logo_file)
     else:
         if os.path.isfile(args.logo):
             shutil.copyfile(args.logo, logo_file)

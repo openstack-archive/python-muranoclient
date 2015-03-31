@@ -167,13 +167,23 @@ class PackageCreatorTest(base.TestAdditionalAsserts):
         except exceptions.CommandError as message:
             self.assertEqual(expected, message.args)
 
-    def test_generate_mpl_wrong_resources_dir(self):
+    def test_prepare_mpl_wrong_resources_dir(self):
         args = TestArgs()
+        args.template = TEMPLATE
         args.classes_dir = CLASSES_DIR
         args.resources_dir = '/home/this/path/does/not/exist'
+        args.type = 'Application'
+        args.name = 'Test'
+        args.tags = ''
+        args.ui = UI
+        args.logo = LOGO
+        args.full_name = 'test.full.name.TestName'
+        args.author = 'TestAuthor'
+        args.description = 'Test description'
+
         expected = ("'--resources-dir' parameter should be a directory", )
         try:
-            mpl_package.generate_manifest(args)
+            mpl_package.prepare_package(args)
         except exceptions.CommandError as message:
             self.assertEqual(expected, message.args)
 
