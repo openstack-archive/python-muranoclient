@@ -467,14 +467,14 @@ def do_service_show(mc, args):
 @utils.arg('-l', '--logo', metavar='<LOGO>', help='Path to the package logo')
 def do_package_create(mc, args):
     """Create an application package."""
-    if args.template and (args.classes_dir or args.resources_dir):
+    if args.template and args.classes_dir:
         raise exceptions.CommandError(
-            "Provide --template for a HOT-based package, OR --classes-dir"
-            " and --resources-dir for a MuranoPL-based package")
-    if not args.template and (not args.classes_dir or not args.resources_dir):
+            "Provide --template for a HOT-based package, OR"
+            " --classes-dir for a MuranoPL-based package")
+    if not args.template and not args.classes_dir:
         raise exceptions.CommandError(
-            "Provide --template for a HOT-based package, OR --classes-dir"
-            " and --resources-dir for a MuranoPL-based package")
+            "Provide --template for a HOT-based package, OR at least"
+            "--classes-dir for a MuranoPL-based package")
     directory_path = None
     try:
         if args.template:

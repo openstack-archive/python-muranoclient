@@ -18,6 +18,7 @@ import tempfile
 
 import yaml
 
+import muranoclient
 from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions
 
@@ -50,11 +51,18 @@ def prepare_package(args):
     with open(manifest_file, 'w') as f:
         f.write(yaml.dump(manifest, default_flow_style=False))
 
-    if args.logo and os.path.isfile(args.logo):
-        logo_file = os.path.join(temp_dir, 'logo.png')
+    logo_file = os.path.join(temp_dir, 'logo.png')
+    if not args.logo or(args.logo and not os.path.isfile(args.logo)):
+        shutil.copyfile(muranoclient.get_resource('mpl_logo.png'), logo_file)
+    else:
         shutil.copyfile(args.logo, logo_file)
+
     shutil.copytree(args.classes_dir, classes_directory)
-    shutil.copytree(args.resources_dir, resource_directory)
+    if args.resources_dir:
+        if not os.path.isdir(args.resources_dir):
+            raise exceptions.CommandError(
+                "'--resources-dir' parameter should be a directory")
+        shutil.copytree(args.resources_dir, resource_directory)
     if args.ui:
         ui_directory = os.path.join(temp_dir, 'UI')
         os.mkdir(ui_directory)
@@ -72,9 +80,6 @@ def generate_manifest(args):
     if not os.path.isdir(args.classes_dir):
         raise exceptions.CommandError(
             "'--classes-dir' parameter should be a directory")
-    if not os.path.isdir(args.resources_dir):
-        raise exceptions.CommandError(
-            "'--resources-dir' parameter should be a directory")
     args = update_args(args)
     if not args.type:
         raise exceptions.CommandError(
