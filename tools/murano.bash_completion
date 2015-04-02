@@ -1,0 +1,26 @@
+_murano_opts="" # lazy init
+_murano_flags="" # lazy init
+_murano_opts_exp="" # lazy init
+_murano()
+{
+    local cur prev kbc
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    if [ "x$_murano_opts" == "x" ] ; then
+        kbc="$(murano bash-completion | sed -e "s/ -h / /")"
+        _murano_opts="$(echo "$kbc" | sed -e "s/--[a-z0-9_-]*//g" -e "s/[ ][ ]*/ /g")"
+        _murano_flags="$(echo " $kbc" | sed -e "s/ [^-][^-][a-z0-9_-]*//g" -e "s/[ ][ ]*/ /g")"
+        _murano_opts_exp="$(echo "$_murano_opts" | sed -e "s/[ ]/|/g")"
+    fi
+
+    if [[ " ${COMP_WORDS[@]} " =~ " "($_murano_opts_exp)" " && "$prev" != "help" ]] ; then
+        COMPREPLY=($(compgen -W "${_murano_flags}" -- "${cur}"))
+    else
+        COMPREPLY=($(compgen -W "${_murano_opts}" -- "${cur}"))
+    fi
+    return 0
+}
+complete -o default -F _murano murano
+
