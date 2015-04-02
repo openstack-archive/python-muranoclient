@@ -176,6 +176,8 @@ class MuranoShell(object):
         self._find_actions(subparsers, submodule)
         self._find_actions(subparsers, self)
 
+        self._add_bash_completion_subparser(subparsers)
+
         return parser
 
     def _add_bash_completion_subparser(self, subparsers):
