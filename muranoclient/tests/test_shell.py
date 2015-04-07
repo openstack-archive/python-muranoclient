@@ -12,15 +12,18 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
+import logging
 import os
 import re
+import shutil
 import StringIO
 import sys
 import tempfile
 
 import fixtures
 import mock
-import requests
+import requests_mock
 import six
 from testtools import matchers
 
@@ -28,7 +31,10 @@ from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions
 import muranoclient.shell
 from muranoclient.tests import base
+from muranoclient.tests import test_utils
 from muranoclient.v1 import shell as v1_shell
+
+make_pkg = test_utils.make_pkg
 
 FIXTURE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'fixture_data'))
@@ -47,8 +53,10 @@ FAKE_ENV2 = {'OS_USERNAME': 'username',
 
 class TestArgs(object):
     version = ''
-    murano_repo_url = ''
+    murano_repo_url = 'http://127.0.0.1'
     exists_action = ''
+    is_public = False
+    categories = []
 
 
 class ShellTest(base.TestCaseShell):
@@ -69,6 +77,17 @@ class ShellTest(base.TestCaseShell):
         self.useFixture(fixtures.MonkeyPatch(
             'muranoclient.common.http.HTTPClient.get_proxy_url',
             mock.MagicMock))
+
+        # To prevent log descriptors from being closed during
+        # shell tests set a custom StreamHandler
+        self.logger = logging.getLogger()
+        self.logger.level = logging.DEBUG
+        self.stream_handler = logging.StreamHandler(sys.stdout)
+        self.logger.addHandler(self.stream_handler)
+
+    def tearDown(self):
+        super(ShellTest, self).tearDown()
+        self.logger.removeHandler(self.stream_handler)
 
     def shell(self, argstr, exitcodes=(0,)):
         orig = sys.stdout
@@ -265,8 +284,6 @@ class ShellTest(base.TestCaseShell):
 
 
 class ShellPackagesOperations(ShellTest):
-    def tearDown(self):
-        super(ShellPackagesOperations, self).tearDown()
 
     def test_create_hot_based_package(self):
         self.useFixture(fixtures.MonkeyPatch(
@@ -299,9 +316,8 @@ class ShellPackagesOperations(ShellTest):
                                   "Application package "
                                   "is available at {0}".format(RESULT_PACKAGE))
 
-    @mock.patch('muranoclient.common.utils.Package.images')
-    def test_package_import(self, mock_images):
-        mock_images.return_value = []
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import(self, from_file):
         args = TestArgs()
         with tempfile.NamedTemporaryFile() as f:
             RESULT_PACKAGE = f.name
@@ -309,82 +325,59 @@ class ShellPackagesOperations(ShellTest):
             args.categories = ['Cat1', 'Cat2 with space']
             args.is_public = True
 
-            result = {RESULT_PACKAGE: utils.Package.from_file(
-                StringIO.StringIO("123"))}
-            with mock.patch(
-                    'muranoclient.common.utils.Package.manifest') as man_mock:
-                man_mock.__getitem__.side_effect = [args.filename]
-                with mock.patch(
-                        'muranoclient.common.utils.Package.requirements',
-                        mock.Mock(side_effect=lambda *args, **kw: result)):
-                    v1_shell.do_package_import(self.client, args)
+            pkg = make_pkg({'FullName': RESULT_PACKAGE})
+            from_file.return_value = utils.Package(utils.File(pkg))
 
-            self.client.packages.create.assert_called_once_with(
-                {'categories': ['Cat1', 'Cat2 with space'], 'is_public': True},
-                {RESULT_PACKAGE: mock.ANY},
-            )
+            v1_shell.do_package_import(self.client, args)
 
-    @mock.patch('muranoclient.common.utils.Package.images')
-    def test_package_import_no_categories(self, mock_images):
-        mock_images.return_value = []
+            self.client.packages.create.assert_called_once_with({
+                'categories': ['Cat1', 'Cat2 with space'],
+                'is_public': True
+            }, {RESULT_PACKAGE: mock.ANY},)
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_no_categories(self, from_file):
         args = TestArgs()
+
         with tempfile.NamedTemporaryFile() as f:
             RESULT_PACKAGE = f.name
+            pkg = make_pkg({'FullName': RESULT_PACKAGE})
+            from_file.return_value = utils.Package(utils.File(pkg))
 
             args.filename = RESULT_PACKAGE
             args.categories = None
             args.is_public = False
 
-            result = {RESULT_PACKAGE: utils.Package.from_file(
-                StringIO.StringIO("123"))}
-
-            with mock.patch(
-                    'muranoclient.common.utils.Package.manifest') as man_mock:
-                man_mock.__getitem__.side_effect = [args.filename]
-                with mock.patch(
-                        'muranoclient.common.utils.Package.requirements',
-                        mock.Mock(side_effect=lambda *args, **kw: result)):
-                    v1_shell.do_package_import(self.client, args)
+            v1_shell.do_package_import(self.client, args)
 
             self.client.packages.create.assert_called_once_with(
                 {'is_public': False},
                 {RESULT_PACKAGE: mock.ANY},
             )
 
-    @mock.patch('muranoclient.common.utils.Package.images')
-    def test_package_import_url(self, mock_images):
-        mock_images.return_value = []
+    @requests_mock.mock()
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_url(self, rm, from_file):
         args = TestArgs()
-
         args.filename = "http://127.0.0.1/test_package.zip"
         args.categories = None
         args.is_public = False
 
-        resp = requests.Response()
-        resp.status_code = 200
-        resp.raw = StringIO.StringIO("123")
-        result = {args.filename: utils.Package.from_file(
-            StringIO.StringIO("123"))}
-        with mock.patch(
-                'muranoclient.common.utils.Package.manifest') as man_mock:
-            man_mock.__getitem__.side_effect = [args.filename]
-            with mock.patch(
-                    'requests.get',
-                    mock.Mock(side_effect=lambda k, *args, **kw: resp)):
-                with mock.patch(
-                        'muranoclient.common.utils.Package.requirements',
-                        mock.Mock(side_effect=lambda *args, **kw: result)):
+        pkg = make_pkg({'FullName': 'test_package'})
+        from_file.return_value = utils.Package(utils.File(pkg))
 
-                    v1_shell.do_package_import(self.client, args)
+        rm.get(args.filename, body=make_pkg({'FullName': 'test_package'}))
+
+        v1_shell.do_package_import(self.client, args)
 
         self.client.packages.create.assert_called_once_with(
             {'is_public': False},
-            {args.filename: mock.ANY},
+            {'test_package': mock.ANY},
         )
 
-    @mock.patch('muranoclient.common.utils.Package.images')
-    def test_package_import_by_name(self, mock_images):
-        mock_images.return_value = []
+    @requests_mock.mock()
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_by_name(self, rm, from_file):
         args = TestArgs()
 
         args.filename = "io.test.apps.test_application"
@@ -392,25 +385,182 @@ class ShellPackagesOperations(ShellTest):
         args.is_public = False
         args.murano_repo_url = "http://127.0.0.1"
 
-        resp = requests.Response()
-        resp.status_code = 200
-        resp.raw = StringIO.StringIO("123")
-        result = {args.filename: utils.Package.from_file(
-            StringIO.StringIO("123"))}
-        with mock.patch(
-                'muranoclient.common.utils.Package.manifest') as man_mock:
-            man_mock.__getitem__.side_effect = [args.filename]
-            with mock.patch(
-                    'requests.get',
-                    mock.Mock(side_effect=lambda k, *args, **kw: resp)):
-                with mock.patch(
-                        'muranoclient.common.utils.Package.requirements',
-                        mock.Mock(side_effect=lambda *args, **kw: result)):
+        pkg = make_pkg({'FullName': args.filename})
+        from_file.return_value = utils.Package(utils.File(pkg))
 
-                        v1_shell.do_package_import(self.client, args)
+        rm.get(args.murano_repo_url + '/apps/' + args.filename + '.zip',
+               body=make_pkg({'FullName': 'first_app'}))
+
+        v1_shell.do_package_import(self.client, args)
 
         self.assertTrue(self.client.packages.create.called)
         self.client.packages.create.assert_called_once_with(
             {'is_public': False},
             {args.filename: mock.ANY},
         )
+
+    @requests_mock.mock()
+    def test_import_bundle_by_name(self, m):
+        """Asserts bundle import calls packages create once for each pkg."""
+        pkg1 = make_pkg({'FullName': 'first_app'})
+        pkg2 = make_pkg({'FullName': 'second_app'})
+
+        m.get(TestArgs.murano_repo_url + '/apps/first_app.zip', body=pkg1)
+        m.get(TestArgs.murano_repo_url + '/apps/second_app.1.0.zip',
+              body=pkg2)
+        s = StringIO.StringIO()
+        bundle_contents = {'Packages': [
+            {'Name': 'first_app'},
+            {'Name': 'second_app', 'Version': '1.0'}
+        ]}
+        json.dump(bundle_contents, s)
+        s.seek(0)
+
+        m.get(TestArgs.murano_repo_url + '/bundles/test_bundle.bundle',
+              body=s)
+
+        args = TestArgs()
+        args.filename = "test_bundle"
+
+        v1_shell.do_bundle_import(self.client, args)
+
+        self.client.packages.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )
+
+    @requests_mock.mock()
+    def test_import_bundle_dependencies(self, m):
+        """Asserts bundle import calls packages create once for each pkg,
+        including dependencies.
+        """
+        pkg1 = make_pkg(
+            {'FullName': 'first_app', 'Require': {'second_app': '1.0'}, })
+        pkg2 = make_pkg({'FullName': 'second_app'})
+
+        m.get(TestArgs.murano_repo_url + '/apps/first_app.zip', body=pkg1)
+        m.get(TestArgs.murano_repo_url + '/apps/second_app.1.0.zip',
+              body=pkg2)
+        s = StringIO.StringIO()
+
+        # bundle only contains 1st package
+        bundle_contents = {'Packages': [
+            {'Name': 'first_app'},
+        ]}
+        json.dump(bundle_contents, s)
+        s.seek(0)
+
+        m.get(TestArgs.murano_repo_url + '/bundles/test_bundle.bundle',
+              body=s)
+
+        args = TestArgs()
+        args.filename = "test_bundle"
+
+        v1_shell.do_bundle_import(self.client, args)
+
+        self.client.packages.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )
+
+    @requests_mock.mock()
+    def test_import_bundle_by_url(self, m):
+        """Asserts bundle import calls packages create once for each pkg."""
+        pkg1 = make_pkg({'FullName': 'first_app'})
+        pkg2 = make_pkg({'FullName': 'second_app'})
+
+        m.get(TestArgs.murano_repo_url + '/apps/first_app.zip', body=pkg1)
+        m.get(TestArgs.murano_repo_url + '/apps/second_app.1.0.zip',
+              body=pkg2)
+        s = StringIO.StringIO()
+        bundle_contents = {'Packages': [
+            {'Name': 'first_app'},
+            {'Name': 'second_app', 'Version': '1.0'}
+        ]}
+        json.dump(bundle_contents, s)
+        s.seek(0)
+
+        url = 'http://127.0.0.2/test_bundle.bundle'
+        m.get(url, body=s)
+
+        args = TestArgs()
+        args.filename = url
+
+        v1_shell.do_bundle_import(self.client, args)
+
+        self.client.packages.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )
+
+    @requests_mock.mock()
+    def test_import_bundle_wrong_url(self, m):
+        url = 'http://127.0.0.2/test_bundle.bundle'
+        m.get(url, status_code=404)
+
+        args = TestArgs()
+        args.filename = url
+
+        self.assertRaises(ValueError, v1_shell.do_bundle_import,
+                          self.client, args)
+        self.assertFalse(self.client.packages.create.called)
+
+    @requests_mock.mock()
+    def test_import_bundle_no_bundle(self, m):
+        url = 'http://127.0.0.1/bundles/test_bundle.bundle'
+        m.get(url, status_code=404)
+
+        args = TestArgs()
+        args.filename = "test_bundle"
+
+        self.assertRaises(ValueError, v1_shell.do_bundle_import,
+                          self.client, args)
+        self.assertFalse(self.client.packages.create.called)
+
+    @requests_mock.mock()
+    def test_import_local_bundle(self, m):
+        """Asserts local bundles are first searched locally."""
+        tmp_dir = tempfile.mkdtemp()
+        bundle_file = os.path.join(tmp_dir, 'bundle.bundle')
+        with open(os.path.join(tmp_dir, 'bundle.bundle'), 'w') as f:
+
+            bundle_contents = {'Packages': [
+                {'Name': 'first_app'},
+                {'Name': 'second_app', 'Version': '1.0'}
+            ]}
+            json.dump(bundle_contents, f)
+
+        pkg1 = make_pkg({'FullName': 'first_app',
+                         'Require': {'third_app': None}})
+        pkg2 = make_pkg({'FullName': 'second_app'})
+        pkg3 = make_pkg({'FullName': 'third_app'})
+        with open(os.path.join(tmp_dir, 'first_app'), 'w') as f:
+            f.write(pkg1.read())
+        with open(os.path.join(tmp_dir, 'third_app'), 'w') as f:
+            f.write(pkg3.read())
+
+        m.get(TestArgs.murano_repo_url + '/apps/first_app.zip',
+              status_code=404)
+        m.get(TestArgs.murano_repo_url + '/apps/second_app.1.0.zip',
+              body=pkg2)
+        m.get(TestArgs.murano_repo_url + '/apps/third_app.zip',
+              status_code=404)
+
+        args = TestArgs()
+        args.filename = bundle_file
+        v1_shell.do_bundle_import(self.client, args)
+
+        self.client.packages.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+                mock.call({'is_public': False}, {'third_app': mock.ANY}),
+            ], any_order=True,
+        )
+        shutil.rmtree(tmp_dir)
