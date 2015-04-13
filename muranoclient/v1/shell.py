@@ -323,16 +323,23 @@ def do_package_import(mc, args):
 
     filename = args.filename
     if os.path.isfile(filename):
-        filename = open(filename, 'rb')
+        _file = filename
     else:
-        filename = utils.to_url(
+        print("Package file '{0}' does not exist, attempting to download"
+              "".format(args.filename))
+        _file = utils.to_url(
             filename,
             version=args.version,
             base_url=args.murano_repo_url,
             extension='.zip',
             path='apps/',
         )
-    package = utils.Package.from_file(filename)
+    try:
+        package = utils.Package.from_file(_file)
+    except Exception as e:
+        print("Failed to create package for '{0}', reason: {1}".format(
+            args.filename, e))
+        return
     reqs = package.requirements(base_url=args.murano_repo_url)
     for name, package in reqs.iteritems():
         image_specs = package.images()
@@ -372,15 +379,24 @@ def do_bundle_import(mc, args):
     """
     local_path = None
     if os.path.isfile(args.filename):
-        bundle_file = utils.Bundle.from_file(args.filename)
+        _file = args.filename
         local_path = os.path.dirname(os.path.abspath(args.filename))
     else:
-        bundle_file = utils.Bundle.from_file(utils.to_url(
+        print("Bundle file '{0}' does not exist, attempting to download"
+              "".format(args.filename))
+        _file = utils.to_url(
             args.filename,
             base_url=args.murano_repo_url,
             path='/bundles/',
             extension='.bundle',
-        ))
+        )
+
+    try:
+        bundle_file = utils.Bundle.from_file(_file)
+    except Exception as e:
+        print("Failed to create bundle for '{0}', reason: {1}".format(
+            args.filename, e))
+        return
 
     data = {"is_public": args.is_public}
 
