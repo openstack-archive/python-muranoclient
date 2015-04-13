@@ -262,13 +262,23 @@ def do_package_show(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Package ID to delete")
+           nargs='+', help="Package ID to delete")
 def do_package_delete(mc, args):
     """Delete a package."""
-    try:
-        mc.packages.delete(args.id)
-    except exceptions.NotFound:
-        raise exceptions.CommandError("Package %s not found" % args.id)
+    failure_count = 0
+    for package_id in args.id:
+        try:
+            mc.packages.delete(package_id)
+            print("Deleted package  '{0}'".format(package_id))
+        except exceptions.NotFound:
+            raise exceptions.CommandError("Package %s not found" % package_id)
+            failure_count += 1
+            print("Failed to delete '{0}'; package not found".
+                  format(package_id))
+
+    if failure_count == len(args.id):
+        raise exceptions.CommandError("Unable to find and delete any of the "
+                                      "specified packages.")
     else:
         do_package_list(mc)
 
@@ -318,13 +328,15 @@ def _handle_package_exists(mc, data, package, exists_action):
 
 
 @utils.arg('filename', metavar='<FILE>',
+           nargs='+',
            help='Url of the murano zip package, FQPN, or path to zip package')
 @utils.arg('-c', '--categories', metavar='<CAT1 CAT2 CAT3>', nargs='*',
            help='Category list to attach')
 @utils.arg('--is-public', action='store_true', default=False,
            help='Make package available for user from other tenants')
 @utils.arg('--version', default='',
-           help='Version of the package to use from repository')
+           help='Version of the package to use from repository '
+                '(ignored when importing with multiple packages)')
 @utils.arg('--exists-action', default='', choices=['a', 's', 'u'],
            help='Default action when package already exists')
 def do_package_import(mc, args):
@@ -334,30 +346,41 @@ def do_package_import(mc, args):
     """
     data = {"is_public": args.is_public}
 
+    version = args.version
+    if version and len(args.filename) >= 2:
+        print("Requested to import more than one package, "
+              "ignoring version.")
+        version = ''
+
     if args.categories:
         data["categories"] = args.categories
 
-    filename = args.filename
-    if os.path.isfile(filename):
-        _file = filename
-    else:
-        print("Package file '{0}' does not exist, attempting to download"
-              "".format(args.filename))
-        _file = utils.to_url(
-            filename,
-            version=args.version,
-            base_url=args.murano_repo_url,
-            extension='.zip',
-            path='apps/',
-        )
-    try:
-        package = utils.Package.from_file(_file)
-    except Exception as e:
-        print("Failed to create package for '{0}', reason: {1}".format(
-            args.filename, e))
-        return
-    reqs = package.requirements(base_url=args.murano_repo_url)
-    for name, package in reqs.iteritems():
+    should_do_list = False
+
+    total_reqs = {}
+    for filename in args.filename:
+        if os.path.isfile(filename):
+            _file = filename
+        else:
+            print("Package file '{0}' does not exist, attempting to download"
+                  "".format(filename))
+            _file = utils.to_url(
+                filename,
+                version=version,
+                base_url=args.murano_repo_url,
+                extension='.zip',
+                path='apps/',
+            )
+        try:
+            package = utils.Package.from_file(_file)
+        except Exception as e:
+            print("Failed to create package for '{0}', reason: {1}".format(
+                filename, e))
+            continue
+        should_do_list = True
+        total_reqs.update(package.requirements(base_url=args.murano_repo_url))
+
+    for name, package in total_reqs.iteritems():
         image_specs = package.images()
         if image_specs:
             print("Inspecting required images")
@@ -374,15 +397,16 @@ def do_package_import(mc, args):
                       "images for {1}".format(e, name))
         try:
             _handle_package_exists(mc, data, package, args.exists_action)
-        except exceptions.CommandError:
-            raise
         except Exception as e:
             print("Error {0} occurred while installing package {1}".format(
                 e, name))
-    do_package_list(mc)
+
+    if should_do_list:
+        do_package_list(mc)
 
 
 @utils.arg('filename', metavar='<FILE>',
+           nargs='+',
            help='Bundle url, bundle name, or path to the bundle file')
 @utils.arg('--is-public', action='store_true', default=False,
            help='Make packages available to users from other tenants')
@@ -395,61 +419,68 @@ def do_bundle_import(mc, args):
     treat Names of packages in a bundle as file names, relative to location
     of bundle file.
     """
-    local_path = None
-    if os.path.isfile(args.filename):
-        _file = args.filename
-        local_path = os.path.dirname(os.path.abspath(args.filename))
-    else:
-        print("Bundle file '{0}' does not exist, attempting to download"
-              "".format(args.filename))
-        _file = utils.to_url(
-            args.filename,
-            base_url=args.murano_repo_url,
-            path='/bundles/',
-            extension='.bundle',
-        )
+    should_do_list = False
+    total_reqs = {}
+    for filename in args.filename:
+        local_path = None
+        if os.path.isfile(filename):
+            _file = filename
+            local_path = os.path.dirname(os.path.abspath(filename))
+        else:
+            print("Bundle file '{0}' does not exist, attempting to download"
+                  "".format(filename))
+            _file = utils.to_url(
+                filename,
+                base_url=args.murano_repo_url,
+                path='/bundles/',
+                extension='.bundle',
+            )
 
-    try:
-        bundle_file = utils.Bundle.from_file(_file)
-    except Exception as e:
-        print("Failed to create bundle for '{0}', reason: {1}".format(
-            args.filename, e))
-        return
+        try:
+            bundle_file = utils.Bundle.from_file(_file)
+        except Exception as e:
+            print("Failed to create bundle for '{0}', reason: {1}".format(
+                filename, e))
+            continue
 
-    data = {"is_public": args.is_public}
+        should_do_list = True
+        data = {"is_public": args.is_public}
 
-    for package in bundle_file.packages(
-            base_url=args.murano_repo_url, path=local_path):
+        for package in bundle_file.packages(
+                base_url=args.murano_repo_url, path=local_path):
 
-        requirements = package.requirements(
-            base_url=args.murano_repo_url,
-            path=local_path,
-        )
-        for name, dep_package in requirements.iteritems():
-            image_specs = dep_package.images()
-            if image_specs:
-                print("Inspecting required images")
-                try:
-                    imgs = utils.ensure_images(
-                        glance_client=mc.glance_client,
-                        image_specs=image_specs,
-                        base_url=args.murano_repo_url,
-                        local_path=local_path)
-                    for img in imgs:
-                        print("Added {0}, {1} image".format(
-                            img['name'], img['id']))
-                except Exception as e:
-                    print("Error {0} occurred while installing "
-                          "images for {1}".format(e, name))
+            requirements = package.requirements(
+                base_url=args.murano_repo_url,
+                path=local_path,
+            )
+            total_reqs.update(requirements)
+
+    for name, dep_package in total_reqs.iteritems():
+        image_specs = dep_package.images()
+        if image_specs:
+            print("Inspecting required images")
             try:
-                _handle_package_exists(
-                    mc, data, dep_package, args.exists_action)
-            except exceptions.CommandError:
-                raise
+                imgs = utils.ensure_images(
+                    glance_client=mc.glance_client,
+                    image_specs=image_specs,
+                    base_url=args.murano_repo_url,
+                    local_path=local_path)
+                for img in imgs:
+                    print("Added {0}, {1} image".format(
+                        img['name'], img['id']))
             except Exception as e:
-                print("Error {0} occurred while "
-                      "installing package {1}".format(e, name))
-    do_package_list(mc)
+                print("Error {0} occurred while installing "
+                      "images for {1}".format(e, name))
+        try:
+            _handle_package_exists(
+                mc, data, dep_package, args.exists_action)
+        except exceptions.CommandError:
+            raise
+        except Exception as e:
+            print("Error {0} occurred while "
+                  "installing package {1}".format(e, name))
+    if should_do_list:
+        do_package_list(mc)
 
 
 @utils.arg('id', metavar='<ID>',

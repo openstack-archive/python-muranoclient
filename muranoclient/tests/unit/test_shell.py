@@ -219,8 +219,10 @@ class ShellTest(base.TestCaseShell):
     def test_package_delete(self, mock_package_manager):
         self.client.packages = mock_package_manager()
         self.make_env()
-        self.shell('package-delete 1234')
-        self.client.packages.delete.assert_called_with('1234')
+        self.shell('package-delete 1234 4321')
+        self.client.packages.delete.assert_has_calls([
+            mock.call('1234'), mock.call('4321')])
+        self.client.packages.delete.assert_called_twice()
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_delete(self, mock_manager):
@@ -322,7 +324,7 @@ class ShellPackagesOperations(ShellTest):
         args = TestArgs()
         with tempfile.NamedTemporaryFile() as f:
             RESULT_PACKAGE = f.name
-            args.filename = RESULT_PACKAGE
+            args.filename = [RESULT_PACKAGE]
             args.categories = ['Cat1', 'Cat2 with space']
             args.is_public = True
 
@@ -348,7 +350,7 @@ class ShellPackagesOperations(ShellTest):
         args = TestArgs()
         args.exists_action = exists_action
         with tempfile.NamedTemporaryFile() as f:
-            args.filename = f.name
+            args.filename = [f.name]
 
             pkg = make_pkg({'FullName': f.name})
             from_file.return_value = utils.Package(utils.File(pkg))
@@ -475,7 +477,7 @@ class ShellPackagesOperations(ShellTest):
             pkg = make_pkg({'FullName': RESULT_PACKAGE})
             from_file.return_value = utils.Package(utils.File(pkg))
 
-            args.filename = RESULT_PACKAGE
+            args.filename = [RESULT_PACKAGE]
             args.categories = None
             args.is_public = False
 
@@ -490,14 +492,14 @@ class ShellPackagesOperations(ShellTest):
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_url(self, rm, from_file):
         args = TestArgs()
-        args.filename = "http://127.0.0.1/test_package.zip"
+        args.filename = ["http://127.0.0.1/test_package.zip"]
         args.categories = None
         args.is_public = False
 
         pkg = make_pkg({'FullName': 'test_package'})
         from_file.return_value = utils.Package(utils.File(pkg))
 
-        rm.get(args.filename, body=make_pkg({'FullName': 'test_package'}))
+        rm.get(args.filename[0], body=make_pkg({'FullName': 'test_package'}))
 
         v1_shell.do_package_import(self.client, args)
 
@@ -511,15 +513,15 @@ class ShellPackagesOperations(ShellTest):
     def test_package_import_by_name(self, rm, from_file):
         args = TestArgs()
 
-        args.filename = "io.test.apps.test_application"
+        args.filename = ["io.test.apps.test_application"]
         args.categories = None
         args.is_public = False
         args.murano_repo_url = "http://127.0.0.1"
 
-        pkg = make_pkg({'FullName': args.filename})
+        pkg = make_pkg({'FullName': args.filename[0]})
         from_file.return_value = utils.Package(utils.File(pkg))
 
-        rm.get(args.murano_repo_url + '/apps/' + args.filename + '.zip',
+        rm.get(args.murano_repo_url + '/apps/' + args.filename[0] + '.zip',
                body=make_pkg({'FullName': 'first_app'}))
 
         v1_shell.do_package_import(self.client, args)
@@ -527,7 +529,34 @@ class ShellPackagesOperations(ShellTest):
         self.assertTrue(self.client.packages.create.called)
         self.client.packages.create.assert_called_once_with(
             {'is_public': False},
-            {args.filename: mock.ANY},
+            {args.filename[0]: mock.ANY},
+        )
+
+    @requests_mock.mock()
+    def test_package_import_multiple(self, rm):
+        args = TestArgs()
+
+        args.filename = ["io.test.apps.test_application",
+                         "http://127.0.0.1/test_app2.zip", ]
+        args.categories = None
+        args.is_public = False
+        args.murano_repo_url = "http://127.0.0.1"
+
+        rm.get(args.murano_repo_url + '/apps/' + args.filename[0] + '.zip',
+               body=make_pkg({'FullName': 'first_app'}))
+
+        rm.get(args.filename[1],
+               body=make_pkg({'FullName': 'second_app'}))
+
+        v1_shell.do_package_import(self.client, args)
+
+        self.assertTrue(self.client.packages.create.called)
+
+        self.client.packages.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
         )
 
     @requests_mock.mock()
@@ -551,7 +580,7 @@ class ShellPackagesOperations(ShellTest):
               body=s)
 
         args = TestArgs()
-        args.filename = "test_bundle"
+        args.filename = ["test_bundle"]
 
         v1_shell.do_bundle_import(self.client, args)
 
@@ -587,7 +616,7 @@ class ShellPackagesOperations(ShellTest):
               body=s)
 
         args = TestArgs()
-        args.filename = "test_bundle"
+        args.filename = ["test_bundle"]
 
         v1_shell.do_bundle_import(self.client, args)
 
@@ -619,7 +648,7 @@ class ShellPackagesOperations(ShellTest):
         m.get(url, body=s)
 
         args = TestArgs()
-        args.filename = url
+        args.filename = [url]
 
         v1_shell.do_bundle_import(self.client, args)
 
@@ -636,7 +665,7 @@ class ShellPackagesOperations(ShellTest):
         m.get(url, status_code=404)
 
         args = TestArgs()
-        args.filename = url
+        args.filename = [url]
 
         v1_shell.do_bundle_import(self.client, args)
         self.assertFalse(self.client.packages.create.called)
@@ -647,7 +676,7 @@ class ShellPackagesOperations(ShellTest):
         m.get(url, status_code=404)
 
         args = TestArgs()
-        args.filename = "test_bundle"
+        args.filename = ["test_bundle"]
 
         v1_shell.do_bundle_import(self.client, args)
         self.assertFalse(self.client.packages.create.called)
@@ -682,7 +711,7 @@ class ShellPackagesOperations(ShellTest):
               status_code=404)
 
         args = TestArgs()
-        args.filename = bundle_file
+        args.filename = [bundle_file]
         v1_shell.do_bundle_import(self.client, args)
 
         self.client.packages.create.assert_has_calls(
