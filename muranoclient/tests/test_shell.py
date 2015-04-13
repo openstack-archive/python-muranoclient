@@ -507,8 +507,7 @@ class ShellPackagesOperations(ShellTest):
         args = TestArgs()
         args.filename = url
 
-        self.assertRaises(ValueError, v1_shell.do_bundle_import,
-                          self.client, args)
+        v1_shell.do_bundle_import(self.client, args)
         self.assertFalse(self.client.packages.create.called)
 
     @requests_mock.mock()
@@ -519,8 +518,7 @@ class ShellPackagesOperations(ShellTest):
         args = TestArgs()
         args.filename = "test_bundle"
 
-        self.assertRaises(ValueError, v1_shell.do_bundle_import,
-                          self.client, args)
+        v1_shell.do_bundle_import(self.client, args)
         self.assertFalse(self.client.packages.create.called)
 
     @requests_mock.mock()
