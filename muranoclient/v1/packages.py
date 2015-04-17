@@ -92,7 +92,7 @@ class PackageManager(base.Manager):
                     yield image
 
         if 'page_size' not in kwargs:
-            kwargs['limit'] = DEFAULT_PAGE_SIZE
+            kwargs['limit'] = kwargs.get('limit', DEFAULT_PAGE_SIZE)
         else:
             kwargs['limit'] = kwargs['page_size']
 
