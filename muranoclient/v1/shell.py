@@ -280,7 +280,8 @@ def _handle_package_exists(mc, data, package, exists_action):
         try:
             return mc.packages.create(data, {name: package.file()})
         except common_exceptions.HTTPConflict:
-            print("Package with name {0} is already registered.".format(name))
+            print("Importing package {0} failed. Package with the same"
+                  " name/classes is already registered.".format(name))
             allowed_results = ['s', 'u', 'a']
             res = exists_action
             if not res:
@@ -296,8 +297,23 @@ def _handle_package_exists(mc, data, package, exists_action):
                 print("Exiting.")
                 sys.exit()
             elif res == 'u':
-                print("Deleting package {0}".format(name))
-                mc.packages.delete(name)
+                pkgs = list(mc.packages.filter(fqn=name, owned=True))
+                if not pkgs:
+                    msg = (
+                        "Got Conflict response, but couldn't find package "
+                        "'{0}' in the current tenant.\nThis probably means "
+                        "conflicting package is in another tenant.\n"
+                        "Please delete it manually."
+                    ).format(name)
+                    raise exceptions.CommandError(msg)
+                elif len(pkgs) > 1:
+                    msg = (
+                        "Got {0} packages with name '{1}'.\nI'm not trusting "
+                        "myself, please delete the package manually"
+                    ).format(len(pkgs), name)
+                    raise exceptions.CommandError(msg)
+                print("Deleting package {0}({1})".format(name, pkgs[0].id))
+                mc.packages.delete(pkgs[0].id)
                 continue
 
 
@@ -358,6 +374,8 @@ def do_package_import(mc, args):
                       "images for {1}".format(e, name))
         try:
             _handle_package_exists(mc, data, package, args.exists_action)
+        except exceptions.CommandError:
+            raise
         except Exception as e:
             print("Error {0} occurred while installing package {1}".format(
                 e, name))
@@ -426,6 +444,8 @@ def do_bundle_import(mc, args):
             try:
                 _handle_package_exists(
                     mc, data, dep_package, args.exists_action)
+            except exceptions.CommandError:
+                raise
             except Exception as e:
                 print("Error {0} occurred while "
                       "installing package {1}".format(e, name))
