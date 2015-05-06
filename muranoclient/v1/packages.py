@@ -15,7 +15,7 @@
 import logging
 import urllib
 
-from oslo.serialization import jsonutils
+from oslo_serialization import jsonutils
 import yaml
 
 from muranoclient.common import base

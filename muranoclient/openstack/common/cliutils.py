@@ -28,9 +28,9 @@ import prettytable
 import six
 from six import moves
 
-from oslo.utils import encodeutils
-from oslo.utils import strutils
-from oslo.utils import uuidutils
+from oslo_utils import encodeutils
+from oslo_utils import strutils
+from oslo_utils import uuidutils
 from muranoclient.openstack.common.apiclient import exceptions
 from muranoclient.openstack.common.gettextutils import _
 

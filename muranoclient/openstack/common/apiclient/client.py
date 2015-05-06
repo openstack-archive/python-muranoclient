@@ -35,7 +35,7 @@ except ImportError:
 
 import requests
 
-from oslo.utils import importutils
+from oslo_utils import importutils
 
 from muranoclient.openstack.common.apiclient import exceptions
 from muranoclient.openstack.common.gettextutils import _

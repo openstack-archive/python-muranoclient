@@ -24,7 +24,7 @@ import sys
 
 import glanceclient
 from keystoneclient.v2_0 import client as ksclient
-from oslo.utils import encodeutils
+from oslo_utils import encodeutils
 import six
 
 from muranoclient import client as apiclient

@@ -18,8 +18,8 @@ import logging
 import os
 import socket
 
-from oslo.serialization import jsonutils
-from oslo.utils import encodeutils
+from oslo_serialization import jsonutils
+from oslo_utils import encodeutils
 import requests
 import six
 from six.moves.urllib import parse
