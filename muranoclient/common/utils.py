@@ -370,7 +370,7 @@ def ensure_images(glance_client, image_specs, base_url, local_path=None):
                 return False
         return True
 
-    keys = ['Name', 'Hash', 'DiskFormat', 'ContainerFormat', ]
+    keys = ['Name', 'DiskFormat', 'ContainerFormat', ]
     installed_images = []
     for image_spec in image_specs:
         if not _image_valid(image_spec, keys):
@@ -380,13 +380,11 @@ def ensure_images(glance_client, image_specs, base_url, local_path=None):
             'disk_format': image_spec["DiskFormat"],
             'container_format': image_spec["ContainerFormat"],
         }
-        # NOTE(kzaitsev): glance v1 client does not allow checksum in
-        # a filter, so we have to filter ourselves
-        for img_obj in glance_client.images.list(filters=filters):
-            img = img_obj.to_dict()
-            if img['checksum'] == image_spec['Hash']:
-                break
-        else:
+
+        images = glance_client.images.list(filters=filters)
+        try:
+            img = images.next().to_dict()
+        except StopIteration:
             img = None
 
         update_metadata = False
