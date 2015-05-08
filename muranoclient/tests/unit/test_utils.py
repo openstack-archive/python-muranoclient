@@ -83,7 +83,6 @@ def make_pkg(manifest_override, image_dicts=None):
         default_image_spec = {
             'ContainerFormat': 'bare',
             'DiskFormat': 'qcow2',
-            'Hash': 'd41d8cd98f00b204e9800998ecf8427e',
             'Name': '',
         }
         for image_dict in image_dicts:
