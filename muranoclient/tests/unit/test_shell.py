@@ -31,8 +31,8 @@ from muranoclient.common import exceptions as common_exceptions
 from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions
 import muranoclient.shell
-from muranoclient.tests import base
-from muranoclient.tests import test_utils
+from muranoclient.tests.unit import base
+from muranoclient.tests.unit import test_utils
 from muranoclient.v1 import shell as v1_shell
 
 make_pkg = test_utils.make_pkg

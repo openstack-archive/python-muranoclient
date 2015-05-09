@@ -16,7 +16,7 @@ import os
 import shutil
 
 from muranoclient.openstack.common.apiclient import exceptions
-from muranoclient.tests import base
+from muranoclient.tests.unit import base
 from muranoclient.v1.package_creator import hot_package
 from muranoclient.v1.package_creator import mpl_package
 

@@ -19,7 +19,7 @@ import testtools
 
 from muranoclient.common import exceptions as exc
 from muranoclient.common import http
-from muranoclient.tests import fakes
+from muranoclient.tests.unit import fakes
 
 
 @mock.patch('muranoclient.common.http.requests.request')
