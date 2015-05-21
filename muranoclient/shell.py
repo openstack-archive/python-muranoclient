@@ -160,10 +160,11 @@ class MuranoShell(object):
                             help='Send os-username and os-password to murano.')
 
         parser.add_argument('--murano-repo-url',
-                            default=utils.env('MURANO_REPO_URL',
-                                              default='http://127.0.0.1'),
+                            default=utils.env(
+                                'MURANO_REPO_URL',
+                                default='http://storage.apps.openstack.org'),
                             help=('Defaults to env[MURANO_REPO_URL] '
-                                  'or 127.0.0.1'))
+                                  'or http://storage.apps.openstack.org'))
 
         return parser
 
