@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import ConfigParser
 import os
 
 from tempest_lib.cli import base
@@ -29,11 +30,25 @@ class ClientTestBase(base.ClientTestBase):
             'OS_MURANOCLIENT_EXEC_DIR',
             os.path.join(os.path.abspath('.'), '.tox/functional/bin'))
 
+        self.username = os.environ.get('OS_USERNAME')
+        self.password = os.environ.get('OS_PASSWORD')
+        self.tenant_name = os.environ.get('OS_TENANT_NAME')
+        self.uri = os.environ.get('OS_AUTH_URL')
+        config = ConfigParser.RawConfigParser()
+        if config.read('functional_creds.conf'):
+            # the OR pattern means the environment is preferred for
+            # override
+            self.username = self.username or config.get('admin', 'user')
+            self.password = self.password or config.get('admin', 'pass')
+            self.tenant_name = self.tenant_name or config.get('admin',
+                                                              'tenant')
+            self.uri = self.uri or config.get('auth', 'uri')
+
         clients = base.CLIClient(
-            username=os.environ.get('OS_USERNAME'),
-            password=os.environ.get('OS_PASSWORD'),
-            tenant_name=os.environ.get('OS_TENANT_NAME'),
-            uri=os.environ.get('OS_AUTH_URL'),
+            username=self.username,
+            password=self.password,
+            tenant_name=self.tenant_name,
+            uri=self.uri,
             cli_dir=cli_dir
         )
         return clients

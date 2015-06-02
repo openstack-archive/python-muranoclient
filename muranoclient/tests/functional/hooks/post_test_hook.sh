@@ -28,9 +28,25 @@ function generate_testr_results {
 
 export MURANOCLIENT_DIR="$BASE/new/python-muranoclient"
 
+sudo chown -R jenkins:stack $MURANOCLIENT_DIR
+
 # Get admin credentials
 cd $BASE/new/devstack
 source openrc admin admin
+
+# Pass the appropriate variables via a config file
+CREDS_FILE=$MURANOCLIENT_DIR/functional_creds.conf
+cat <<EOF > $CREDS_FILE
+# Credentials for functional testing
+[auth]
+uri = $OS_AUTH_URL
+
+[admin]
+user = $OS_USERNAME
+tenant = $OS_TENANT_NAME
+pass = $OS_PASSWORD
+
+EOF
 
 # Go to the muranoclient dir
 cd $MURANOCLIENT_DIR
