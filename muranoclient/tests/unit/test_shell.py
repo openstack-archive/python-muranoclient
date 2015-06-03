@@ -225,11 +225,24 @@ class ShellTest(base.TestCaseShell):
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_delete(self, mock_manager):
         self.client.environments = mock_manager()
+        self.client.environments.find.return_value.id = '123'
         self.make_env()
-        self.shell('environment-delete env1 env2')
-        self.client.environments.find.assert_has_calls([
-            mock.call(name='env1'), mock.call(name='env2')])
-        self.client.environments.delete.assert_called_twice()
+        self.shell('environment-delete env1')
+        self.client.environments.find.assert_has_calls(mock.call(name='env1'))
+        self.client.environments.delete.assert_has_calls(
+            mock.call('123', False)
+        )
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    def test_environment_delete_with_abandon(self, mock_manager):
+        self.client.environments = mock_manager()
+        self.client.environments.find.return_value.id = '123'
+        self.make_env()
+        self.shell('environment-delete env1 --abandon')
+        self.client.environments.find.assert_has_calls(mock.call(name='env1'))
+        self.client.environments.delete.assert_has_calls(
+            mock.call('123', True)
+        )
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_rename(self, mock_manager):
