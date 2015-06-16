@@ -27,6 +27,7 @@ from keystoneclient.v2_0 import client as ksclient
 from oslo_utils import encodeutils
 import six
 
+import muranoclient
 from muranoclient import client as apiclient
 from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions as exc
@@ -50,6 +51,10 @@ class MuranoShell(object):
         parser.add_argument('-h', '--help',
                             action='store_true',
                             help=argparse.SUPPRESS,)
+
+        parser.add_argument('--version',
+                            action='version',
+                            version=muranoclient.__version__)
 
         parser.add_argument('-d', '--debug',
                             default=bool(utils.env('MURANOCLIENT_DEBUG')),
