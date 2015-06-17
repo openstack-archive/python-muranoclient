@@ -65,9 +65,9 @@ def do_environment_delete(mc, args):
 
 
 @utils.arg("id", metavar="<NAME or ID>",
-           help="Environment id or name")
+           help="Environment ID or name")
 @utils.arg("name", metavar="<ENVIRONMENT_NAME>",
-           help="Name to which the environment will be renamed")
+           help="A name to which the environment will be renamed")
 def do_environment_rename(mc, args):
     """Rename an environment."""
     try:
@@ -80,7 +80,7 @@ def do_environment_rename(mc, args):
 
 
 @utils.arg("id", metavar="<NAME or ID>",
-           help="Environment id or name")
+           help="Environment ID or name")
 def do_environment_show(mc, args):
     """Display environment details."""
     try:
@@ -108,7 +108,7 @@ def do_env_template_list(mc, args={}):
 
 
 @utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
-           help="Environment Template name")
+           help="Environment template name")
 def do_env_template_create(mc, args):
     """Create an environment template."""
     mc.env_templates.create({"name": args.name})
@@ -116,7 +116,7 @@ def do_env_template_create(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Environment Template id")
+           help="Environment template ID")
 def do_env_template_show(mc, args):
     """Display environment template details."""
     try:
@@ -137,7 +137,7 @@ def do_env_template_show(mc, args):
 
 
 @utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
-           help="Environment Template name")
+           help="Environment template name")
 @utils.arg('app_template_file', metavar='<FILE>',
            help='Path to the template.')
 def do_env_template_add_app(mc, args):
@@ -149,19 +149,19 @@ def do_env_template_add_app(mc, args):
 
 
 @utils.arg("id", metavar="<ENV_TEMPLATE_ID>",
-           help="Environment Template ID")
+           help="Environment template ID")
 @utils.arg("service_id", metavar="<ENV_TEMPLATE_APP_ID>",
-           help="Application Id")
+           help="Application ID")
 def do_env_template_del_app(mc, args):
-    """Delete application to the environment template."""
+    """Delete application from the environment template."""
     mc.env_templates.delete_app(args.name, args.service_id)
     do_env_template_list(mc)
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Environment Template id")
+           help="Environment template ID")
 @utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
-           help="Environment Template name")
+           help="Environment template name")
 def do_env_template_update(mc, args):
     """Update an environment template."""
     mc.env_templates.update(args.id, args.name)
@@ -169,7 +169,7 @@ def do_env_template_update(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           nargs="+", help="Id of environment(s) template to delete")
+           nargs="+", help="ID of environment(s) template to delete")
 def do_env_template_delete(mc, args):
     """Delete an environment template."""
     failure_count = 0
@@ -187,7 +187,7 @@ def do_env_template_delete(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Environment id for which to list deployments")
+           help="Environment ID for which to list deployments")
 def do_deployment_list(mc, args):
     """List deployments for an environment."""
     try:
@@ -314,16 +314,16 @@ def _handle_package_exists(mc, data, package, exists_action):
                 pkgs = list(mc.packages.filter(fqn=name, owned=True))
                 if not pkgs:
                     msg = (
-                        "Got Conflict response, but couldn't find package "
-                        "'{0}' in the current tenant.\nThis probably means "
-                        "conflicting package is in another tenant.\n"
+                        "Got a conflict response, but could not find the "
+                        "package '{0}' in the current tenant.\nThis probably "
+                        "means the conflicting package is in another tenant.\n"
                         "Please delete it manually."
                     ).format(name)
                     raise exceptions.CommandError(msg)
                 elif len(pkgs) > 1:
                     msg = (
-                        "Got {0} packages with name '{1}'.\nI'm not trusting "
-                        "myself, please delete the package manually"
+                        "Got {0} packages with name '{1}'.\nI do not trust "
+                        "myself, please delete the package manually."
                     ).format(len(pkgs), name)
                     raise exceptions.CommandError(msg)
                 print("Deleting package {0}({1})".format(name, pkgs[0].id))
@@ -333,20 +333,20 @@ def _handle_package_exists(mc, data, package, exists_action):
 
 @utils.arg('filename', metavar='<FILE>',
            nargs='+',
-           help='Url of the murano zip package, FQPN, or path to zip package')
+           help='URL of the murano zip package, FQPN, or path to zip package')
 @utils.arg('-c', '--categories', metavar='<CAT1 CAT2 CAT3>', nargs='*',
            help='Category list to attach')
 @utils.arg('--is-public', action='store_true', default=False,
-           help='Make package available for user from other tenants')
+           help='Make the package available for users from other tenants')
 @utils.arg('--version', default='',
            help='Version of the package to use from repository '
                 '(ignored when importing with multiple packages)')
 @utils.arg('--exists-action', default='', choices=['a', 's', 'u'],
-           help='Default action when package already exists')
+           help='Default action when a package already exists')
 def do_package_import(mc, args):
     """Import a package.
     `FILE` can be either a path to a zip file, url or a FQPN.
-    `categories` could be separated by a comma
+    `categories` can be separated by a comma.
     """
     data = {"is_public": args.is_public}
 
@@ -411,17 +411,17 @@ def do_package_import(mc, args):
 
 @utils.arg('filename', metavar='<FILE>',
            nargs='+',
-           help='Bundle url, bundle name, or path to the bundle file')
+           help='Bundle URL, bundle name, or path to the bundle file')
 @utils.arg('--is-public', action='store_true', default=False,
            help='Make packages available to users from other tenants')
 @utils.arg('--exists-action', default='', choices=['a', 's', 'u'],
-           help='Default action when package already exists')
+           help='Default action when a package already exists')
 def do_bundle_import(mc, args):
     """Import a bundle.
-    `FILE` can be either a path to a zip file, url or name from repo.
-    if `FILE` is a local file does not attempt to parse requirements and
-    treat Names of packages in a bundle as file names, relative to location
-    of bundle file.
+    `FILE` can be either a path to a zip file, URL, or name from repo.
+    If `FILE` is a local file, treat names of packages in a bundle as
+    file names, relative to location of the bundle file. Requirements
+    are first searched in the same directory.
     """
     should_do_list = False
     total_reqs = {}
@@ -525,7 +525,7 @@ def do_service_show(mc, args):
 @utils.arg('-f', '--full-name', metavar='<full-name>',
            help='Fully-qualified name of the Application in Catalog')
 @utils.arg('-a', '--author', metavar='<AUTHOR>', help='Name of the publisher')
-@utils.arg('--tags', help='List of keywords connected to the application',
+@utils.arg('--tags', help='A list of keywords connected to the application',
            metavar='<TAG1 TAG2>', nargs='*')
 @utils.arg('-d', '--description', metavar='<DESCRIPTION>',
            help='Detailed description for the Application in Catalog')
@@ -581,7 +581,7 @@ def do_category_list(mc, args={}):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Id of a category(s) to show")
+           help="ID of a category(s) to show")
 def do_category_show(mc, args):
     category = mc.categories.get(args.id)
     # field_labels = ["ID", "Name", "Packages Assigned"]
@@ -602,7 +602,7 @@ def do_category_create(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           nargs="+", help="Id of a category(s) to delete")
+           nargs="+", help="ID of a category(ies) to delete")
 def do_category_delete(mc, args):
     """Delete a category."""
     failure_count = 0
