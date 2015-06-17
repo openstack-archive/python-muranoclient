@@ -14,7 +14,7 @@
 from oslo_serialization import jsonutils
 
 
-class FakeHTTPResponse():
+class FakeHTTPResponse(object):
 
     version = 1.1
 
@@ -43,5 +43,5 @@ class FakeHTTPResponse():
         return jsonutils.loads(self.content)
 
 
-class FakeRaw():
+class FakeRaw(object):
     version = 110
