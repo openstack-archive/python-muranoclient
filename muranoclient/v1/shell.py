@@ -43,13 +43,17 @@ def do_environment_create(mc, args):
 
 @utils.arg("id", metavar="<NAME or ID>",
            nargs="+", help="Id or name of environment(s) to delete")
+@utils.arg('--abandon', action='store_true', default=False,
+           help='If set will abandon environment without deleting any'
+                ' of its resources')
 def do_environment_delete(mc, args):
     """Delete an environment."""
+    abandon = getattr(args, 'abandon', False)
     failure_count = 0
     for environment_id in args.id:
         try:
             environment = utils.find_resource(mc.environments, environment_id)
-            mc.environments.delete(environment.id)
+            mc.environments.delete(environment.id, abandon)
         except exceptions.NotFound:
             failure_count += 1
             print("Failed to delete '{0}'; environment not found".
