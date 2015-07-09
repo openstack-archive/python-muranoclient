@@ -491,6 +491,92 @@ def do_bundle_import(mc, args):
         do_package_list(mc)
 
 
+def _handle_save_packages(packages, dst, base_url, no_images):
+    downloaded_images = []
+
+    for name, pkg in packages.iteritems():
+        if not no_images:
+            image_specs = pkg.images()
+            for image_spec in image_specs:
+                if not image_spec["Name"]:
+                    print("Invalid image.lst file for {0} package. "
+                          "'Name' section is absent.".format(name))
+                    continue
+                if image_spec["Name"] not in downloaded_images:
+                    print("Package {0} depends on image {1}. "
+                          "Downloading...".format(name, image_spec["Name"]))
+                    try:
+                        utils.save_image_local(image_spec, base_url, dst)
+                        downloaded_images.append(image_spec["Name"])
+                    except Exception as e:
+                        print("Error {0} occurred while saving image {1}".
+                              format(e, image_spec["Name"]))
+
+        try:
+            pkg.save(dst)
+            print("Package {0} has been successfully saved".format(name))
+        except Exception as e:
+            print("Error {0} occurred while saving package {1}".format(
+                e, name))
+
+
+@utils.arg('filename', metavar='<BUNDLE>',
+           help='Bundle URL, bundle name, or path to the bundle file')
+@utils.arg('-p', '--path', metavar='<PATH>',
+           help='Path to the directory to store packages. If not set will use '
+                'current directory')
+@utils.arg('--no-images', action='store_true', default=False,
+           help='If set will skip images downloading')
+def do_bundle_save(mc, args):
+    """Save a bundle.
+    This will download a bundle of packages with all dependencies
+    to specified path. If path doesn't exist it will be created.
+    """
+
+    bundle = args.filename
+    base_url = args.murano_repo_url
+
+    if args.path:
+        if not os.path.exists(args.path):
+            os.makedirs(args.path)
+        dst = args.path
+    else:
+        dst = os.getcwd()
+
+    total_reqs = {}
+
+    if os.path.isfile(bundle):
+        _file = bundle
+    else:
+        print("Bundle file '{0}' does not exist, attempting to download"
+              .format(bundle))
+        _file = utils.to_url(
+            bundle,
+            base_url=base_url,
+            path='/bundles/',
+            extension='.bundle',
+        )
+    try:
+        bundle_file = utils.Bundle.from_file(_file)
+    except Exception as e:
+        msg = "Failed to create bundle for {0}, reason: {1}".format(bundle, e)
+        raise exceptions.CommandError(msg)
+
+    for package in bundle_file.packages(base_url=base_url):
+        requirements = package.requirements(base_url=base_url)
+        total_reqs.update(requirements)
+
+    no_images = getattr(args, 'no_images', False)
+
+    _handle_save_packages(total_reqs, dst, base_url, no_images)
+
+    try:
+        bundle_file.save(dst)
+        print("Bundle file {0} has been successfully saved".format(bundle))
+    except Exception as e:
+        print("Error {0} occurred while saving bundle {1}".format(e, bundle))
+
+
 @utils.arg('id', metavar='<ID>',
            help='Environment ID to show applications from')
 @utils.arg('-p', '--path', metavar='<PATH>',

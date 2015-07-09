@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import filecmp
 import json
 import logging
 import os
@@ -749,4 +750,43 @@ class ShellPackagesOperations(ShellTest):
                 mock.call({'is_public': False}, {'third_app': mock.ANY}),
             ], any_order=True,
         )
+        shutil.rmtree(tmp_dir)
+
+    @requests_mock.mock()
+    def test_save_bundle(self, m):
+        tmp_dir = tempfile.mkdtemp()
+
+        pkg = make_pkg({'FullName': 'test_app'})
+
+        expected_pkg = tempfile.NamedTemporaryFile(delete=False)
+        shutil.copyfileobj(pkg, expected_pkg)
+        pkg.seek(0)
+
+        m.get(TestArgs.murano_repo_url + '/apps/test_app.zip', body=pkg)
+
+        s = StringIO.StringIO()
+        expected_bundle = {'Packages': [
+            {'Name': 'test_app'},
+        ]}
+        json.dump(expected_bundle, s)
+        s.seek(0)
+
+        m.get(TestArgs.murano_repo_url + '/bundles/test_bundle.bundle',
+              body=s)
+
+        args = TestArgs()
+        args.filename = "test_bundle"
+        args.path = tmp_dir
+
+        v1_shell.do_bundle_save(self.client, args)
+
+        expected_pkg.seek(0)
+        result_bundle = json.load(open(os.path.join(
+            tmp_dir, 'test_bundle.bundle')))
+        result_pkg = os.path.join(tmp_dir, 'test_app.zip')
+
+        self.assertEqual(expected_bundle, result_bundle)
+        self.assertTrue(filecmp.cmp(expected_pkg.name, result_pkg))
+
+        os.remove(expected_pkg.name)
         shutil.rmtree(tmp_dir)
