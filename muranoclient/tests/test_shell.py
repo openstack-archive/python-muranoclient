@@ -246,7 +246,7 @@ class ShellTest(base.TestCaseShell):
         self.shell('environment-delete env1 env2')
         self.client.environments.find.assert_has_calls([
             mock.call(name='env1'), mock.call(name='env2')])
-        self.client.environments.delete.assert_called_twice()
+        self.assertEqual(2, self.client.environments.delete.call_count)
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_rename(self, mock_manager):
@@ -255,7 +255,7 @@ class ShellTest(base.TestCaseShell):
         self.shell('environment-rename old-name-or-id new-name')
         self.client.environments.find.assert_called_once_with(
             name='old-name-or-id')
-        self.client.environments.update.assert_called_once()
+        self.assertEqual(1, self.client.environments.update.call_count)
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_show(self, mock_manager):
@@ -264,7 +264,6 @@ class ShellTest(base.TestCaseShell):
         self.shell('environment-show env-id-or-name')
         self.client.environments.find.assert_called_once_with(
             name='env-id-or-name')
-        self.client.environments.get.assert_called_once()
 
     @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
     def test_env_template_delete(self, mock_manager):
@@ -298,7 +297,7 @@ class ShellTest(base.TestCaseShell):
         self.shell('deployment-list env-id-or-name')
         self.client.environments.find.assert_called_once_with(
             name='env-id-or-name')
-        self.client.deployments.list.assert_called_once()
+        self.assertEqual(1, self.client.deployments.list.call_count)
 
 
 class ShellPackagesOperations(ShellTest):
