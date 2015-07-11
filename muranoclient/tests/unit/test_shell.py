@@ -225,6 +225,18 @@ class ShellTest(base.TestCaseShell):
         self.assertEqual(2, self.client.packages.delete.call_count)
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    def test_environment_list(self, mock_manager):
+        self.client.environments = mock_manager()
+        self.make_env()
+
+        self.shell('environment-list')
+        self.client.environments.list.assert_called_once_with(False)
+
+        self.client.environments.list.reset_mock()
+        self.shell('environment-list --all-tenants')
+        self.client.environments.list.assert_called_once_with(True)
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_delete(self, mock_manager):
         self.client.environments = mock_manager()
         self.client.environments.find.return_value.id = '123'

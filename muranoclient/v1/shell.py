@@ -25,9 +25,13 @@ from muranoclient.v1.package_creator import hot_package
 from muranoclient.v1.package_creator import mpl_package
 
 
+@utils.arg('--all-tenants', action='store_true', default=False,
+           help='Allows to list environments from all tenants'
+                ' (admin only)')
 def do_environment_list(mc, args={}):
     """List the environments."""
-    environments = mc.environments.list()
+    all_tenants = getattr(args, 'all_tenants', False)
+    environments = mc.environments.list(all_tenants)
     field_labels = ['ID', 'Name', 'Created', 'Updated']
     fields = ['id', 'name', 'created', 'updated']
     utils.print_list(environments, fields, field_labels, sortby=0)
