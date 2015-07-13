@@ -498,6 +498,8 @@ def do_bundle_import(mc, args):
                 'Leave empty to browse all services in the environment',
            default='/')
 def do_service_show(mc, args):
+    """List applications, added to specified environment.
+    """
     if args.path == '/':
         services = mc.services.list(args.id)
     else:
