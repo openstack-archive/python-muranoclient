@@ -154,11 +154,11 @@ def do_env_template_add_app(mc, args):
 
 @utils.arg("id", metavar="<ENV_TEMPLATE_ID>",
            help="Environment template ID")
-@utils.arg("service_id", metavar="<ENV_TEMPLATE_APP_ID>",
+@utils.arg("app_id", metavar="<ENV_TEMPLATE_APP_ID>",
            help="Application ID")
 def do_env_template_del_app(mc, args):
     """Delete application from the environment template."""
-    mc.env_templates.delete_app(args.name, args.service_id)
+    mc.env_templates.delete_app(args.name, args.app_id)
     do_env_template_list(mc)
 
 
@@ -495,28 +495,28 @@ def do_bundle_import(mc, args):
            help='Environment ID to show applications from')
 @utils.arg('-p', '--path', metavar='<PATH>',
            help='Level of detalization to show. '
-                'Leave empty to browse all services in the environment',
+                'Leave empty to browse all applications in the environment',
            default='/')
-def do_service_show(mc, args):
+def do_app_show(mc, args):
     """List applications, added to specified environment.
     """
     if args.path == '/':
-        services = mc.services.list(args.id)
+        apps = mc.services.list(args.id)
     else:
         if not args.path.startswith('/'):
             args.path = '/' + args.path
-            services = [mc.services.get(args.id, args.path)]
+            apps = [mc.services.get(args.id, args.path)]
 
     field_labels = ['Id', 'Name', 'Type']
     fields = ['id', 'name', 'type']
     formatters = {}
 
-    # If services is empty, first element exists and it's None
-    if hasattr(services[0], '?'):
+    # If app list is empty, first element exists and it's None
+    if hasattr(apps[0], '?'):
         formatters = {'id': lambda x: getattr(x, '?')['id'],
                       'type': lambda x: getattr(x, '?')['type']}
 
-    utils.print_list(services, fields, field_labels, formatters=formatters)
+    utils.print_list(apps, fields, field_labels, formatters=formatters)
 
 
 @utils.arg('-t', '--template', metavar='<HEAT_TEMPLATE>',
