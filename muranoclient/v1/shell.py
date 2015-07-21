@@ -15,7 +15,6 @@
 import os
 import shutil
 import sys
-import tempfile
 import zipfile
 
 from muranoclient.common import exceptions as common_exceptions
@@ -559,7 +558,11 @@ def do_package_create(mc, args):
         else:
             directory_path = mpl_package.prepare_package(args)
 
-        archive_name = args.output or tempfile.mktemp(prefix="murano_")
+        if args.output:
+            archive_name = args.output
+        else:
+            archive_name = os.path.splitext(os.path.basename(args.template))[0]
+            archive_name += ".zip"
 
         _make_archive(archive_name, directory_path)
         print("Application package is available at " +
