@@ -19,11 +19,11 @@ Command-line interface to the Murano Project.
 from __future__ import print_function
 
 import argparse
-import logging
 import sys
 
 import glanceclient
 from keystoneclient.v2_0 import client as ksclient
+from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
 
@@ -248,22 +248,10 @@ class MuranoShell(object):
             service_type=kwargs.get('service_type') or 'application_catalog',
             endpoint_type=kwargs.get('endpoint_type') or 'publicURL')
 
-    def _setup_logging(self, debug):
-        log_lvl = logging.DEBUG if debug else logging.WARNING
-        logging.basicConfig(
-            format="%(levelname)s (%(module)s:%(lineno)d) %(message)s",
-            level=log_lvl)
-
-    def _setup_verbose(self, verbose):
-        if verbose:
-            exc.verbose = 1
-
     def main(self, argv):
         # Parse args once to find version
         parser = self.get_base_parser()
         (options, args) = parser.parse_known_args(argv)
-        self._setup_logging(options.debug)
-        self._setup_verbose(options.verbose)
 
         # build available subcommands based on version
         api_version = options.murano_api_version

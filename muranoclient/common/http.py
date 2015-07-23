@@ -14,10 +14,10 @@
 #    under the License.
 
 import copy
-import logging
 import os
 import socket
 
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import requests
