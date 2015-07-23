@@ -589,9 +589,8 @@ def do_category_list(mc, args={}):
 @utils.arg("id", metavar="<ID>",
            help="ID of a category(s) to show")
 def do_category_show(mc, args):
+    """Display category details."""
     category = mc.categories.get(args.id)
-    # field_labels = ["ID", "Name", "Packages Assigned"]
-    # fields = ["id", "name", "packages"]
     to_display = dict(id=category.id,
                       name=category.name,
                       packages=', '.join(p['name'] for p in category.packages))
