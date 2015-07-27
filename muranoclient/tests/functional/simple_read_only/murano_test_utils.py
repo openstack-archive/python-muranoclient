@@ -21,22 +21,16 @@ import uuid
 class CLIUtilsTestBase(muranoclient.ClientTestBase):
     """Basic methods for Murano CLI client."""
 
-    def delete_murano_object(self, murano_object, object_name, object_title):
+    def delete_murano_object(self, murano_object, obj_to_del):
         """Delete Murano object like environment, category
-        or environment-template
+        or environment-template.
         """
-        # Check if object exist
-        if object_name not in [obj['Name'] for obj in
-                               self.listing('{0}-list'.format(murano_object))]:
+        if obj_to_del not in self.listing('{0}-list'.format(murano_object)):
             return
-
-        ID = self.get_value('ID', 'Name', object_name, object_title)
         object_list = self.listing('{0}-delete'.format(murano_object),
-                                   params=ID)
-
+                                   params=obj_to_del['ID'])
         start_time = time.time()
-        while object_name in [obj['Name'] for obj in
-                              self.listing('{0}-list'.format(murano_object))]:
+        while obj_to_del in self.listing('{0}-list'.format(murano_object)):
             if start_time - time.time() > 60:
                 self.fail("{0} is not deleted in 60 seconds".
                           format(murano_object))
@@ -44,25 +38,35 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
 
     def create_murano_object(self, murano_object, prefix_object_name):
         """Create Murano object like environment, category
-        or environment-template
+        or environment-template.
         """
         object_name = self.generate_name(prefix_object_name)
-        mrn_object = self.listing('{0}-create'.format(murano_object),
-                                  params=object_name)
+        mrn_objects = self.listing('{0}-create'.format(murano_object),
+                                   params=object_name)
+        mrn_object = None
+        for obj in mrn_objects:
+            if object_name == obj['Name']:
+                mrn_object = obj
+                break
+        if mrn_object is None:
+            self.fail("Murano {0} has not been created!".format(murano_object))
 
-        self.addCleanup(self.delete_murano_object,
-                        murano_object, object_name, mrn_object)
-
-        object_list = self.listing('{0}-list'.format(murano_object))
-        return object_name, mrn_object, object_list
+        self.addCleanup(self.delete_murano_object, murano_object, mrn_object)
+        return mrn_object
 
     @staticmethod
     def generate_name(prefix):
-        """Generate name for objects"""
+        """Generate name for objects."""
         suffix = uuid.uuid4().hex[:8]
         return "{0}-{1}".format(prefix, suffix)
 
     def get_table_struct(self, command, params=""):
-        """Get table structure i.e. header of table"""
+        """Get table structure i.e. header of table."""
         return output_parser.table(self.murano(command,
                                                params=params))['headers']
+
+    def get_object(self, object_list, object_value):
+        """"Get Murano object by value from list of Murano objects."""
+        for obj in object_list:
+            if object_value in obj.values():
+                return obj
