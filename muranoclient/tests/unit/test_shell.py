@@ -790,3 +790,43 @@ class ShellPackagesOperations(ShellTest):
 
         os.remove(expected_pkg.name)
         shutil.rmtree(tmp_dir)
+
+    @requests_mock.mock()
+    def test_package_save(self, m):
+        args = TestArgs()
+        tmp_dir = tempfile.mkdtemp()
+
+        args.package = ["test_app1", "http://127.0.0.1/test_app2.zip"]
+        args.path = tmp_dir
+
+        pkgs = [
+            make_pkg(
+                {'FullName': 'test_app1', 'Require': {'test_app3': '1.0'}}),
+            make_pkg({'FullName': 'test_app2'}),
+            make_pkg({'FullName': 'test_app3'})
+        ]
+
+        m.get(TestArgs.murano_repo_url + '/apps/' + args.package[0] + '.zip',
+              body=pkgs[0])
+        m.get(args.package[1], body=pkgs[1])
+        m.get(TestArgs.murano_repo_url + '/apps/' + 'test_app3.1.0.zip',
+              body=pkgs[2])
+
+        expected_pkgs = []
+
+        for i in range(0, 3):
+            expected_pkgs.append(tempfile.NamedTemporaryFile(delete=False))
+            shutil.copyfileobj(pkgs[i], expected_pkgs[i])
+            pkgs[i].seek(0)
+
+        v1_shell.do_package_save(self.client, args)
+
+        file_names = ['test_app1.zip', 'test_app2.zip', 'test_app3.1.0.zip']
+
+        for i in range(0, 3):
+            expected_pkgs[i].seek(0)
+            result_pkg = os.path.join(tmp_dir, file_names[i])
+            self.assertTrue(filecmp.cmp(expected_pkgs[i].name, result_pkg))
+            os.remove(expected_pkgs[i].name)
+
+        shutil.rmtree(tmp_dir)

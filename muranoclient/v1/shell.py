@@ -577,6 +577,59 @@ def do_bundle_save(mc, args):
         print("Error {0} occurred while saving bundle {1}".format(e, bundle))
 
 
+@utils.arg('package', metavar='<PACKAGE>',
+           nargs='+',
+           help='Package URL or name')
+@utils.arg('-p', '--path', metavar='<PATH>',
+           help='Path to the directory to store package. If not set will use '
+                'current directory')
+@utils.arg('--version', default='',
+           help='Version of the package to use from repository '
+                '(ignored when saving with multiple packages)')
+@utils.arg('--no-images', action='store_true', default=False,
+           help='If set will skip images downloading')
+def do_package_save(mc, args):
+    """Save a package.
+    This will download package(s) with all dependencies
+    to specified path. If path doesn't exist it will be created.
+    """
+    base_url = args.murano_repo_url
+
+    if args.path:
+        if not os.path.exists(args.path):
+            os.makedirs(args.path)
+        dst = args.path
+    else:
+        dst = os.getcwd()
+
+    version = args.version
+    if version and len(args.filename) >= 2:
+        print("Requested to save more than one package, "
+              "ignoring version.")
+        version = ''
+
+    total_reqs = {}
+    for package in args.package:
+        _file = utils.to_url(
+            package,
+            version=version,
+            base_url=base_url,
+            extension='.zip',
+            path='apps/',
+        )
+        try:
+            pkg = utils.Package.from_file(_file)
+        except Exception as e:
+            print("Failed to create package for '{0}', reason: {1}".format(
+                pkg, e))
+            continue
+        total_reqs.update(pkg.requirements(base_url=base_url))
+
+    no_images = getattr(args, 'no_images', False)
+
+    _handle_save_packages(total_reqs, dst, base_url, no_images)
+
+
 @utils.arg('id', metavar='<ID>',
            help='Environment ID to show applications from')
 @utils.arg('-p', '--path', metavar='<PATH>',
