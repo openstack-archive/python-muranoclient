@@ -23,6 +23,8 @@ import tempfile
 
 import fixtures
 import mock
+from oslo_log import handlers
+from oslo_log import log
 import requests_mock
 import six
 from testtools import matchers
@@ -81,14 +83,14 @@ class ShellTest(base.TestCaseShell):
 
         # To prevent log descriptors from being closed during
         # shell tests set a custom StreamHandler
-        self.logger = logging.getLogger()
+        self.logger = log.getLogger(None).logger
         self.logger.level = logging.DEBUG
-        self.stream_handler = logging.StreamHandler(sys.stdout)
-        self.logger.addHandler(self.stream_handler)
+        self.color_handler = handlers.ColorHandler(sys.stdout)
+        self.logger.addHandler(self.color_handler)
 
     def tearDown(self):
         super(ShellTest, self).tearDown()
-        self.logger.removeHandler(self.stream_handler)
+        self.logger.removeHandler(self.color_handler)
 
     def shell(self, argstr, exitcodes=(0,)):
         orig = sys.stdout

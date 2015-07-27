@@ -12,10 +12,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import logging
-
 import mock
 import testtools
+
+from oslo_log import log as logging
 
 from muranoclient import client
 from muranoclient.v1 import actions

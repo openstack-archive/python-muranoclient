@@ -15,7 +15,6 @@
 
 from __future__ import print_function
 
-import logging
 import os
 import re
 import StringIO
@@ -28,6 +27,7 @@ import uuid
 import warnings
 import zipfile
 
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import importutils
