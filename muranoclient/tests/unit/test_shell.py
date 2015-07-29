@@ -227,6 +227,29 @@ class ShellTest(base.TestCaseShell):
         self.assertEqual(2, self.client.packages.delete.call_count)
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    def test_environment_create(self, mock_manager):
+        self.client.environments = mock_manager()
+        self.make_env()
+
+        self.shell('environment-create foo')
+        self.client.environments.create.assert_has_calls(
+            [mock.call({'name': 'foo'})])
+        self.client.environments.create.reset_mock()
+        self.shell('environment-create --join-net 123 foo')
+        cc = self.client.environments.create
+        expected_call = mock.call(
+            {'defaultNetworks':
+                {'environment':
+                    {'internalNetworkName': '123',
+                        '?':
+                        {'type': 'io.murano.resources.ExistingNeutronNetwork',
+                            'id': mock.ANY}},
+                    'flat': None},
+             'name': 'foo',
+             })
+        self.assertEqual(cc.call_args, expected_call)
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_list(self, mock_manager):
         self.client.environments = mock_manager()
         self.make_env()

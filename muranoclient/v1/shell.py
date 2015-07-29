@@ -15,6 +15,7 @@
 import os
 import shutil
 import sys
+import uuid
 import zipfile
 
 from muranoclient.common import exceptions as common_exceptions
@@ -36,11 +37,39 @@ def do_environment_list(mc, args={}):
     utils.print_list(environments, fields, field_labels, sortby=0)
 
 
+def _generate_join_existing_net(net, subnet):
+    res = {
+        'defaultNetworks': {
+            'environment': {
+                '?': {
+                    'id': uuid.uuid4().hex,
+                    'type': 'io.murano.resources.ExistingNeutronNetwork'
+                },
+            },
+            'flat': None
+        }
+    }
+    if net:
+        res['defaultNetworks']['environment']['internalNetworkName'] = net
+    if subnet:
+        res['defaultNetworks']['environment']['internalSubnetworkName'] = \
+            subnet
+    return res
+
+
+@utils.arg("--join-net-id", metavar="<NET_ID>",
+           help="Network id to join",)
+@utils.arg("--join-subnet-id", metavar="<SUBNET_ID>",
+           help="Subnetwork id to join",)
 @utils.arg("name", metavar="<ENVIRONMENT_NAME>",
            help="Environment name")
 def do_environment_create(mc, args):
     """Create an environment."""
-    mc.environments.create({"name": args.name})
+    body = {"name": args.name}
+    if args.join_net_id or args.join_subnet_id:
+        body.update(_generate_join_existing_net(
+            args.join_net_id, args.join_subnet_id))
+    mc.environments.create(body)
     do_environment_list(mc)
 
 
