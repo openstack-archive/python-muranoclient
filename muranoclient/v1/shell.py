@@ -11,6 +11,8 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
+import functools
 import json
 import os
 import shutil
@@ -19,12 +21,16 @@ import uuid
 import zipfile
 
 import jsonpatch
+from oslo_utils import strutils
 
 from muranoclient.common import exceptions as common_exceptions
 from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions
 from muranoclient.v1.package_creator import hot_package
 from muranoclient.v1.package_creator import mpl_package
+
+_bool_from_str_strict = functools.partial(
+    strutils.bool_from_string, strict=True)
 
 
 @utils.arg('--all-tenants', action='store_true', default=False,
@@ -553,6 +559,32 @@ def do_package_import(mc, args):
 
     if should_do_list:
         do_package_list(mc)
+
+
+@utils.arg("id", metavar="<ID>",
+           help="Package ID to update")
+@utils.arg('--is-public', type=_bool_from_str_strict, metavar='{true|false}',
+           help='Make package available to users from other tenants')
+@utils.arg('--enabled', type=_bool_from_str_strict, metavar='{true|false}',
+           help='Make package active and available for deployments')
+@utils.arg('--name', default=None, help='New name for the package')
+@utils.arg('--description', default=None, help='New package description')
+@utils.arg('--tags', metavar='<TAG>', nargs='*',
+           default=None,
+           help='A list of keywords connected to the application')
+def do_package_update(mc, args):
+    """Edit the package in question"""
+    data = {}
+    parameters = ('is_public', 'enabled',
+                  'name', 'description',
+                  'tags')
+    for parameter in parameters:
+        param_value = getattr(args, parameter, None)
+        if param_value is not None:
+            data[parameter] = param_value
+
+    mc.packages.update(args.id, data)
+    do_package_show(mc, args)
 
 
 @utils.arg('filename', metavar='<FILE>',

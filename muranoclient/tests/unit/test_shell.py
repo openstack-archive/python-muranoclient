@@ -220,6 +220,42 @@ class ShellTest(base.TestCaseShell):
         self.client.packages.get.assert_called_with('1234')
 
     @mock.patch('muranoclient.v1.packages.PackageManager')
+    def test_package_update(self, mock_package_manager):
+        self.client.packages = mock_package_manager()
+        mock_package = mock.MagicMock()
+        mock_package.class_definitions = ''
+        mock_package.categories = ''
+        mock_package.tags = ''
+        mock_package.description = ''
+        self.client.packages.get.return_value = mock_package
+
+        self.make_env()
+
+        self.shell('package-update 123 --is-public true')
+        self.shell('package-update 123 --is-public false')
+        self.shell('package-update 123 --is-public false --enabled t')
+        self.shell('package-update 123 --name foo --description bar')
+        self.shell('package-update 123 --tags a')
+        self.shell('package-update 123 --tags a ' +
+                   '--is-public f --enabled f ' +
+                   '--name foo ' +
+                   '--description bar',)
+        self.client.packages.update.assert_has_calls([
+            mock.call('123', {'is_public': True}),
+            mock.call('123', {'is_public': False}),
+            mock.call('123', {'enabled': True, 'is_public': False}),
+            mock.call('123', {'name': 'foo', 'description': 'bar'}),
+            mock.call('123', {'tags': ['a']}),
+            mock.call('123', {
+                'tags': ['a'],
+                'is_public': False,
+                'enabled': False,
+                'name': 'foo',
+                'description': 'bar',
+            }),
+        ])
+
+    @mock.patch('muranoclient.v1.packages.PackageManager')
     def test_package_delete(self, mock_package_manager):
         self.client.packages = mock_package_manager()
         self.make_env()
