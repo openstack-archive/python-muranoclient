@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import filecmp
 import json
 import logging
@@ -389,6 +390,38 @@ class ShellTest(base.TestCaseShell):
         self.client.environments.find.assert_called_once_with(
             name='env-id-or-name')
         self.assertEqual(1, self.client.deployments.list.call_count)
+
+    @mock.patch('muranoclient.v1.services.ServiceManager')
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    def test_environment_apps_edit(self, mock_env_manager, mock_services):
+        self.client.environments = mock_env_manager()
+        self.client.services = mock_services()
+        fake = collections.namedtuple('fakeEnv', 'services')
+        self.client.environments.get.side_effect = [
+            fake(services=[
+                {'?': {'name': "foo"}}
+            ]),
+        ]
+
+        temp_file = tempfile.NamedTemporaryFile(prefix="murano-test")
+        json.dump([
+            {'op': 'replace', 'path': '/0/?/name',
+                'value': "dummy"
+             }
+        ], temp_file)
+        temp_file.file.flush()
+
+        self.make_env()
+
+        self.shell('environment-apps-edit 12345 {0} --session-id 4321'.format(
+            temp_file.name))
+
+        self.client.services.put.assert_called_once_with(
+            '12345',
+            session_id='4321',
+            path='/',
+            data=[{'?': {'name': 'dummy'}}]
+        )
 
 
 class ShellPackagesOperations(ShellTest):

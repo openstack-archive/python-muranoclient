@@ -11,12 +11,14 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
+import json
 import os
 import shutil
 import sys
 import uuid
 import zipfile
+
+import jsonpatch
 
 from muranoclient.common import exceptions as common_exceptions
 from muranoclient.common import utils
@@ -194,6 +196,50 @@ def do_environment_session_create(mc, args):
     environment_id = args.id
     session_id = mc.sessions.configure(environment_id).id
     print("Created new session: {0}".format(session_id))
+
+
+@utils.arg("id", metavar="<ID>", help="ID of Environment to edit")
+@utils.arg("filename", metavar="FILE", nargs="?",
+           help="File to read jsonpatch from (defaults to stdin)")
+@utils.arg("--session-id", metavar="<SESSION_ID>",
+           required=True,
+           help="Id of a config session.")
+def do_environment_apps_edit(mc, args):
+    """Edit environment's object model.
+
+    `FILE` is path to a file, that contains jsonpatch, that describes changes
+    to be made to environment's object-model.
+
+    [
+        { "op": "add", "path": "/-",
+           "value": { ... your-app object model here ... }
+        },
+        { "op": "replace", "path": "/0/?/name",
+          "value": "new_name"
+        },
+    ]
+
+    For more info on jsonpatch see RFC 6902
+    """
+
+    jp_obj = None
+    if not args.filename:
+        jp_obj = json.load(sys.stdin)
+    else:
+        with open(args.filename) as fpatch:
+            jp_obj = json.load(fpatch)
+
+    jpatch = jsonpatch.JsonPatch(jp_obj)
+
+    environment_id = args.id
+    session_id = args.session_id
+    environment = mc.environments.get(environment_id, session_id)
+
+    mc.services.put(
+        environment_id,
+        path='/',
+        data=jpatch.apply(environment.services),
+        session_id=session_id)
 
 
 def do_env_template_list(mc, args={}):
