@@ -227,6 +227,14 @@ class ShellTest(base.TestCaseShell):
             mock.call('1234'), mock.call('4321')])
         self.assertEqual(2, self.client.packages.delete.call_count)
 
+    @mock.patch('muranoclient.v1.sessions.SessionManager')
+    def test_environment_session_create(self, mock_manager):
+        self.client.sessions = mock_manager()
+        self.make_env()
+        self.shell('environment-session-create 1234')
+        self.client.sessions.configure.assert_has_calls([
+            mock.call('1234')])
+
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_create(self, mock_manager):
         self.client.environments = mock_manager()

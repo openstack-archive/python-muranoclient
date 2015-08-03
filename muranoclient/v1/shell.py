@@ -188,6 +188,14 @@ def do_environment_action_get_result(mc, args):
     print("Task id result: {0}".format(result))
 
 
+@utils.arg("id", metavar="<ID>", help="ID of Environment to add session to")
+def do_environment_session_create(mc, args):
+    """Creates a new configuration session for environment ID."""
+    environment_id = args.id
+    session_id = mc.sessions.configure(environment_id).id
+    print("Created new session: {0}".format(session_id))
+
+
 def do_env_template_list(mc, args={}):
     """List the environments templates."""
     env_templates = mc.env_templates.list()
