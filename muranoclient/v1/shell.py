@@ -113,22 +113,30 @@ def do_environment_rename(mc, args):
 
 @utils.arg("id", metavar="<NAME or ID>",
            help="Environment ID or name")
+@utils.arg("--session-id", metavar="<SESSION_ID>", default='',
+           help="Id of a config session.")
+@utils.arg("--only-apps", action='store_true',
+           help="Only print apps of the environment. (useful for automation)")
 def do_environment_show(mc, args):
     """Display environment details."""
     try:
-        environment = utils.find_resource(mc.environments, args.id)
+        environment = utils.find_resource(
+            mc.environments, args.id, session_id=args.session_id)
     except exceptions.NotFound:
         raise exceptions.CommandError("Environment %s not found" % args.id)
     else:
-        formatters = {
-            "id": utils.text_wrap_formatter,
-            "created": utils.text_wrap_formatter,
-            "name": utils.text_wrap_formatter,
-            "tenant_id": utils.text_wrap_formatter,
-            "services": utils.json_formatter,
+        if getattr(args, 'only_apps', False):
+            print(utils.json_formatter(environment.services))
+        else:
+            formatters = {
+                "id": utils.text_wrap_formatter,
+                "created": utils.text_wrap_formatter,
+                "name": utils.text_wrap_formatter,
+                "tenant_id": utils.text_wrap_formatter,
+                "services": utils.json_formatter,
 
-        }
-        utils.print_dict(environment.to_dict(), formatters=formatters)
+            }
+            utils.print_dict(environment.to_dict(), formatters=formatters)
 
 
 @utils.arg("id", metavar="<ID>",

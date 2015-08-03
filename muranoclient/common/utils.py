@@ -94,19 +94,19 @@ def print_dict(d, formatters={}):
     print(encodeutils.safe_encode(pt.get_string(sortby='Property')))
 
 
-def find_resource(manager, name_or_id):
+def find_resource(manager, name_or_id, *args, **kwargs):
     """Helper for the _find_* methods."""
     # first try to get entity as integer id
     try:
         if isinstance(name_or_id, int) or name_or_id.isdigit():
-            return manager.get(int(name_or_id))
+            return manager.get(int(name_or_id), *args, **kwargs)
     except exceptions.NotFound:
         pass
 
     # now try to get entity as uuid
     try:
         uuid.UUID(str(name_or_id))
-        return manager.get(name_or_id)
+        return manager.get(name_or_id, *args, **kwargs)
     except (ValueError, exceptions.NotFound):
         pass
 
