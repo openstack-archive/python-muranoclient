@@ -17,6 +17,7 @@ from __future__ import print_function
 
 import os
 import re
+import shutil
 import StringIO
 import sys
 import tempfile
@@ -243,6 +244,18 @@ class FileWrapperMixin(object):
         if self._file and not self._file.closed:
             self._file.close()
 
+    def save(self, dst):
+        file_name = self.file_wrapper.name
+
+        if urlparse.urlparse(file_name).scheme:
+            file_name = file_name.split('/')[-1]
+
+        dst = os.path.join(dst, file_name)
+
+        with open(dst, 'wb') as dst_file:
+            self._file.seek(0)
+            shutil.copyfileobj(self._file, dst_file)
+
     def __del__(self):
         self.close()
 
@@ -355,6 +368,35 @@ class Package(FileWrapperMixin):
                     dep_dict=dep_dict,
                 ))
         return dep_dict
+
+
+def save_image_local(image_spec, base_url, dst):
+    dst = os.path.join(dst, image_spec['Name'])
+
+    download_url = to_url(
+        image_spec.get("Url", image_spec['Name']),
+        base_url=base_url,
+        path='/images/'
+    )
+
+    with open(dst, "wb") as image_file:
+        response = requests.get(download_url, stream=True)
+        total_length = response.headers.get('content-length')
+
+        if total_length is None:
+            image_file.write(response.content)
+        else:
+            dl = 0
+            total_length = int(total_length)
+            for chunk in response.iter_content(1024 * 1024):
+                dl += len(chunk)
+                image_file.write(chunk)
+                done = int(50 * dl / total_length)
+                sys.stdout.write("\r[{0}{1}]".
+                                 format('=' * done, ' ' * (50 - done)))
+                sys.stdout.flush()
+            sys.stdout.write("\n")
+            image_file.flush()
 
 
 def ensure_images(glance_client, image_specs, base_url, local_path=None):
