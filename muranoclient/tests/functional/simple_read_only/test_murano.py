@@ -52,14 +52,11 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
             1) create environment
             2) check table structure
         """
-        # Create environment
-        env_name, environment, env_list = \
-            self.create_murano_object('environment', 'MuranoTestTS-depl-list')
-
-        env_id = self.get_value('ID', 'Name', env_name, environment)
-        deployment = self.get_table_struct('deployment-list {0}'.
-                                           format(env_id))
-        self.assertEqual(deployment,
+        environment = self.create_murano_object('environment',
+                                                'MuranoTestTS-depl-list')
+        table_struct = self.get_table_struct('deployment-list',
+                                             params=environment['ID'])
+        self.assertEqual(table_struct,
                          ['ID', 'State', 'Created', 'Updated', 'Finished'])
 
     def test_table_struct_of_environment_create(self):
@@ -67,11 +64,9 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
             1) create environment
             2) check table structure
         """
-        # Create environment
         self.create_murano_object('environment', 'MuranoTestTS-env-create')
-
-        environment = self.get_table_struct('environment-list')
-        self.assertEqual(environment, ['ID', 'Name', 'Created', 'Updated'])
+        table_struct = self.get_table_struct('environment-list')
+        self.assertEqual(table_struct, ['ID', 'Name', 'Created', 'Updated'])
 
     def test_table_struct_of_environment_delete(self):
         """Test scenario:
@@ -79,25 +74,20 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
             2) delete environment
             3) check table structure
         """
-        # Create environment
-        env_name, environment, env_list = \
-            self.create_murano_object('environment', 'MuranoTestTS-env-del')
-        # Delete environment
-        self.delete_murano_object('environment', env_name, environment)
-
-        environment = self.get_table_struct('environment-list')
-        self.assertEqual(environment, ['ID', 'Name', 'Created', 'Updated'])
+        environment = self.create_murano_object('environment',
+                                                'MuranoTestTS-env-del')
+        self.delete_murano_object('environment', environment)
+        table_struct = self.get_table_struct('environment-list')
+        self.assertEqual(table_struct, ['ID', 'Name', 'Created', 'Updated'])
 
     def test_table_struct_of_category_create(self):
         """Test scenario:
             1) create category
             2) check table structure
         """
-        # Create category
         self.create_murano_object('category', 'MuranoTestTS-cat-create')
-
-        category = self.get_table_struct('category-list')
-        self.assertEqual(category, ['ID', 'Name'])
+        table_struct = self.get_table_struct('category-list')
+        self.assertEqual(table_struct, ['ID', 'Name'])
 
     def test_table_struct_of_category_delete(self):
         """Test scenario:
@@ -105,12 +95,9 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
             2) delete category
             3) check table structure
         """
-        # Create category
-        cat_name, category, cat_list = \
-            self.create_murano_object('category', 'MuranoTestTS-cat-create')
-
-        self.delete_murano_object('category', cat_name, category)
-
+        category = self.create_murano_object('category',
+                                             'MuranoTestTS-cat-create')
+        self.delete_murano_object('category', category)
         category = self.get_table_struct('category-list')
         self.assertEqual(category, ['ID', 'Name'])
 
@@ -119,12 +106,10 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
             1) create env_template
             2) check table structure
         """
-        # Create env_template
         self.create_murano_object('env-template',
                                   'MuranoTestTS-env-tmp-create')
-
-        env_template = self.get_table_struct('env-template-list')
-        self.assertEqual(env_template, ['ID', 'Name', 'Created', 'Updated'])
+        table_struct = self.get_table_struct('env-template-list')
+        self.assertEqual(table_struct, ['ID', 'Name', 'Created', 'Updated'])
 
     def test_table_struct_of_env_template_delete(self):
         """Test scenario:
@@ -132,13 +117,87 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
             2) delete env_template
             3) check table structure
         """
-        # Create env_template
-        env_template_name, env_template, env_template_list = \
-            self.create_murano_object('env-template',
-                                      'MuranoTestTS-env-tmp-create')
-        # Delete env_template
-        self.delete_murano_object('env-template',
-                                  env_template_name, env_template)
+        env_template = self.create_murano_object('env-template',
+                                                 'MuranoTestTS-env-tmp-create')
+        self.delete_murano_object('env-template', env_template)
+        table_struct = self.get_table_struct('env-template-list')
+        self.assertEqual(table_struct, ['ID', 'Name', 'Created', 'Updated'])
 
-        env_template = self.get_table_struct('env-template-list')
-        self.assertEqual(env_template, ['ID', 'Name', 'Created', 'Updated'])
+
+class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
+    """Sanity tests for testing actions with environment.
+
+    Smoke test for the Murano CLI commands which checks basic actions with
+    environment command like create, delete, rename etc.
+    """
+
+    def test_environment_create(self):
+        """Test scenario:
+            1) create environment
+            2) check that created environment exist
+        """
+        environment = self.create_murano_object('environment',
+                                                'TestMuranoSanityEnv')
+        env_list = self.listing('environment-list')
+
+        self.assertIn(environment, env_list)
+
+    def test_environment_delete(self):
+        """Test scenario:
+            1) create environment
+            2) delete environment
+        """
+        environment = self.create_murano_object('environment',
+                                                'TestMuranoSanityEnv')
+        self.delete_murano_object('environment', environment)
+        env_list = self.listing('environment-list')
+
+        self.assertNotIn(environment, env_list)
+
+    def test_environment_rename(self):
+        """Test scenario:
+            1) create environment
+            2) rename environment
+        """
+        environment = self.create_murano_object('environment',
+                                                'TestMuranoSanityEnv')
+
+        new_env_name = self.generate_name('TestMuranoSEnv-env-rename')
+        rename_params = "{0} {1}".format(environment['Name'], new_env_name)
+        new_list = self.listing('environment-rename', params=rename_params)
+        renamed_env = self.get_object(new_list, new_env_name)
+        self.addCleanup(self.delete_murano_object, 'environment', renamed_env)
+        new_env_list = self.listing('environment-list')
+
+        self.assertIn(renamed_env, new_env_list)
+        self.assertNotIn(environment, new_env_list)
+
+    def test_table_struct_env_show(self):
+        """Test scenario:
+            1) create environment
+            2) check structure of env_show object
+        """
+        environment = self.create_murano_object('environment',
+                                                'TestMuranoSanityEnv')
+        env_show = self.listing('environment-show', params=environment['Name'])
+        # Check structure of env_show object
+        self.assertEqual(['created', 'id', 'name', 'networking', 'status',
+                          'tenant_id', 'updated', 'version'],
+                         map(lambda x: x['Property'], env_show))
+
+    def test_environment_show(self):
+        """Test scenario:
+            1) create environment
+            2) check that env_name, ID, updated and created values
+               exist in env_show object
+        """
+        environment = self.create_murano_object('environment',
+                                                'TestMuranoSanityEnv')
+        env_show = self.listing('environment-show', params=environment['Name'])
+
+        self.assertIn(environment['Created'],
+                      map(lambda x: x['Value'], env_show))
+        self.assertIn(environment['Updated'],
+                      map(lambda x: x['Value'], env_show))
+        self.assertIn(environment['Name'], map(lambda x: x['Value'], env_show))
+        self.assertIn(environment['ID'], map(lambda x: x['Value'], env_show))
