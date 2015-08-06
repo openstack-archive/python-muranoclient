@@ -366,7 +366,7 @@ def _handle_package_exists(mc, data, package, exists_action):
 @utils.arg('filename', metavar='<FILE>',
            nargs='+',
            help='URL of the murano zip package, FQPN, or path to zip package')
-@utils.arg('-c', '--categories', metavar='<CAT1 CAT2 CAT3>', nargs='*',
+@utils.arg('-c', '--categories', metavar='<CATEGORY>', nargs='*',
            help='Category list to attach')
 @utils.arg('--is-public', action='store_true', default=False,
            help='Make the package available for users from other tenants')
@@ -378,7 +378,10 @@ def _handle_package_exists(mc, data, package, exists_action):
 def do_package_import(mc, args):
     """Import a package.
     `FILE` can be either a path to a zip file, url or a FQPN.
-    `categories` can be separated by a comma.
+    You can use `--` to separate `FILE`s from other arguments.
+
+    Categories have to be separated with a space and have to be already
+    present in murano.
     """
     data = {"is_public": args.is_public}
 
