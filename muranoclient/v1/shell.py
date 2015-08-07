@@ -131,6 +131,17 @@ def do_environment_show(mc, args):
         utils.print_dict(environment.to_dict(), formatters=formatters)
 
 
+@utils.arg("id", metavar="<ID>",
+           help="ID of Environment to deploy")
+@utils.arg("--session-id", metavar="<SESSION>",
+           required=True,
+           help="ID of configuration session to deploy")
+def do_environment_deploy(mc, args):
+    """Start deployment of a murano environment session."""
+    mc.sessions.deploy(args.id, args.session_id)
+    do_environment_show(mc, args)
+
+
 def do_env_template_list(mc, args={}):
     """List the environments templates."""
     env_templates = mc.env_templates.list()

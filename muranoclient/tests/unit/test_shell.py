@@ -305,6 +305,16 @@ class ShellTest(base.TestCaseShell):
         self.client.environments.find.assert_called_once_with(
             name='env-id-or-name')
 
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    @mock.patch('muranoclient.v1.sessions.SessionManager')
+    def test_environment_deploy(self, mock_manager, env_manager):
+        self.client.sessions = mock_manager()
+        self.client.environments = env_manager()
+        self.make_env()
+        self.shell('environment-deploy 12345 --session-id 54321')
+        self.client.sessions.deploy.assert_called_once_with(
+            '12345', '54321')
+
     @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
     def test_env_template_delete(self, mock_manager):
         self.client.env_templates = mock_manager()
