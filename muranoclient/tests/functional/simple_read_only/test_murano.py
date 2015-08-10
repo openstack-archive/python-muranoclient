@@ -201,3 +201,222 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
                       map(lambda x: x['Value'], env_show))
         self.assertIn(environment['Name'], map(lambda x: x['Value'], env_show))
         self.assertIn(environment['ID'], map(lambda x: x['Value'], env_show))
+
+
+class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
+    """Sanity tests for testing actions with Category.
+
+    Smoke test for the Murano CLI commands which checks basic actions with
+    category command like create, delete etc.
+    """
+
+    def test_category_create(self):
+        """Test scenario:
+            1) create category
+            2) check that created category exist
+        """
+        category = self.create_murano_object('category',
+                                             'TestMuranoSanityCategory')
+        category_list = self.listing('category-list')
+
+        self.assertIn(category, category_list)
+
+    def test_category_delete(self):
+        """Test scenario:
+            1) create category
+            2) delete category
+            3) check that category has been deleted successfully
+        """
+        category = self.create_murano_object('category',
+                                             'TestMuranoSanityCategory')
+        self.delete_murano_object('category', category)
+        category_list = self.listing('category-list')
+
+        self.assertNotIn(category, category_list)
+
+    def test_table_struct_category_show(self):
+        """Test scenario:
+            1) create category
+            2) check table structure of category-show object
+        """
+        category = self.create_murano_object('category',
+                                             'TestMuranoSanityCategory')
+        category_show = self.listing('category-show', params=category['ID'])
+
+        self.assertEqual(['id', 'name', 'packages'],
+                         map(lambda x: x['Property'], category_show))
+
+    def test_category_show(self):
+        """Test scenario:
+            1) create category
+            2) check that category values exist in category_show object
+        """
+        category = self.create_murano_object('category',
+                                             'TestMuranoSanityCategory')
+        category_show = self.listing('category-show', params=category['ID'])
+
+        self.assertIn(category['ID'], map(lambda x: x['Value'], category_show))
+        self.assertIn(category['Name'],
+                      map(lambda x: x['Value'], category_show))
+
+
+class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
+    """Sanity tests for testing actions with Environment template.
+
+    Smoke test for the Murano CLI commands which checks basic actions with
+    env-temlate command like create, delete etc.
+    """
+    def test_environment_template_create(self):
+        """Test scenario:
+            1) create environment template
+            2) check that created environment template exist
+        """
+        env_template = self.create_murano_object('env-template',
+                                                 'TestMuranoSanityEnvTemp')
+        env_template_list = self.listing('env-template-list')
+
+        self.assertIn(env_template, env_template_list)
+
+    def test_environment_template_delete(self):
+        """Test scenario:
+            1) create environment template
+            2) delete environment template
+            3) check that deleted environment template doesn't exist
+        """
+        env_template = self.create_murano_object('env-template',
+                                                 'TestMuranoSanityEnvTemp')
+        env_template_list = self.delete_murano_object('env-template',
+                                                      env_template)
+
+        self.assertNotIn(env_template, env_template_list)
+
+    def test_table_struct_env_template_show(self):
+        """Test scenario:
+            1) create environment template
+            2) check table structure of env-template-show object
+        """
+        env_template = self.create_murano_object('env-template',
+                                                 'TestMuranoSanityEnvTemp')
+        env_template_show = self.listing('env-template-show',
+                                         params=env_template['ID'])
+        tested_env_template = map(lambda x: x['Property'], env_template_show)
+
+        self.assertIn('created', tested_env_template)
+        self.assertIn('id', tested_env_template)
+        self.assertIn('name', tested_env_template)
+        self.assertIn('services', tested_env_template)
+        self.assertIn('tenant_id', tested_env_template)
+        self.assertIn('updated', tested_env_template)
+        self.assertIn('version', tested_env_template)
+
+    def test_env_template_show(self):
+        """Test scenario:
+            1) create environment template
+            2) check that environment template values exist in
+            env-template-show object
+        """
+        env_template = self.create_murano_object('env-template',
+                                                 'TestMuranoSanityEnvTemp')
+        env_template_show = self.listing('env-template-show',
+                                         params=env_template['ID'])
+        tested_env = map(lambda x: x['Value'], env_template_show)
+
+        self.assertIn(env_template['ID'], tested_env)
+        self.assertIn(env_template['Name'], tested_env)
+        self.assertIn(env_template['Updated'], tested_env)
+        self.assertIn(env_template['Created'], tested_env)
+
+
+class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
+    """Sanity tests for testing actions with Packages.
+
+    Smoke tests for the Murano CLI commands which check basic actions with
+    packages like import, create, delete etc.
+    """
+
+    def test_import_package_by_url(self):
+        """Test scenario:
+            1) import package
+            2) check that package exists
+        """
+        package = self.import_dummy_package_by_url('dummy_package')
+        package_list = self.listing('package-list')
+
+        self.assertIn(package, package_list)
+
+    def test_package_is_public(self):
+        """Test scenario:
+            1) import package
+            2) check that package is public
+        """
+        package = self.import_dummy_package_by_url('dummy_package',
+                                                   '--is-public')
+        self.assertEqual(package['Is Public'], 'True')
+
+    def test_package_delete(self):
+        """Test scenario:
+            1) import package
+            2) delete package
+            3) check that package has been deleted
+        """
+
+        package = self.import_dummy_package_by_url('dummy_package')
+        package_list = self.delete_murano_object('package', package)
+
+        self.assertNotIn(package, package_list)
+
+    def test_package_show(self):
+        """Test scenario:
+            1) import package
+            2) check that package values exist in
+            return by package-show object
+        """
+
+        package = self.import_dummy_package_by_url('dummy_package')
+        package_show = self.listing('package-show', params=package['ID'])
+
+        tested_package = map(lambda x: x['Value'], package_show)
+
+        self.assertIn(package['ID'], tested_package)
+        self.assertIn(package['Name'], tested_package)
+        self.assertIn(package['FQN'], tested_package)
+        self.assertIn(package['Is Public'], tested_package)
+
+    def test_package_import_update(self):
+        """Test scenario:
+            1) import package
+            2) import new_package using option 'u' - update
+            3) check that package has been updated
+        """
+        package = self.import_dummy_package_by_url('dummy_package')
+        upd_package = self.import_dummy_package_by_url('dummy_package',
+                                                       '--exists-action', 'u')
+        self.assertEqual(package['Name'], upd_package['Name'])
+        self.assertNotEqual(package['ID'], upd_package['ID'])
+
+    def test_package_import_skip(self):
+        """Test scenario:
+            1) import package using option 's' - skip for existing package
+            2) try to import the same package using option 's' - skip
+            3) check that package hasn't been updated
+        """
+        package = self.import_dummy_package_by_url('dummy_package',
+                                                   '--exists-action', 's')
+        skip_package = self.import_dummy_package_by_url('dummy_package',
+                                                        '--exists-action', 's')
+        package_list = self.listing("package-list")
+
+        self.assertIn(package, package_list)
+        self.assertEqual(package, skip_package)
+
+    def test_package_import_abort(self):
+        """Test scenario:
+            1) import package
+            2) import new_package using option 'a' - skip
+            3) check that package hasn't been updated
+        """
+        package_list = self.listing("package-list")
+        package = self.import_dummy_package_by_url('dummy_package',
+                                                   '--exists-action', 'a')
+
+        self.assertNotIn(package, package_list)
