@@ -323,6 +323,31 @@ class ShellTest(base.TestCaseShell):
         self.client.environments.get.assert_called_once_with(
             12345, session_id='12345')
 
+    @mock.patch('muranoclient.v1.actions.ActionManager')
+    def test_environment_action_call(self, mock_manager):
+        self.client.actions = mock_manager()
+        self.make_env()
+        self.shell('environment-action-call 12345 --action-id 54321')
+        self.client.actions.call.assert_called_once_with(
+            '12345', '54321', arguments={})
+
+    @mock.patch('muranoclient.v1.actions.ActionManager')
+    def test_environment_action_call_args(self, mock_manager):
+        self.client.actions = mock_manager()
+        self.make_env()
+        self.shell('environment-action-call 12345 --action-id 54321 '
+                   '--arguments foo=bar')
+        self.client.actions.call.assert_called_once_with(
+            '12345', '54321', arguments={'foo': 'bar'})
+
+    @mock.patch('muranoclient.v1.actions.ActionManager')
+    def test_environment_action_get_result(self, mock_manager):
+        self.client.actions = mock_manager()
+        self.make_env()
+        self.shell('environment-action-get-result 12345 --task-id 54321')
+        self.client.actions.call.assert_called_once_with(
+            '12345', '54321')
+
     @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
     def test_env_template_delete(self, mock_manager):
         self.client.env_templates = mock_manager()

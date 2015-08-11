@@ -150,6 +150,44 @@ def do_environment_deploy(mc, args):
     do_environment_show(mc, args)
 
 
+@utils.arg("id", help="ID of Environment to call action against")
+@utils.arg("--action-id", metavar="<ACTION>",
+           required=True,
+           help="ID of action to run")
+@utils.arg("--arguments", metavar='<KEY=VALUE>', nargs='*',
+           help="Action arguments.")
+def do_environment_action_call(mc, args):
+    """Call action `ACTION` in environment `ID`.
+
+    Returns id of an asynchronous task, that executes the action.
+    Actions can only be called on a `deployed` environment.
+    To view actions available in a given environment use `environment-show`
+    command.
+    """
+    arguments = {}
+    for argument in args.arguments or []:
+        if '=' not in argument:
+            raise exceptions.CommandError(
+                "Argument should be in form of KEY=VALUE. Found: {0}".format(
+                    argument))
+        k, v = argument.split('=', 1)
+        arguments[k] = v
+    task_id = mc.actions.call(
+        args.id, args.action_id, arguments=arguments)
+    print("Created task, id: {0}".format(task_id))
+
+
+@utils.arg("id", metavar="<ID>",
+           help="ID of Environment where task is being executed")
+@utils.arg("--task-id", metavar="<TASK>",
+           required=True,
+           help="ID of action to run")
+def do_environment_action_get_result(mc, args):
+    """Get result of `TASK` in environment `ID`."""
+    result = mc.actions.call(args.id, args.task_id)
+    print("Task id result: {0}".format(result))
+
+
 def do_env_template_list(mc, args={}):
     """List the environments templates."""
     env_templates = mc.env_templates.list()
