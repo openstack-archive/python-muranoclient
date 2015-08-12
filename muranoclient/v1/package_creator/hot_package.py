@@ -38,8 +38,8 @@ def generate_manifest(args):
         args.name = os.path.splitext(filename)[0]
     if not args.full_name:
         prefix = 'io.murano.apps.generated'
-        # normalized_name = re.sub(r'\W+', '_', args.name).title()
-        normalized_name = args.name.replace('_', ' ').title().replace(' ', '')
+        normalized_name = args.name.replace('_', ' ').replace('-', ' ')
+        normalized_name = normalized_name.title().replace(' ', '')
         args.full_name = '{0}.{1}'.format(prefix, normalized_name)
     try:
         with open(args.template) as heat_file:
