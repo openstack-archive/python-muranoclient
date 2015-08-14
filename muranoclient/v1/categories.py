@@ -12,6 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+from six.moves import urllib
+
 from muranoclient.common import base
 
 
@@ -26,9 +29,24 @@ class Category(base.Resource):
 class CategoryManager(base.Manager):
     resource_class = Category
 
-    def list(self):
-        return self._list('/v1/catalog/categories',
-                          response_key='categories')
+    def list(self, **kwargs):
+        """Get category list with pagination support.
+
+        :param sort_keys: an array of fields used to sort the list (string)
+        :param sort_dir: 'asc' or 'desc' for ascending or descending sort
+        :param limit: maximum number of categories to return
+        :param marker: begin returning categories that appear later in the
+                       category list than that represented by this marker id
+        """
+
+        params = {}
+        for key, value in six.iteritems(kwargs):
+            if value:
+                params[key] = value
+
+        url = '/v1/catalog/categories?{0}'.format(
+            urllib.parse.urlencode(params, True))
+        return self._list(url, response_key='categories')
 
     def get(self, id):
         return self._get('/v1/catalog/categories/{0}'.format(id))
