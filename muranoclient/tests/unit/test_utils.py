@@ -267,3 +267,32 @@ class BundleTest(testtools.TestCase):
                  bundle.packages(base_url=self.base_url)]),
             set(['first_app', 'second_app'])
         )
+
+
+class TraverseTest(testtools.TestCase):
+
+    def test_traverse_and_replace(self):
+        obj = [
+            {'id': '===id1==='},
+            {'id': '===id2===', 'x': [{'bar': '===id1==='}]},
+            ['===id1===', '===id2==='],
+            '===id3===',
+            '===nonid0===',
+            '===id3===',
+        ]
+        utils.traverse_and_replace(obj)
+        self.assertNotEqual(obj[0]['id'], '===id1===')
+        self.assertNotEqual(obj[1]['id'], '===id2===')
+        self.assertNotEqual(obj[1]['x'][0]['bar'], '===id1===')
+        self.assertNotEqual(obj[2][0], '===id1===')
+        self.assertNotEqual(obj[2][1], '===id2===')
+        self.assertNotEqual(obj[3], '===id3===')
+        self.assertEqual(obj[4], '===nonid0===')
+        self.assertNotEqual(obj[5], '===id3===')
+
+        self.assertEqual(obj[0]['id'], obj[1]['x'][0]['bar'])
+        self.assertEqual(obj[0]['id'], obj[2][0])
+
+        self.assertEqual(obj[1]['id'], obj[2][1])
+
+        self.assertEqual(obj[3], obj[5])

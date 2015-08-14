@@ -219,6 +219,9 @@ def do_environment_apps_edit(mc, args):
         },
     ]
 
+    NOTE: Values '===id1===', '===id2===', etc. in the resulting object-model
+    will be substituted with uuids.
+
     For more info on jsonpatch see RFC 6902
     """
 
@@ -234,6 +237,9 @@ def do_environment_apps_edit(mc, args):
     environment_id = args.id
     session_id = args.session_id
     environment = mc.environments.get(environment_id, session_id)
+
+    object_model = jpatch.apply(environment.services)
+    utils.traverse_and_replace(object_model)
 
     mc.services.put(
         environment_id,
