@@ -15,6 +15,7 @@
 
 from __future__ import print_function
 
+import collections
 import os
 import re
 import shutil
@@ -596,3 +597,42 @@ def yaql_constructor(loader, node):
 
 yaml.add_constructor(u'!yaql', yaql_constructor, YaqlYamlLoader)
 yaml.add_implicit_resolver(u'!yaql', YaqlExpression, Loader=YaqlYamlLoader)
+
+
+def traverse_and_replace(obj,
+                         pattern=re.compile(r'^===id(\d+)===$'),
+                         replacements=None):
+    """Helper function that traverses object model and substitutes ids.
+
+    Recursively checks values of objects found in `obj` against `pattern`,
+    and replaces strings that match pattern with uuid.uuid4(). Keeps track of
+    any replacements already made, i.e. ===id1=== would always be the same,
+    across `obj`. Uses 1st group, found in the `pattern` regexp as unique
+    identifier of a replacement
+    """
+    if replacements is None:
+        replacements = collections.defaultdict(lambda: uuid.uuid4().hex)
+
+    def _maybe_replace(obj, key, value):
+        """Check and replace value against pattern"""
+        if isinstance(value, six.string_types):
+            m = pattern.search(value)
+            if m:
+                if m.group(1) not in replacements:
+                    replacements[m.group(1)] = uuid.uuid4().hex
+                obj[key] = replacements[m.group(1)]
+
+    if isinstance(obj, list):
+        for key, value in enumerate(obj):
+            if isinstance(value, (list, dict)):
+                traverse_and_replace(value, pattern, replacements)
+            else:
+                _maybe_replace(obj, key, value)
+    elif isinstance(obj, dict):
+        for key, value in obj.items():
+            if isinstance(value, (list, dict)):
+                traverse_and_replace(value, pattern, replacements)
+            else:
+                _maybe_replace(obj, key, value)
+    else:
+        _maybe_replace(obj, key, value)
