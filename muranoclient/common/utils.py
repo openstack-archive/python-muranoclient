@@ -23,7 +23,6 @@ import StringIO
 import sys
 import tempfile
 import textwrap
-import types
 import urlparse
 import uuid
 import warnings
@@ -38,9 +37,17 @@ import requests
 import six
 import yaml
 import yaql
-import yaql.exceptions
 
 from muranoclient.common import exceptions
+
+try:
+    import yaql.language  # noqa
+
+    from muranoclient.common.yaqlexpression import YaqlExpression
+except ImportError:
+    # no yaql.language means legacy yaql
+    from muranoclient.common.yaqlexpression_legacy import YaqlExpression
+
 
 LOG = logging.getLogger(__name__)
 
@@ -547,38 +554,6 @@ class Bundle(FileWrapperMixin):
                           "package {1}".format(e, package['Name']))
                 continue
             yield pkg_obj
-
-
-class YaqlExpression(object):
-    def __init__(self, expression):
-        self._expression = str(expression)
-        self._parsed_expression = yaql.parse(self._expression)
-
-    def expression(self):
-        return self._expression
-
-    def __repr__(self):
-        return 'YAQL(%s)' % self._expression
-
-    def __str__(self):
-        return self._expression
-
-    @staticmethod
-    def match(expr):
-        if not isinstance(expr, types.StringTypes):
-            return False
-        if re.match('^[\s\w\d.:]*$', expr):
-            return False
-        try:
-            yaql.parse(expr)
-            return True
-        except yaql.exceptions.YaqlGrammarException:
-            return False
-        except yaql.exceptions.YaqlLexicalException:
-            return False
-
-    def evaluate(self, data=None, context=None):
-        return self._parsed_expression.evaluate(data=data, context=context)
 
 
 class YaqlYamlLoader(yaml.Loader):
