@@ -31,6 +31,7 @@ import muranoclient
 from muranoclient import client as apiclient
 from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions as exc
+from muranoclient.openstack.common.gettextutils import _
 
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,7 @@ class MuranoShell(object):
         parser.add_argument('--os-cacert',
                             metavar='<ca-certificate>',
                             default=utils.env('OS_CACERT', default=None),
+                            dest='os_cacert',
                             help='Specify a CA bundle file to use in '
                                  'verifying a TLS (https) server certificate. '
                                  'Defaults to env[OS_CACERT].')
@@ -95,10 +97,9 @@ class MuranoShell(object):
                                  'is prepended to your cert file.')
 
         parser.add_argument('--ca-file',
-                            help='Path of CA SSL certificate(s) used to '
-                                 'verify the remote server certificate. '
-                                 'Without this option glance looks for '
-                                 'the default system CA certificates.')
+                            dest='os_cacert',
+                            help=_('DEPRECATED! Use %(arg)s.') %
+                                 {'arg': '--os-cacert'})
 
         parser.add_argument('--api-timeout',
                             help='Number of seconds to wait for an '
@@ -336,7 +337,7 @@ class MuranoShell(object):
             kwargs = {
                 'token': token,
                 'insecure': args.insecure,
-                'ca_file': args.ca_file,
+                'cacert': args.os_cacert,
                 'cert_file': args.cert_file,
                 'key_file': args.key_file,
                 'username': args.os_username,
