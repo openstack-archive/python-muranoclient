@@ -74,7 +74,7 @@ CLONE_FROM_GIT=$1
 	if [ ! -z $CLONE_FROM_GIT ]; then
 # Preparing clone root directory
 	if [ ! -d $GIT_CLONE_DIR ];then
-		log "Creting $GIT_CLONE_DIR direcory..."
+		log "Creating $GIT_CLONE_DIR directory..."
 		mkdir -p $GIT_CLONE_DIR
 		if [ $? -ne 0 ];then
 			log "Can't create $GIT_CLONE_DIR, exiting!!!" 
