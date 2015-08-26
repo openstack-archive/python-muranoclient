@@ -35,7 +35,7 @@ _bool_from_str_strict = functools.partial(
 
 @utils.arg('--all-tenants', action='store_true', default=False,
            help='Allows to list environments from all tenants'
-                ' (admin only)')
+                ' (admin only).')
 def do_environment_list(mc, args={}):
     """List the environments."""
     all_tenants = getattr(args, 'all_tenants', False)
@@ -66,11 +66,11 @@ def _generate_join_existing_net(net, subnet):
 
 
 @utils.arg("--join-net-id", metavar="<NET_ID>",
-           help="Network id to join",)
+           help="Network id to join.",)
 @utils.arg("--join-subnet-id", metavar="<SUBNET_ID>",
-           help="Subnetwork id to join",)
+           help="Subnetwork id to join.",)
 @utils.arg("name", metavar="<ENVIRONMENT_NAME>",
-           help="Environment name")
+           help="Environment name.")
 def do_environment_create(mc, args):
     """Create an environment."""
     body = {"name": args.name}
@@ -82,10 +82,10 @@ def do_environment_create(mc, args):
 
 
 @utils.arg("id", metavar="<NAME or ID>",
-           nargs="+", help="Id or name of environment(s) to delete")
+           nargs="+", help="Id or name of environment(s) to delete.")
 @utils.arg('--abandon', action='store_true', default=False,
            help='If set will abandon environment without deleting any'
-                ' of its resources')
+                ' of its resources.')
 def do_environment_delete(mc, args):
     """Delete an environment."""
     abandon = getattr(args, 'abandon', False)
@@ -105,9 +105,9 @@ def do_environment_delete(mc, args):
 
 
 @utils.arg("id", metavar="<NAME or ID>",
-           help="Environment ID or name")
+           help="Environment ID or name.")
 @utils.arg("name", metavar="<ENVIRONMENT_NAME>",
-           help="A name to which the environment will be renamed")
+           help="A name to which the environment will be renamed.")
 def do_environment_rename(mc, args):
     """Rename an environment."""
     try:
@@ -120,11 +120,11 @@ def do_environment_rename(mc, args):
 
 
 @utils.arg("id", metavar="<NAME or ID>",
-           help="Environment ID or name")
+           help="Environment ID or name.")
 @utils.arg("--session-id", metavar="<SESSION_ID>", default='',
            help="Id of a config session.")
 @utils.arg("--only-apps", action='store_true',
-           help="Only print apps of the environment. (useful for automation)")
+           help="Only print apps of the environment (useful for automation).")
 def do_environment_show(mc, args):
     """Display environment details."""
     try:
@@ -148,20 +148,20 @@ def do_environment_show(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="ID of Environment to deploy")
+           help="ID of Environment to deploy.")
 @utils.arg("--session-id", metavar="<SESSION>",
            required=True,
-           help="ID of configuration session to deploy")
+           help="ID of configuration session to deploy.")
 def do_environment_deploy(mc, args):
     """Start deployment of a murano environment session."""
     mc.sessions.deploy(args.id, args.session_id)
     do_environment_show(mc, args)
 
 
-@utils.arg("id", help="ID of Environment to call action against")
+@utils.arg("id", help="ID of Environment to call action against.")
 @utils.arg("--action-id", metavar="<ACTION>",
            required=True,
-           help="ID of action to run")
+           help="ID of action to run.")
 @utils.arg("--arguments", metavar='<KEY=VALUE>', nargs='*',
            help="Action arguments.")
 def do_environment_action_call(mc, args):
@@ -186,17 +186,17 @@ def do_environment_action_call(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="ID of Environment where task is being executed")
+           help="ID of Environment where task is being executed.")
 @utils.arg("--task-id", metavar="<TASK>",
            required=True,
-           help="ID of action to run")
+           help="ID of action to run.")
 def do_environment_action_get_result(mc, args):
     """Get result of `TASK` in environment `ID`."""
     result = mc.actions.call(args.id, args.task_id)
     print("Task id result: {0}".format(result))
 
 
-@utils.arg("id", metavar="<ID>", help="ID of Environment to add session to")
+@utils.arg("id", metavar="<ID>", help="ID of Environment to add session to.")
 def do_environment_session_create(mc, args):
     """Creates a new configuration session for environment ID."""
     environment_id = args.id
@@ -204,9 +204,9 @@ def do_environment_session_create(mc, args):
     print("Created new session: {0}".format(session_id))
 
 
-@utils.arg("id", metavar="<ID>", help="ID of Environment to edit")
+@utils.arg("id", metavar="<ID>", help="ID of Environment to edit.")
 @utils.arg("filename", metavar="FILE", nargs="?",
-           help="File to read jsonpatch from (defaults to stdin)")
+           help="File to read jsonpatch from (defaults to stdin).")
 @utils.arg("--session-id", metavar="<SESSION_ID>",
            required=True,
            help="Id of a config session.")
@@ -263,7 +263,7 @@ def do_env_template_list(mc, args={}):
 
 
 @utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
-           help="Environment template name")
+           help="Environment template name.")
 def do_env_template_create(mc, args):
     """Create an environment template."""
     mc.env_templates.create({"name": args.name})
@@ -271,7 +271,7 @@ def do_env_template_create(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Environment template ID")
+           help="Environment template ID.")
 def do_env_template_show(mc, args):
     """Display environment template details."""
     try:
@@ -292,7 +292,7 @@ def do_env_template_show(mc, args):
 
 
 @utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
-           help="Environment template name")
+           help="Environment template name.")
 @utils.arg('app_template_file', metavar='<FILE>',
            help='Path to the template.')
 def do_env_template_add_app(mc, args):
@@ -304,9 +304,9 @@ def do_env_template_add_app(mc, args):
 
 
 @utils.arg("id", metavar="<ENV_TEMPLATE_ID>",
-           help="Environment template ID")
+           help="Environment template ID.")
 @utils.arg("app_id", metavar="<ENV_TEMPLATE_APP_ID>",
-           help="Application ID")
+           help="Application ID.")
 def do_env_template_del_app(mc, args):
     """Delete application from the environment template."""
     mc.env_templates.delete_app(args.name, args.app_id)
@@ -314,9 +314,9 @@ def do_env_template_del_app(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Environment template ID")
+           help="Environment template ID.")
 @utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
-           help="Environment template name")
+           help="Environment template name.")
 def do_env_template_update(mc, args):
     """Update an environment template."""
     mc.env_templates.update(args.id, args.name)
@@ -324,7 +324,7 @@ def do_env_template_update(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           nargs="+", help="ID of environment(s) template to delete")
+           nargs="+", help="ID of environment(s) template to delete.")
 def do_env_template_delete(mc, args):
     """Delete an environment template."""
     failure_count = 0
@@ -342,7 +342,7 @@ def do_env_template_delete(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Environment ID for which to list deployments")
+           help="Environment ID for which to list deployments.")
 def do_deployment_list(mc, args):
     """List deployments for an environment."""
     try:
@@ -369,9 +369,9 @@ def do_package_list(mc, args={}):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Package ID to download")
+           help="Package ID to download.")
 @utils.arg("filename", metavar="file", nargs="?",
-           help="Filename for download (defaults to stdout)")
+           help="Filename for download (defaults to stdout).")
 def do_package_download(mc, args):
     """Download a package to a filename or stdout."""
 
@@ -390,7 +390,7 @@ def do_package_download(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Package ID to show")
+           help="Package ID to show.")
 def do_package_show(mc, args):
     """Display details for a package."""
     try:
@@ -421,7 +421,7 @@ def do_package_show(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           nargs='+', help="Package ID to delete")
+           nargs='+', help="Package ID to delete.")
 def do_package_delete(mc, args):
     """Delete a package."""
     failure_count = 0
@@ -488,16 +488,16 @@ def _handle_package_exists(mc, data, package, exists_action):
 
 @utils.arg('filename', metavar='<FILE>',
            nargs='+',
-           help='URL of the murano zip package, FQPN, or path to zip package')
+           help='URL of the murano zip package, FQPN, or path to zip package.')
 @utils.arg('-c', '--categories', metavar='<CATEGORY>', nargs='*',
-           help='Category list to attach')
+           help='Category list to attach.')
 @utils.arg('--is-public', action='store_true', default=False,
-           help='Make the package available for users from other tenants')
+           help='Make the package available for users from other tenants.')
 @utils.arg('--version', default='',
            help='Version of the package to use from repository '
-                '(ignored when importing with multiple packages)')
+                '(ignored when importing with multiple packages).')
 @utils.arg('--exists-action', default='', choices=['a', 's', 'u'],
-           help='Default action when a package already exists')
+           help='Default action when a package already exists.')
 def do_package_import(mc, args):
     """Import a package.
     `FILE` can be either a path to a zip file, url or a FQPN.
@@ -568,16 +568,16 @@ def do_package_import(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="Package ID to update")
+           help="Package ID to update.")
 @utils.arg('--is-public', type=_bool_from_str_strict, metavar='{true|false}',
-           help='Make package available to users from other tenants')
+           help='Make package available to users from other tenants.')
 @utils.arg('--enabled', type=_bool_from_str_strict, metavar='{true|false}',
-           help='Make package active and available for deployments')
-@utils.arg('--name', default=None, help='New name for the package')
-@utils.arg('--description', default=None, help='New package description')
+           help='Make package active and available for deployments.')
+@utils.arg('--name', default=None, help='New name for the package.')
+@utils.arg('--description', default=None, help='New package description.')
 @utils.arg('--tags', metavar='<TAG>', nargs='*',
            default=None,
-           help='A list of keywords connected to the application')
+           help='A list of keywords connected to the application.')
 def do_package_update(mc, args):
     """Edit the package in question"""
     data = {}
@@ -595,11 +595,11 @@ def do_package_update(mc, args):
 
 @utils.arg('filename', metavar='<FILE>',
            nargs='+',
-           help='Bundle URL, bundle name, or path to the bundle file')
+           help='Bundle URL, bundle name, or path to the bundle file.')
 @utils.arg('--is-public', action='store_true', default=False,
-           help='Make packages available to users from other tenants')
+           help='Make packages available to users from other tenants.')
 @utils.arg('--exists-action', default='', choices=['a', 's', 'u'],
-           help='Default action when a package already exists')
+           help='Default action when a package already exists.')
 def do_bundle_import(mc, args):
     """Import a bundle.
     `FILE` can be either a path to a zip file, URL, or name from repo.
@@ -701,12 +701,12 @@ def _handle_save_packages(packages, dst, base_url, no_images):
 
 
 @utils.arg('filename', metavar='<BUNDLE>',
-           help='Bundle URL, bundle name, or path to the bundle file')
+           help='Bundle URL, bundle name, or path to the bundle file.')
 @utils.arg('-p', '--path', metavar='<PATH>',
            help='Path to the directory to store packages. If not set will use '
-                'current directory')
+                'current directory.')
 @utils.arg('--no-images', action='store_true', default=False,
-           help='If set will skip images downloading')
+           help='If set will skip images downloading.')
 def do_bundle_save(mc, args):
     """Save a bundle.
     This will download a bundle of packages with all dependencies
@@ -759,15 +759,15 @@ def do_bundle_save(mc, args):
 
 @utils.arg('package', metavar='<PACKAGE>',
            nargs='+',
-           help='Package URL or name')
+           help='Package URL or name.')
 @utils.arg('-p', '--path', metavar='<PATH>',
            help='Path to the directory to store package. If not set will use '
-                'current directory')
+                'current directory.')
 @utils.arg('--version', default='',
            help='Version of the package to use from repository '
-                '(ignored when saving with multiple packages)')
+                '(ignored when saving with multiple packages).')
 @utils.arg('--no-images', action='store_true', default=False,
-           help='If set will skip images downloading')
+           help='If set will skip images downloading.')
 def do_package_save(mc, args):
     """Save a package.
     This will download package(s) with all dependencies
@@ -811,10 +811,10 @@ def do_package_save(mc, args):
 
 
 @utils.arg('id', metavar='<ID>',
-           help='Environment ID to show applications from')
+           help='Environment ID to show applications from.')
 @utils.arg('-p', '--path', metavar='<PATH>',
            help='Level of detalization to show. '
-                'Leave empty to browse all applications in the environment',
+                'Leave empty to browse all applications in the environment.',
            default='/')
 def do_app_show(mc, args):
     """List applications, added to specified environment.
@@ -840,27 +840,27 @@ def do_app_show(mc, args):
 
 @utils.arg('-t', '--template', metavar='<HEAT_TEMPLATE>',
            help='Path to the Heat template to import as '
-                'an Application Definition')
+                'an Application Definition.')
 @utils.arg('-c', '--classes-dir', metavar='<CLASSES_DIRECTORY>',
-           help='Path to the directory containing application classes')
+           help='Path to the directory containing application classes.')
 @utils.arg('-r', '--resources-dir', metavar='<RESOURCES_DIRECTORY>',
-           help='Path to the directory containing application resources')
+           help='Path to the directory containing application resources.')
 @utils.arg('-n', '--name', metavar='<DISPLAY_NAME>',
-           help='Display name of the Application in Catalog')
+           help='Display name of the Application in Catalog.')
 @utils.arg('-f', '--full-name', metavar='<full-name>',
-           help='Fully-qualified name of the Application in Catalog')
-@utils.arg('-a', '--author', metavar='<AUTHOR>', help='Name of the publisher')
-@utils.arg('--tags', help='A list of keywords connected to the application',
+           help='Fully-qualified name of the Application in Catalog.')
+@utils.arg('-a', '--author', metavar='<AUTHOR>', help='Name of the publisher.')
+@utils.arg('--tags', help='A list of keywords connected to the application.',
            metavar='<TAG1 TAG2>', nargs='*')
 @utils.arg('-d', '--description', metavar='<DESCRIPTION>',
-           help='Detailed description for the Application in Catalog')
+           help='Detailed description for the Application in Catalog.')
 @utils.arg('-o', '--output', metavar='<PACKAGE_NAME>',
-           help='The name of the output file archive to save locally')
+           help='The name of the output file archive to save locally.')
 @utils.arg('-u', '--ui', metavar='<UI_DEFINITION>',
-           help='Dynamic UI form definition')
+           help='Dynamic UI form definition.')
 @utils.arg('--type',
-           help='Package type. Possible values: Application or Library')
-@utils.arg('-l', '--logo', metavar='<LOGO>', help='Path to the package logo')
+           help='Package type. Possible values: Application or Library.')
+@utils.arg('-l', '--logo', metavar='<LOGO>', help='Path to the package logo.')
 def do_package_create(mc, args):
     """Create an application package."""
     if args.template and args.classes_dir:
@@ -910,7 +910,7 @@ def do_category_list(mc, args={}):
 
 
 @utils.arg("id", metavar="<ID>",
-           help="ID of a category(s) to show")
+           help="ID of a category(s) to show.")
 def do_category_show(mc, args):
     """Display category details."""
     category = mc.categories.get(args.id)
@@ -922,7 +922,7 @@ def do_category_show(mc, args):
 
 
 @utils.arg("name", metavar="<CATEGORY_NAME>",
-           help="Category name")
+           help="Category name.")
 def do_category_create(mc, args):
     """Create a category."""
     mc.categories.add({"name": args.name})
@@ -930,7 +930,7 @@ def do_category_create(mc, args):
 
 
 @utils.arg("id", metavar="<ID>",
-           nargs="+", help="ID of a category(ies) to delete")
+           nargs="+", help="ID of a category(ies) to delete.")
 def do_category_delete(mc, args):
     """Delete a category."""
     failure_count = 0
