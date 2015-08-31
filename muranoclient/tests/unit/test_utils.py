@@ -156,7 +156,7 @@ class PackageTest(testtools.TestCase):
         pkg = make_pkg({'FullName': 'single_app'})
         app = utils.Package.fromFile(pkg)
         reqs = app.requirements(base_url=self.base_url)
-        self.assertEqual(reqs, {'single_app': app})
+        self.assertEqual({'single_app': app}, reqs)
 
     @requests_mock.mock()
     def test_requirements(self, m):
@@ -175,8 +175,8 @@ class PackageTest(testtools.TestCase):
         reqs = app.requirements(base_url=self.base_url)
 
         self.assertEqual(
-            reqs,
-            {'main_app': app, 'dep_app': mock.ANY, 'dep_of_dep': mock.ANY})
+            {'main_app': app, 'dep_app': mock.ANY, 'dep_of_dep': mock.ANY},
+            reqs)
 
     @requests_mock.mock()
     def test_cyclic_requirements(self, m):
@@ -195,8 +195,8 @@ class PackageTest(testtools.TestCase):
         reqs = app.requirements(base_url=self.base_url)
 
         self.assertEqual(
-            reqs,
-            {'main_app': app, 'dep_app': mock.ANY, 'dep_of_dep': mock.ANY})
+            {'main_app': app, 'dep_app': mock.ANY, 'dep_of_dep': mock.ANY},
+            reqs)
 
     def test_images(self):
         pkg = make_pkg({})
@@ -251,8 +251,8 @@ class BundleTest(testtools.TestCase):
         s.seek(0)
         bundle = utils.Bundle.from_file(s)
         self.assertEqual(
-            set([p['Name'] for p in bundle.package_specs()]),
             set(['first_app', 'second_app']),
+            set([p['Name'] for p in bundle.package_specs()])
         )
 
         # setup packages
@@ -262,10 +262,10 @@ class BundleTest(testtools.TestCase):
         m.get(self.base_url + '/apps/first_app.zip', body=pkg1)
         m.get(self.base_url + '/apps/second_app.1.0.zip', body=pkg2)
         self.assertEqual(
+            set(['first_app', 'second_app']),
             set([p.manifest['FullName']
                  for p in
-                 bundle.packages(base_url=self.base_url)]),
-            set(['first_app', 'second_app'])
+                 bundle.packages(base_url=self.base_url)])
         )
 
 
@@ -281,14 +281,14 @@ class TraverseTest(testtools.TestCase):
             '===id3===',
         ]
         utils.traverse_and_replace(obj)
-        self.assertNotEqual(obj[0]['id'], '===id1===')
-        self.assertNotEqual(obj[1]['id'], '===id2===')
-        self.assertNotEqual(obj[1]['x'][0]['bar'], '===id1===')
-        self.assertNotEqual(obj[2][0], '===id1===')
-        self.assertNotEqual(obj[2][1], '===id2===')
-        self.assertNotEqual(obj[3], '===id3===')
-        self.assertEqual(obj[4], '===nonid0===')
-        self.assertNotEqual(obj[5], '===id3===')
+        self.assertNotEqual('===id1===', obj[0]['id'])
+        self.assertNotEqual('===id2===', obj[1]['id'])
+        self.assertNotEqual('===id1===', obj[1]['x'][0]['bar'])
+        self.assertNotEqual('===id1===', obj[2][0])
+        self.assertNotEqual('===id2===', obj[2][1])
+        self.assertNotEqual('===id3===', obj[3])
+        self.assertEqual('===nonid0===', obj[4])
+        self.assertNotEqual('===id3===', obj[5])
 
         self.assertEqual(obj[0]['id'], obj[1]['x'][0]['bar'])
         self.assertEqual(obj[0]['id'], obj[2][0])

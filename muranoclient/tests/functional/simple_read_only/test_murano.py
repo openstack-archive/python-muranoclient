@@ -25,20 +25,20 @@ class SimpleReadOnlyMuranoClientTest(utils.CLIUtilsTestBase):
 
     def test_category_list(self):
         category = self.get_table_struct('category-list')
-        self.assertEqual(category, ['ID', 'Name'])
+        self.assertEqual(['ID', 'Name'], category)
 
     def test_env_template_list(self):
         templates = self.get_table_struct('env-template-list')
-        self.assertEqual(templates, ['ID', 'Name', 'Created', 'Updated'])
+        self.assertEqual(['ID', 'Name', 'Created', 'Updated'], templates)
 
     def test_environment_list(self):
         environment = self.get_table_struct('environment-list')
-        self.assertEqual(environment, ['ID', 'Name', 'Created', 'Updated'])
+        self.assertEqual(['ID', 'Name', 'Created', 'Updated'], environment)
 
     def test_package_list(self):
         packages = self.get_table_struct('package-list')
-        self.assertEqual(packages, ['ID', 'Name', 'FQN',
-                                    'Author', 'Is Public'])
+        self.assertEqual(['ID', 'Name', 'FQN', 'Author', 'Is Public'],
+                         packages)
 
 
 class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
@@ -56,8 +56,8 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
                                                 'MuranoTestTS-depl-list')
         table_struct = self.get_table_struct('deployment-list',
                                              params=environment['ID'])
-        self.assertEqual(table_struct,
-                         ['ID', 'State', 'Created', 'Updated', 'Finished'])
+        self.assertEqual(['ID', 'State', 'Created', 'Updated', 'Finished'],
+                         table_struct)
 
     def test_table_struct_of_environment_create(self):
         """Test scenario:
@@ -66,7 +66,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
         """
         self.create_murano_object('environment', 'MuranoTestTS-env-create')
         table_struct = self.get_table_struct('environment-list')
-        self.assertEqual(table_struct, ['ID', 'Name', 'Created', 'Updated'])
+        self.assertEqual(['ID', 'Name', 'Created', 'Updated'], table_struct)
 
     def test_table_struct_of_environment_delete(self):
         """Test scenario:
@@ -78,7 +78,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
                                                 'MuranoTestTS-env-del')
         self.delete_murano_object('environment', environment)
         table_struct = self.get_table_struct('environment-list')
-        self.assertEqual(table_struct, ['ID', 'Name', 'Created', 'Updated'])
+        self.assertEqual(['ID', 'Name', 'Created', 'Updated'], table_struct)
 
     def test_table_struct_of_category_create(self):
         """Test scenario:
@@ -87,7 +87,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
         """
         self.create_murano_object('category', 'MuranoTestTS-cat-create')
         table_struct = self.get_table_struct('category-list')
-        self.assertEqual(table_struct, ['ID', 'Name'])
+        self.assertEqual(['ID', 'Name'], table_struct)
 
     def test_table_struct_of_category_delete(self):
         """Test scenario:
@@ -99,7 +99,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
                                              'MuranoTestTS-cat-create')
         self.delete_murano_object('category', category)
         category = self.get_table_struct('category-list')
-        self.assertEqual(category, ['ID', 'Name'])
+        self.assertEqual(['ID', 'Name'], category)
 
     def test_table_struct_of_env_template_create(self):
         """Test scenario:
@@ -109,7 +109,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
         self.create_murano_object('env-template',
                                   'MuranoTestTS-env-tmp-create')
         table_struct = self.get_table_struct('env-template-list')
-        self.assertEqual(table_struct, ['ID', 'Name', 'Created', 'Updated'])
+        self.assertEqual(['ID', 'Name', 'Created', 'Updated'], table_struct)
 
     def test_table_struct_of_env_template_delete(self):
         """Test scenario:
@@ -121,7 +121,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
                                                  'MuranoTestTS-env-tmp-create')
         self.delete_murano_object('env-template', env_template)
         table_struct = self.get_table_struct('env-template-list')
-        self.assertEqual(table_struct, ['ID', 'Name', 'Created', 'Updated'])
+        self.assertEqual(['ID', 'Name', 'Created', 'Updated'], table_struct)
 
 
 class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):

@@ -105,8 +105,8 @@ class PackageCreatorTest(base.TestAdditionalAsserts):
         package_dir = hot_package.prepare_package(args)
 
         prepared_files = ['manifest.yaml', 'logo.png', 'template.yaml']
-        self.assertEqual(sorted(os.listdir(package_dir)),
-                         sorted(prepared_files))
+        self.assertEqual(sorted(prepared_files),
+                         sorted(os.listdir(package_dir)))
         shutil.rmtree(package_dir)
 
     def test_generate_mpl_manifest(self):
@@ -203,6 +203,6 @@ class PackageCreatorTest(base.TestAdditionalAsserts):
         prepared_files = ['UI', 'Classes', 'manifest.yaml',
                           'Resources', 'logo.png']
         package_dir = mpl_package.prepare_package(args)
-        self.assertEqual(sorted(os.listdir(package_dir)),
-                         sorted(prepared_files))
+        self.assertEqual(sorted(prepared_files),
+                         sorted(os.listdir(package_dir)))
         shutil.rmtree(package_dir)
