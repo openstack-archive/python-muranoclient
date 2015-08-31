@@ -11,6 +11,10 @@ dist/
 .tox
 AUTHORS
 ChangeLog
+eggs/
+.eggs/
+develop-eggs/
+*.egg
 
 #Python
 *.pyc
@@ -30,3 +34,6 @@ doc/source/api
 .coverage
 *,cover
 cover
+
+#swap file
+*.swp
