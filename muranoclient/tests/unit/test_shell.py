@@ -293,7 +293,7 @@ class ShellTest(base.TestCaseShell):
                     'flat': None},
              'name': 'foo',
              })
-        self.assertEqual(cc.call_args, expected_call)
+        self.assertEqual(expected_call, cc.call_args)
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     def test_environment_list(self, mock_manager):
@@ -616,7 +616,7 @@ class ShellPackagesOperations(ShellTest):
                 mock.call({'is_public': False}, {name: mock.ANY},)
             ], any_order=True,
         )
-        self.assertEqual(self.client.packages.create.call_count, 2)
+        self.assertEqual(2, self.client.packages.create.call_count)
 
     @mock.patch('__builtin__.raw_input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
@@ -639,7 +639,7 @@ class ShellPackagesOperations(ShellTest):
                 mock.call({'is_public': False}, {name: mock.ANY},)
             ], any_order=True,
         )
-        self.assertEqual(self.client.packages.create.call_count, 2)
+        self.assertEqual(2, self.client.packages.create.call_count)
         self.assertFalse(raw_input_mock.called)
 
     @mock.patch('muranoclient.common.utils.Package.from_file')

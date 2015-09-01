@@ -224,7 +224,7 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         manager = packages.PackageManager(api)
         list(manager.filter())
 
-        self.assertEqual(api.json_request.call_count, 2)
+        self.assertEqual(2, api.json_request.call_count)
 
     def test_package_filter_encoding_good(self):
         responses = [
@@ -245,7 +245,7 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         kwargs = {'category': category.decode('utf-8')}
         list(manager.filter(**kwargs))
 
-        self.assertEqual(api.json_request.call_count, 2)
+        self.assertEqual(2, api.json_request.call_count)
 
     def test_action_manager_get_result(self):
         api_mock = mock.MagicMock(
