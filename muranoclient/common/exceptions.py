@@ -159,6 +159,11 @@ def from_response(response):
     return cls()
 
 
+def from_code(code):
+    cls = _code_map.get(code, HTTPException)
+    return cls()
+
+
 class NoTokenLookupException(Exception):
     """DEPRECATED!"""
     pass
