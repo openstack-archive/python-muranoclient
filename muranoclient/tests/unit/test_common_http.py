@@ -442,7 +442,7 @@ class HttpClientTest(testtools.TestCase):
         self.assertFalse(client.verify_cert)
 
     def test_passed_cert_to_verify_cert(self, mock_request):
-        client = http.HTTPClient('https://foo', ca_file="NOWHERE")
+        client = http.HTTPClient('https://foo', cacert="NOWHERE")
         self.assertEqual("NOWHERE", client.verify_cert)
 
         with mock.patch('muranoclient.common.http.get_system_ca_file') as gsf:
