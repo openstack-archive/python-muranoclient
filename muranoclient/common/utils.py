@@ -345,6 +345,37 @@ class Package(FileWrapperMixin):
         except Exception:
             return []
 
+    @property
+    def classes(self):
+        if not hasattr(self, '_classes'):
+            self._classes = {}
+            for class_name, class_file in six.iteritems(
+                    self.manifest.get('Classes', {})):
+                filename = "Classes/%s" % class_file
+                if filename not in self.contents.namelist():
+                    continue
+                klass = yaml.safe_load(self.contents.open(filename))
+                self._classes[class_name] = klass
+        return self._classes
+
+    @property
+    def ui(self):
+        if not hasattr(self, '_ui'):
+            if 'UI/ui.yaml' in self.contents.namelist():
+                self._ui = self.contents.open('UI/ui.yaml')
+            else:
+                self._ui = None
+        return self._ui
+
+    @property
+    def logo(self):
+        if not hasattr(self, '_logo'):
+            if 'logo.png' in self.contents.namelist():
+                self._logo = self.contents.open('logo.png')
+            else:
+                self._logo = None
+        return self._logo
+
     def requirements(self, base_url, path=None, dep_dict=None):
         """Recursively scan Require section of manifests of all the
         dependencies. Returns a dict with FQPNs as keys and respective

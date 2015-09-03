@@ -14,6 +14,7 @@
 
 from muranoclient.common import http
 from muranoclient.v1 import actions
+from muranoclient.v1 import artifact_packages
 from muranoclient.v1 import categories
 from muranoclient.v1 import deployments
 from muranoclient.v1 import environments
@@ -37,6 +38,7 @@ class Client(http.HTTPClient):
     def __init__(self, *args, **kwargs):
         """Initialize a new client for the Murano v1 API."""
         self.glance_client = kwargs.pop('glance_client', None)
+        tenant = kwargs.pop('tenant', None)
         super(Client, self).__init__(*args, **kwargs)
         self.environments = environments.EnvironmentManager(self)
         self.env_templates = templates.EnvTemplateManager(self)
@@ -47,6 +49,14 @@ class Client(http.HTTPClient):
             request_statistics.RequestStatisticsManager(self)
         self.instance_statistics = \
             instance_statistics.InstanceStatisticsManager(self)
-        self.packages = packages.PackageManager(self)
+        artifacts_client = kwargs.pop('artifacts_client', None)
+        pkg_mgr = packages.PackageManager(self)
+        if artifacts_client:
+            artifact_repo = artifact_packages.ArtifactRepo(artifacts_client,
+                                                           tenant)
+            self.packages = artifact_packages.PackageManagerAdapter(
+                pkg_mgr, artifact_repo)
+        else:
+            self.packages = pkg_mgr
         self.actions = actions.ActionManager(self)
         self.categories = categories.CategoryManager(self)
