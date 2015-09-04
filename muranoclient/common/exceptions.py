@@ -13,6 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import re
 import sys
 
 
@@ -152,7 +153,31 @@ def from_response(response):
     """Return an instance of an HTTPException based on httplib response."""
     cls = _code_map.get(response.status_code, HTTPException)
     body = response.content
-    if body:
+    if body and response.headers['content-type'].\
+       lower().startswith("application/json"):
+        # Iterate over the nested objects and retreive the "message" attribute.
+        messages = [obj.get('message') for obj in response.json().values()]
+        # Join all of the messages together nicely and filter out any objects
+        # that don't have a "message" attr.
+        details = '\n'.join(i for i in messages if i is not None)
+        return cls(details=details)
+    elif body and \
+            response.headers['content-type'].lower().startswith("text/html"):
+        # Split the lines, strip whitespace and inline HTML from the response.
+        details = [re.sub(r'<.+?>', '', i.strip())
+                   for i in response.text.splitlines()]
+        details = [i for i in details if i]
+        # Remove duplicates from the list.
+        details_seen = set()
+        details_temp = []
+        for i in details:
+            if i not in details_seen:
+                details_temp.append(i)
+                details_seen.add(i)
+        # Return joined string separated by colons.
+        details = ': '.join(details_temp)
+        return cls(details=details)
+    elif body:
         details = body.replace('\n\n', '\n')
         return cls(details=details)
 
