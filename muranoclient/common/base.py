@@ -129,7 +129,7 @@ class ManagerWithFind(Manager):
         elif num > 1:
             raise exceptions.NoUniqueMatch
         else:
-            return rl[0]
+            return self.get(rl[0].id)
 
     def findall(self, **kwargs):
         """Find all items with attributes matching ``**kwargs``.
