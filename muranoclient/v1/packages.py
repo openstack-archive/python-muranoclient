@@ -15,14 +15,11 @@
 import six
 import urllib
 
-from oslo_log import log as logging
 from oslo_serialization import jsonutils
 import yaml
 
 from muranoclient.common import base
 from muranoclient.common import exceptions
-
-LOG = logging.getLogger(__name__)
 
 DEFAULT_PAGE_SIZE = 20
 

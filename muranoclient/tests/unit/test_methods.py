@@ -15,8 +15,6 @@
 import mock
 import testtools
 
-from oslo_log import log as logging
-
 from muranoclient import client
 from muranoclient.v1 import actions
 import muranoclient.v1.environments as environments
@@ -29,7 +27,6 @@ def my_mock(*a, **b):
     return [a, b]
 
 
-LOG = logging.getLogger('Unit tests')
 api = mock.MagicMock(json_request=my_mock)
 
 
