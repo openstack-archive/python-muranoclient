@@ -181,7 +181,7 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
                                                 'TestMuranoSanityEnv')
         env_show = self.listing('environment-show', params=environment['Name'])
         # Check structure of env_show object
-        self.assertEqual(['created', 'id', 'name', 'networking', 'status',
+        self.assertEqual(['created', 'id', 'name', 'status',
                           'tenant_id', 'updated', 'version'],
                          map(lambda x: x['Property'], env_show))
 
