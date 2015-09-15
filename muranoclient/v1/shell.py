@@ -824,14 +824,15 @@ def do_app_show(mc, args):
     else:
         if not args.path.startswith('/'):
             args.path = '/' + args.path
-            apps = [mc.services.get(args.id, args.path)]
+        apps = [mc.services.get(args.id, args.path)]
 
     field_labels = ['Id', 'Name', 'Type']
     fields = ['id', 'name', 'type']
     formatters = {}
 
-    # If app list is empty, first element exists and it's None
-    if hasattr(apps[0], '?'):
+    # If app with specified path is not found, first element exists
+    # and it's None.
+    if apps and hasattr(apps[0], '?'):
         formatters = {'id': lambda x: getattr(x, '?')['id'],
                       'type': lambda x: getattr(x, '?')['type']}
 

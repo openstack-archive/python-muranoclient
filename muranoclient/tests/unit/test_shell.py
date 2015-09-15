@@ -459,6 +459,31 @@ class ShellTest(base.TestCaseShell):
             data=[{'?': {'name': 'dummy'}}]
         )
 
+    @mock.patch('muranoclient.v1.services.ServiceManager')
+    def test_app_show(self, mock_services):
+        self.client.services = mock_services()
+        mock_app = mock.MagicMock()
+        mock_app.name = "app_name"
+        setattr(mock_app, '?', {'type': 'app_type', 'id': 'app_id'})
+        self.client.services.list.return_value = [mock_app]
+        self.make_env()
+        result = self.shell('app-show env-id')
+        required = ['Id', 'Name', 'Type', 'app_id', 'app_name', 'app_type']
+        for r in required:
+            self.assertIn(r, result[0])
+        self.client.services.list.assert_called_once_with('env-id')
+
+    @mock.patch('muranoclient.v1.services.ServiceManager')
+    def test_app_show_empty_list(self, mock_services):
+        self.client.services = mock_services()
+        self.client.services.list.return_value = []
+        self.make_env()
+        result = self.shell('app-show env-id')
+        required = ['Id', 'Name', 'Type']
+        for r in required:
+            self.assertIn(r, result[0])
+        self.client.services.list.assert_called_once_with('env-id')
+
 
 class ShellPackagesOperations(ShellTest):
 
