@@ -37,6 +37,8 @@ from muranoclient.openstack.common.gettextutils import _
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_REPO_URL = "http://apps.openstack.org/api/v1/murano_repo/liberty/"
+
 
 class MuranoShell(object):
     def get_base_parser(self):
@@ -171,9 +173,9 @@ class MuranoShell(object):
         parser.add_argument('--murano-repo-url',
                             default=utils.env(
                                 'MURANO_REPO_URL',
-                                default='http://storage.apps.openstack.org'),
+                                default=DEFAULT_REPO_URL),
                             help=('Defaults to env[MURANO_REPO_URL] '
-                                  'or http://storage.apps.openstack.org.'))
+                                  'or {0}'.format(DEFAULT_REPO_URL)))
 
         return parser
 
