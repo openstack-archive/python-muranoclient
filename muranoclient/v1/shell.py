@@ -371,7 +371,8 @@ def do_package_list(mc, args={}):
 @utils.arg("id", metavar="<ID>",
            help="Package ID to download.")
 @utils.arg("filename", metavar="file", nargs="?",
-           help="Filename for download (defaults to stdout).")
+           help="Filename to save package to. If it is not specified and "
+                "there is no stdout redirection the package won't be saved.")
 def do_package_download(mc, args):
     """Download a package to a filename or stdout."""
 
@@ -379,12 +380,17 @@ def do_package_download(mc, args):
         fh.write(mc.packages.download(package_id))
 
     try:
-        if not args.filename:
-            download_to_fh(args.id, sys.stdout)
-        else:
+        if args.filename:
             with open(args.filename, 'wb') as fh:
                 download_to_fh(args.id, fh)
                 print("Package downloaded to %s" % args.filename)
+        elif not sys.stdout.isatty():
+            download_to_fh(args.id, sys.stdout)
+        else:
+            msg = ('No stdout redirection or local file specified for '
+                   'downloaded package. Please specify a local file to save '
+                   'downloaded package or redirect output to another source.')
+            raise exceptions.CommandError(msg)
     except exceptions.NotFound:
         raise exceptions.CommandError("Package %s not found" % args.id)
 
