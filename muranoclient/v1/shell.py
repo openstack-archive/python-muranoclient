@@ -801,7 +801,7 @@ def do_package_save(mc, args):
             pkg = utils.Package.from_file(_file)
         except Exception as e:
             print("Failed to create package for '{0}', reason: {1}".format(
-                pkg, e))
+                package, e))
             continue
         total_reqs.update(pkg.requirements(base_url=base_url))
 
