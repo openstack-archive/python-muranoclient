@@ -601,8 +601,8 @@ def yaql_constructor(loader, node):
     value = loader.construct_scalar(node)
     return YaqlExpression(value)
 
-yaml.add_constructor(u'!yaql', yaql_constructor, YaqlYamlLoader)
-yaml.add_implicit_resolver(u'!yaql', YaqlExpression, Loader=YaqlYamlLoader)
+YaqlYamlLoader.add_constructor(u'!yaql', yaql_constructor)
+YaqlYamlLoader.add_implicit_resolver(u'!yaql', YaqlExpression, None)
 
 
 def traverse_and_replace(obj,
