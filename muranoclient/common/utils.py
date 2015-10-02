@@ -540,7 +540,7 @@ class Bundle(FileWrapperMixin):
         return Bundle.from_file(file_obj)
 
     def package_specs(self):
-        """Returns a generator yeilding package specifications i.e.
+        """Returns a generator yielding package specifications i.e.
         dicts with 'Name' and 'Version' fields
         """
         self._file.seek(0)
