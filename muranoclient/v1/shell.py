@@ -17,6 +17,7 @@ import json
 import os
 import shutil
 import sys
+import tempfile
 import uuid
 import zipfile
 
@@ -880,16 +881,17 @@ def do_package_create(mc, args):
             "--classes-dir for a MuranoPL-based package")
     directory_path = None
     try:
+        archive_name = args.output if args.output else None
         if args.template:
             directory_path = hot_package.prepare_package(args)
+            if not archive_name:
+                archive_name = os.path.basename(args.template)
+                archive_name = os.path.splitext(archive_name)[0] + ".zip"
         else:
             directory_path = mpl_package.prepare_package(args)
-
-        if args.output:
-            archive_name = args.output
-        else:
-            archive_name = os.path.splitext(os.path.basename(args.template))[0]
-            archive_name += ".zip"
+            if not archive_name:
+                archive_name = tempfile.mkstemp(
+                    prefix="murano_", dir=os.getcwd())[1] + ".zip"
 
         _make_archive(archive_name, directory_path)
         print("Application package is available at " +
