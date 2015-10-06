@@ -14,6 +14,7 @@
 #    under the License.
 
 import copy
+import hashlib
 import os
 import socket
 
@@ -79,12 +80,22 @@ class HTTPClient(object):
             else:
                 self.verify_cert = kwargs.get('cacert', get_system_ca_file())
 
+    def _safe_header(self, name, value):
+        if name in ['X-Auth-Token', 'X-Subject-Token']:
+            # because in python3 byte string handling is ... ug
+            v = value.encode('utf-8')
+            h = hashlib.sha1(v)
+            d = h.hexdigest()
+            return encodeutils.safe_decode(name), "{SHA1}%s" % d
+        else:
+            return (encodeutils.safe_decode(name),
+                    encodeutils.safe_decode(value))
+
     def log_curl_request(self, method, url, kwargs):
         curl = ['curl -i -X %s' % method]
 
         for (key, value) in kwargs['headers'].items():
-            header = '-H \'%s: %s\'' % (encodeutils.safe_decode(key),
-                                        encodeutils.safe_decode(value))
+            header = '-H \'%s: %s\'' % self._safe_header(key, value)
             curl.append(header)
 
         conn_params_fmt = [
