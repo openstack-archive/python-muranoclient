@@ -627,7 +627,7 @@ def do_bundle_import(mc, args):
             _file = utils.to_url(
                 filename,
                 base_url=args.murano_repo_url,
-                path='/bundles/',
+                path='bundles/',
                 extension='.bundle',
             )
 
@@ -740,7 +740,7 @@ def do_bundle_save(mc, args):
         _file = utils.to_url(
             bundle,
             base_url=base_url,
-            path='/bundles/',
+            path='bundles/',
             extension='.bundle',
         )
     try:

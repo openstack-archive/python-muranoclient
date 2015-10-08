@@ -304,7 +304,7 @@ class Package(FileWrapperMixin):
             name,
             base_url=base_url,
             version=version,
-            path='/apps/',
+            path='apps/',
             extension='.zip')
         )
 
@@ -415,7 +415,7 @@ def save_image_local(image_spec, base_url, dst):
     download_url = to_url(
         image_spec.get("Url", image_spec['Name']),
         base_url=base_url,
-        path='/images/'
+        path='images/'
     )
 
     with open(dst, "wb") as image_file:
@@ -503,7 +503,7 @@ def ensure_images(glance_client, image_specs, base_url, local_path=None):
                 download_url = to_url(
                     image_spec.get("Url", image_spec['Name']),
                     base_url=base_url,
-                    path='/images/',
+                    path='images/',
                 )
                 LOG.info("Instructing glance to download image {0}".format(
                     image_spec['Name']))
