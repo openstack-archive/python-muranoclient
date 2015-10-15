@@ -334,12 +334,32 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
     packages like import, create, delete etc.
     """
 
-    def test_import_package_by_url(self):
+    def test_package_import_by_url(self):
         """Test scenario:
-            1) import package
+            1) import package by url
             2) check that package exists
         """
-        package = self.import_dummy_package_by_url('dummy_package')
+        try:
+            self.run_server()
+            package = self.import_package(
+                self.app_name,
+                'http://localhost:8089/apps/{0}.zip'.format(self.app_name)
+            )
+        finally:
+            self.stop_server()
+        package_list = self.listing('package-list')
+
+        self.assertIn(package, package_list)
+
+    def test_package_import_by_path(self):
+        """Test scenario:
+            1) import package by path
+            2) check that package exists
+        """
+        package = self.import_package(
+            self.app_name,
+            self.dummy_app_path
+        )
         package_list = self.listing('package-list')
 
         self.assertIn(package, package_list)
@@ -349,8 +369,11 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
             1) import package
             2) check that package is public
         """
-        package = self.import_dummy_package_by_url('dummy_package',
-                                                   '--is-public')
+        package = self.import_package(
+            self.app_name,
+            self.dummy_app_path,
+            '--is-public'
+        )
         self.assertEqual(package['Is Public'], 'True')
 
     def test_package_delete(self):
@@ -360,7 +383,10 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
             3) check that package has been deleted
         """
 
-        package = self.import_dummy_package_by_url('dummy_package')
+        package = self.import_package(
+            self.app_name,
+            self.dummy_app_path
+        )
         package_list = self.delete_murano_object('package', package)
 
         self.assertNotIn(package, package_list)
@@ -372,7 +398,10 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
             return by package-show object
         """
 
-        package = self.import_dummy_package_by_url('dummy_package')
+        package = self.import_package(
+            self.app_name,
+            self.dummy_app_path
+        )
         package_show = self.listing('package-show', params=package['ID'])
 
         tested_package = map(lambda x: x['Value'], package_show)
@@ -388,9 +417,15 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
             2) import new_package using option 'u' - update
             3) check that package has been updated
         """
-        package = self.import_dummy_package_by_url('dummy_package')
-        upd_package = self.import_dummy_package_by_url('dummy_package',
-                                                       '--exists-action', 'u')
+        package = self.import_package(
+            self.app_name,
+            self.dummy_app_path
+        )
+        upd_package = self.import_package(
+            self.app_name,
+            self.dummy_app_path,
+            '--exists-action', 'u'
+        )
         self.assertEqual(package['Name'], upd_package['Name'])
         self.assertNotEqual(package['ID'], upd_package['ID'])
 
@@ -400,10 +435,16 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
             2) try to import the same package using option 's' - skip
             3) check that package hasn't been updated
         """
-        package = self.import_dummy_package_by_url('dummy_package',
-                                                   '--exists-action', 's')
-        skip_package = self.import_dummy_package_by_url('dummy_package',
-                                                        '--exists-action', 's')
+        package = self.import_package(
+            self.app_name,
+            self.dummy_app_path,
+            '--exists-action', 's'
+        )
+        skip_package = self.import_package(
+            self.app_name,
+            self.dummy_app_path,
+            '--exists-action', 's'
+        )
         package_list = self.listing("package-list")
 
         self.assertIn(package, package_list)
@@ -415,8 +456,18 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
             2) import new_package using option 'a' - skip
             3) check that package hasn't been updated
         """
-        package_list = self.listing("package-list")
-        package = self.import_dummy_package_by_url('dummy_package',
-                                                   '--exists-action', 'a')
+        package = self.import_package(
+            self.app_name,
+            self.dummy_app_path
+        )
+        package_list = self.listing('package-list')
 
+        self.assertIn(package, package_list)
+
+        package = self.import_package(
+            self.app_name,
+            self.dummy_app_path,
+            '--exists-action', 'a'
+        )
+        package_list = self.listing('package-list')
         self.assertNotIn(package, package_list)
