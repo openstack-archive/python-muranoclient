@@ -202,7 +202,9 @@ def do_environment_session_create(mc, args):
     """Creates a new configuration session for environment ID."""
     environment_id = args.id
     session_id = mc.sessions.configure(environment_id).id
-    print("Created new session: {0}".format(session_id))
+    print("Created new session:")
+    formatters = {"id": utils.text_wrap_formatter}
+    utils.print_dict({"id": session_id}, formatters=formatters)
 
 
 @utils.arg("id", metavar="<ID>", help="ID of Environment to edit.")
