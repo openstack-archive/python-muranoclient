@@ -12,10 +12,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from muranoclient.tests.functional import muranoclient
-from tempest_lib.cli import output_parser
+import multiprocessing
+import os
+import shutil
+import SimpleHTTPServer
+import SocketServer
+import tempfile
 import time
 import uuid
+
+from muranoclient.tests.functional import muranoclient
+from muranoclient.tests.functional.simple_read_only import utils
+from tempest_lib.cli import output_parser
 
 
 class CLIUtilsTestBase(muranoclient.ClientTestBase):
@@ -70,3 +78,61 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
         for obj in object_list:
             if object_value in obj.values():
                 return obj
+
+
+class TestSuiteRepository(CLIUtilsTestBase):
+
+    def setUp(self):
+        super(TestSuiteRepository, self).setUp()
+        self.serve_dir = tempfile.mkdtemp(suffix="repo")
+        self.p = multiprocessing.Process(target=self.serve_function)
+        self.p.start()
+        self._compose_app()
+
+    def tearDown(self):
+        super(TestSuiteRepository, self).tearDown()
+        self.p.terminate()
+        shutil.rmtree(self.serve_dir)
+
+    def _compose_app(self, name='dummy_package', require=None):
+        package_dir = os.path.join(self.serve_dir, 'apps/', name)
+        shutil.copytree(os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), 'MockApp'), package_dir)
+
+        app_name = utils.compose_package(
+            name,
+            os.path.join(package_dir, 'manifest.yaml'),
+            package_dir,
+            require=require,
+            archive_dir=os.path.join(self.serve_dir, 'apps/'),
+        )
+
+        return app_name
+
+    def serve_function(self):
+        class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+            pass
+        os.chdir(self.serve_dir)
+        httpd = SocketServer.TCPServer(
+            ("0.0.0.0", 8089),
+            Handler, bind_and_activate=False)
+        httpd.allow_reuse_address = True
+        httpd.server_bind()
+        httpd.server_activate()
+        httpd.serve_forever()
+
+
+class CLIUtilsTestPackagesBase(TestSuiteRepository):
+    """Basic methods for Murano Packages CLI client."""
+
+    def import_dummy_package_by_url(self, pkg_name, *args):
+        """Create Murano dummy package and import it by url."""
+
+        actions = ' '.join(args)
+        params = 'http://localhost:8089/apps/{0}.zip {1}'\
+            .format(pkg_name, actions)
+        package = self.listing('package-import', params=params)
+        package = self.get_object(package, pkg_name)
+        self.addCleanup(self.delete_murano_object, 'package', package)
+
+        return package
