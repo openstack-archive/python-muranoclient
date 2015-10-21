@@ -66,7 +66,7 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
     def generate_name(prefix):
         """Generate name for objects."""
         suffix = uuid.uuid4().hex[:8]
-        return "{0}-{1}".format(prefix, suffix)
+        return "{0}_{1}".format(prefix, suffix)
 
     def get_table_struct(self, command, params=""):
         """Get table structure i.e. header of table."""
@@ -85,16 +85,32 @@ class TestSuiteRepository(CLIUtilsTestBase):
     def setUp(self):
         super(TestSuiteRepository, self).setUp()
         self.serve_dir = tempfile.mkdtemp(suffix="repo")
-        self.p = multiprocessing.Process(target=self.serve_function)
-        self.p.start()
-        self._compose_app()
+        self.app_name = self.generate_name("dummy_app")
+        self.dummy_app_path = self._compose_app(name=self.app_name)
 
     def tearDown(self):
         super(TestSuiteRepository, self).tearDown()
-        self.p.terminate()
         shutil.rmtree(self.serve_dir)
 
-    def _compose_app(self, name='dummy_package', require=None):
+    def run_server(self):
+        def serve_function():
+            class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+                pass
+            os.chdir(self.serve_dir)
+            httpd = SocketServer.TCPServer(
+                ("0.0.0.0", 8089),
+                Handler, bind_and_activate=False)
+            httpd.allow_reuse_address = True
+            httpd.server_bind()
+            httpd.server_activate()
+            httpd.serve_forever()
+        self.p = multiprocessing.Process(target=serve_function)
+        self.p.start()
+
+    def stop_server(self):
+        self.p.terminate()
+
+    def _compose_app(self, name, require=None):
         package_dir = os.path.join(self.serve_dir, 'apps/', name)
         shutil.copytree(os.path.join(os.path.dirname(
             os.path.realpath(__file__)), 'MockApp'), package_dir)
@@ -109,28 +125,15 @@ class TestSuiteRepository(CLIUtilsTestBase):
 
         return app_name
 
-    def serve_function(self):
-        class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-            pass
-        os.chdir(self.serve_dir)
-        httpd = SocketServer.TCPServer(
-            ("0.0.0.0", 8089),
-            Handler, bind_and_activate=False)
-        httpd.allow_reuse_address = True
-        httpd.server_bind()
-        httpd.server_activate()
-        httpd.serve_forever()
-
 
 class CLIUtilsTestPackagesBase(TestSuiteRepository):
     """Basic methods for Murano Packages CLI client."""
 
-    def import_dummy_package_by_url(self, pkg_name, *args):
+    def import_package(self, pkg_name, pkg_path, *args):
         """Create Murano dummy package and import it by url."""
 
         actions = ' '.join(args)
-        params = 'http://localhost:8089/apps/{0}.zip {1}'\
-            .format(pkg_name, actions)
+        params = '{0} {1}'.format(pkg_path, actions)
         package = self.listing('package-import', params=params)
         package = self.get_object(package, pkg_name)
         self.addCleanup(self.delete_murano_object, 'package', package)
