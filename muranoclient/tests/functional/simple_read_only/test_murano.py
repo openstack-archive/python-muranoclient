@@ -471,3 +471,61 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
         )
         package_list = self.listing('package-list')
         self.assertNotIn(package, package_list)
+
+
+class DeployMuranoEnvironmentTest(utils.CLIUtilsTestPackagesBase):
+    """Test for testing Murano environment deployment.
+
+    Test for the Murano CLI commands which checks addition of app
+    to the environment, session creation and deployment of
+    environment.
+    """
+
+    def test_environment_deployment(self):
+        """Test scenario:
+            1) import package
+            2) create environment
+            3) create session for created environment
+            4) add application to the environment
+            5) send environment to deploy
+            6) check that deployment was successful
+        """
+        self.import_package(
+            self.app_name,
+            self.dummy_app_path
+        )
+
+        env_id = self.create_murano_object('environment',
+                                           'TestMuranoDeployEnv')['ID']
+
+        session = self.listing('environment-session-create',
+                               params=env_id)
+        session_id = self.get_property_value(session, 'id')
+
+        obj_model = {
+            'op': 'add',
+            'path': '/-',
+            'value': {
+                '?': {
+                    'type': 'io.murano.apps.{0}'.format(self.app_name),
+                    'id': '12345',
+                }
+            }
+        }
+        temp_file = self.prepare_file_with_obj_model(obj_model)
+
+        self.listing('environment-apps-edit',
+                     params='--session-id {0} {1} {2}'.
+                     format(session_id, env_id, temp_file))
+
+        self.listing('environment-deploy',
+                     params='{0} --session-id {1}'.
+                     format(env_id, session_id))
+
+        result = self.wait_deployment_result(env_id)
+        self.assertTrue(result)
+
+        deployments = self.listing('deployment-list', params=env_id)
+
+        self.assertEqual('success', deployments[0]['State'])
+        self.assertTrue(1, len(deployments))
