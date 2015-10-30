@@ -22,8 +22,8 @@ import tempfile
 import time
 import uuid
 
+from muranoclient.tests.functional.cli import utils
 from muranoclient.tests.functional import muranoclient
-from muranoclient.tests.functional.simple_read_only import utils
 from tempest_lib.cli import output_parser
 from tempest_lib import exceptions
 

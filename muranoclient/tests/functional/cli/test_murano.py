@@ -14,7 +14,7 @@
 
 import unittest
 
-from muranoclient.tests.functional.simple_read_only import \
+from muranoclient.tests.functional.cli import \
     murano_test_utils as utils
 
 
