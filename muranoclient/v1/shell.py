@@ -366,8 +366,9 @@ def do_package_list(mc, args={}):
         "include_disabled": getattr(args, 'include_disabled', False),
     }
     packages = mc.packages.filter(**filter_args)
-    field_labels = ["ID", "Name", "FQN", "Author", "Is Public"]
-    fields = ["id", "name", "fully_qualified_name", "author", "is_public"]
+    field_labels = ["ID", "Name", "FQN", "Author", "Active", "Is Public"]
+    fields = ["id", "name", "fully_qualified_name", "author",
+              "enabled", "is_public"]
     utils.print_list(packages, fields, field_labels, sortby=0)
 
 
