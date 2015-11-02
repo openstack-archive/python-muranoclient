@@ -39,6 +39,7 @@ import yaml
 import yaql
 
 from muranoclient.common import exceptions
+from muranoclient.openstack.common.gettextutils import _
 
 try:
     import yaql.language  # noqa
@@ -438,7 +439,9 @@ def save_image_local(image_spec, base_url, dst):
             image_file.flush()
 
 
-def ensure_images(glance_client, image_specs, base_url, local_path=None):
+def ensure_images(glance_client, image_specs, base_url,
+                  local_path=None,
+                  is_package_public=False):
     """Ensure that images from image_specs are available in glance. If not
     attempts: instructs glance to download the images and sets murano-specific
     metadata for it.
@@ -513,6 +516,15 @@ def ensure_images(glance_client, image_specs, base_url, local_path=None):
                     disk_format=image_spec['DiskFormat'],
                     copy_from=download_url)
                 img = img.to_dict()
+
+            if is_package_public:
+                try:
+                    glance_client.images.update(img['id'], is_public=True)
+                    LOG.debug('Success update for image {0}'.format(img['id']))
+                except Exception as e:
+                    LOG.exception(_("Error {0} occured while setting "
+                                    "image {1} public").format(e, img['id']))
+
             installed_images.append(img)
 
             if update_metadata and 'Meta' in image_spec:

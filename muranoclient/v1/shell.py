@@ -560,7 +560,8 @@ def do_package_import(mc, args):
                 imgs = utils.ensure_images(
                     glance_client=mc.glance_client,
                     image_specs=image_specs,
-                    base_url=args.murano_repo_url)
+                    base_url=args.murano_repo_url,
+                    is_package_public=args.is_public)
                 for img in imgs:
                     print("Added {0}, {1} image".format(
                         img['name'], img['id']))
@@ -662,7 +663,8 @@ def do_bundle_import(mc, args):
                     glance_client=mc.glance_client,
                     image_specs=image_specs,
                     base_url=args.murano_repo_url,
-                    local_path=local_path)
+                    local_path=local_path,
+                    is_package_public=args.is_public)
                 for img in imgs:
                     print("Added {0}, {1} image".format(
                         img['name'], img['id']))
