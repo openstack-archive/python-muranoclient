@@ -485,6 +485,53 @@ class ShellTest(base.TestCaseShell):
             self.assertIn(r, result[0])
         self.client.services.list.assert_called_once_with('env-id')
 
+    @mock.patch('muranoclient.v1.categories.CategoryManager')
+    def test_category_list(self, mock_manager):
+        self.client.categories = mock_manager()
+        self.make_env()
+        result = self.shell('category-list')
+        required = ['ID', 'Name']
+        for r in required:
+            self.assertIn(r, result[0])
+        self.client.categories.list.assert_called_once_with()
+
+    @mock.patch('muranoclient.v1.categories.CategoryManager')
+    def test_category_show(self, mock_manager):
+        self.client.categories = mock_manager()
+        self.make_env()
+        result = self.shell('category-show category-id')
+        required = ['Property', 'Value', 'id', 'name', 'packages']
+        for r in required:
+            self.assertIn(r, result[0])
+        self.client.categories.get.assert_called_once_with('category-id')
+
+    @mock.patch('muranoclient.v1.categories.CategoryManager')
+    def test_category_create(self, mock_manager):
+        self.client.categories = mock_manager()
+        self.make_env()
+        result = self.shell('category-create category-name')
+        required = ['ID', 'Name']
+        for r in required:
+            self.assertIn(r, result[0])
+        self.client.categories.add.assert_called_once_with(
+            {'name': 'category-name'})
+
+    @mock.patch('muranoclient.v1.categories.CategoryManager')
+    def test_category_delete(self, mock_manager):
+        self.client.categories = mock_manager()
+        self.make_env()
+        result = self.shell('category-delete category-id')
+        required = ['ID', 'Name']
+        for r in required:
+            self.assertIn(r, result[0])
+        self.client.categories.delete.assert_called_once_with('category-id')
+
+        self.client.categories.delete.side_effect = exceptions.NotFound()
+        ex = self.assertRaises(exceptions.CommandError, self.shell,
+                               'category-delete category-id')
+        expected = 'Unable to find and delete any of the specified categories.'
+        self.assertEqual(expected, six.text_type(ex))
+
 
 class ShellPackagesOperations(ShellTest):
 
