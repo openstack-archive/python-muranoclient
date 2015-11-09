@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import unittest
+
 from muranoclient.tests.functional.simple_read_only import \
     murano_test_utils as utils
 
@@ -497,10 +499,85 @@ class DeployMuranoEnvironmentTest(utils.CLIUtilsTestPackagesBase):
 
         env_id = self.create_murano_object('environment',
                                            'TestMuranoDeployEnv')['ID']
+        obj_model = {
+            'op': 'add',
+            'path': '/-',
+            'value': {
+                '?': {
+                    'type': 'io.murano.apps.{0}'.format(self.app_name),
+                    'id': '{0}'.format(self.generate_uuid()),
+                }
+            }
+        }
+        self.deploy_environment(env_id, obj_model)
+        deployments = self.listing('deployment-list', params=env_id)
 
-        session = self.listing('environment-session-create',
-                               params=env_id)
-        session_id = self.get_property_value(session, 'id')
+        self.assertEqual('success', deployments[0]['State'])
+        self.assertEqual(1, len(deployments))
+
+    def test_add_component_to_deployed_env(self):
+        """Test scenario:
+            1) import package
+            2) create environment
+            3) create session for created environment
+            4) add application to the environment
+            5) send environment to deploy
+            6) check that deployment was successful
+            7) add application to environment
+            8) deploy environment again
+        """
+        self.import_package(
+            self.app_name,
+            self.dummy_app_path
+        )
+
+        env_id = self.create_murano_object('environment',
+                                           'TestMuranoDeployEnv')['ID']
+        obj_model = {
+            'op': 'add',
+            'path': '/-',
+            'value': {
+                '?': {
+                    'type': 'io.murano.apps.{0}'.format(self.app_name),
+                    'id': '',
+                }
+            }
+        }
+        obj_model['value']['?']['id'] = self.generate_uuid()
+        self.deploy_environment(env_id, obj_model)
+
+        deployments = self.listing('deployment-list', params=env_id)
+        self.assertEqual('success', deployments[0]['State'])
+        self.assertEqual(1, len(deployments))
+
+        obj_model['value']['?']['id'] = self.generate_uuid()
+        self.deploy_environment(env_id, obj_model)
+
+        deployments = self.listing('deployment-list', params=env_id)
+        self.assertEqual('success', deployments[1]['State'])
+        self.assertEqual(2, len(deployments))
+
+    # TODO(akuznetsova):  need to upskip this test when
+    # https://bugs.launchpad.net/python-muranoclient/+bug/1511645 is fixed
+    @unittest.expectedFailure
+    def test_delete_component_from_deployed_env(self):
+        """Test scenario:
+            1) import package
+            2) create environment
+            3) create session for created environment
+            4) add application to the environment
+            5) send environment to deploy
+            6) check that deployment was successful
+            7) delete application from environment
+            8) deploy environment again
+        """
+        self.import_package(
+            self.app_name,
+            self.dummy_app_path
+        )
+
+        env_id = self.create_murano_object('environment',
+                                           'TestMuranoDeployEnv')['ID']
 
         obj_model = {
             'op': 'add',
@@ -508,24 +585,18 @@ class DeployMuranoEnvironmentTest(utils.CLIUtilsTestPackagesBase):
             'value': {
                 '?': {
                     'type': 'io.murano.apps.{0}'.format(self.app_name),
-                    'id': '12345',
+                    'id': '{0}'.format(self.generate_uuid()),
                 }
             }
         }
-        temp_file = self.prepare_file_with_obj_model(obj_model)
+        self.deploy_environment(env_id, obj_model)
 
-        self.listing('environment-apps-edit',
-                     params='--session-id {0} {1} {2}'.
-                     format(session_id, env_id, temp_file))
-
-        self.listing('environment-deploy',
-                     params='{0} --session-id {1}'.
-                     format(env_id, session_id))
-
-        result = self.wait_deployment_result(env_id)
-        self.assertTrue(result)
+        obj_model = {
+            'op': 'remove',
+            'path': '/0'
+        }
+        self.deploy_environment(env_id, obj_model)
 
         deployments = self.listing('deployment-list', params=env_id)
-
-        self.assertEqual('success', deployments[0]['State'])
-        self.assertTrue(1, len(deployments))
+        self.assertEqual('success', deployments[1]['State'])
+        self.assertEqual(2, len(deployments))

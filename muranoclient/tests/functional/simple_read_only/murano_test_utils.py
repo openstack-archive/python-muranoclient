@@ -65,9 +65,14 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
         return mrn_object
 
     @staticmethod
+    def generate_uuid():
+        """Generate uuid for objects."""
+        return uuid.uuid4().hex
+
+    @staticmethod
     def generate_name(prefix):
         """Generate name for objects."""
-        suffix = uuid.uuid4().hex[:8]
+        suffix = CLIUtilsTestBase.generate_uuid()[:8]
         return "{0}_{1}".format(prefix, suffix)
 
     def get_table_struct(self, command, params=""):
@@ -181,3 +186,21 @@ class CLIUtilsTestPackagesBase(TestSuiteRepository):
             time.sleep(2)
 
         return True
+
+    def deploy_environment(self, env_id, obj_model):
+        session = self.listing('environment-session-create',
+                               params=env_id)
+        session_id = self.get_property_value(session, 'id')
+
+        temp_file = self.prepare_file_with_obj_model(obj_model)
+
+        self.listing('environment-apps-edit',
+                     params='--session-id {0} {1} {2}'.
+                     format(session_id, env_id, temp_file))
+
+        self.listing('environment-deploy',
+                     params='{0} --session-id {1}'.
+                     format(env_id, session_id))
+
+        result = self.wait_deployment_result(env_id)
+        self.assertTrue(result)
