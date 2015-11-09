@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 import multiprocessing
 import os
 import shutil
@@ -24,6 +25,7 @@ import uuid
 from muranoclient.tests.functional import muranoclient
 from muranoclient.tests.functional.simple_read_only import utils
 from tempest_lib.cli import output_parser
+from tempest_lib import exceptions
 
 
 class CLIUtilsTestBase(muranoclient.ClientTestBase):
@@ -78,6 +80,10 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
         for obj in object_list:
             if object_value in obj.values():
                 return obj
+
+    def get_property_value(self, obj, prop):
+        return [o['Value'] for o in obj
+                if o['Property'] == '{0}'.format(prop)][0]
 
 
 class TestSuiteRepository(CLIUtilsTestBase):
@@ -139,3 +145,39 @@ class CLIUtilsTestPackagesBase(TestSuiteRepository):
         self.addCleanup(self.delete_murano_object, 'package', package)
 
         return package
+
+    def prepare_file_with_obj_model(self, obj_model):
+        temp_file = tempfile.NamedTemporaryFile(prefix="murano-obj-model",
+                                                delete=False)
+        self.addCleanup(os.remove, temp_file.name)
+
+        with open(temp_file.name, 'w') as tf:
+            tf.write(json.dumps([obj_model]))
+
+        return temp_file.name
+
+    def wait_deployment_result(self, env_id, timeout=180):
+        start_time = time.time()
+
+        env = self.listing('environment-show', params=env_id)
+        env_status = self.get_property_value(env, 'status')
+
+        expected_statuses = ['ready', 'deploying']
+
+        while env_status != 'ready':
+            if time.time() - start_time > timeout:
+                msg = ("Environment exceeds timeout {0} to change state "
+                       "to Ready. Environment: {1}".format(timeout, env))
+                raise exceptions.TimeoutException(msg)
+
+            env = self.listing('environment-show', params=env_id)
+            env_status = self.get_property_value(env, 'status')
+
+            if env_status not in expected_statuses:
+                msg = ("Environment status %s is not in expected "
+                       "statuses: %s" % (env_status, expected_statuses))
+                raise exceptions.TempestException(msg)
+
+            time.sleep(2)
+
+        return True
