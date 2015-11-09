@@ -277,6 +277,25 @@ def do_env_template_create(mc, args):
 
 @utils.arg("id", metavar="<ID>",
            help="Environment template ID.")
+@utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
+           help="New environment name.")
+def do_env_template_create_env(mc, args):
+    """Create a new environment from template."""
+    try:
+        template = mc.env_templates.create_env(args.id, args.name)
+    except common_exceptions.HTTPNotFound:
+        raise exceptions.CommandError("Environment template %s not found"
+                                      % args.id)
+    else:
+        formatters = {
+            "environment_id": utils.text_wrap_formatter,
+            "session_id": utils.text_wrap_formatter
+        }
+        utils.print_dict(template.to_dict(), formatters=formatters)
+
+
+@utils.arg("id", metavar="<ID>",
+           help="Environment template ID.")
 def do_env_template_show(mc, args):
     """Display environment template details."""
     try:

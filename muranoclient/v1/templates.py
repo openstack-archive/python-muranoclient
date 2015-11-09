@@ -77,3 +77,11 @@ class EnvTemplateManager(base.Manager):
         """
         return self._delete('/v1/templates/{id}/services/{app_id}'.
                             format(id=env_template_id, service_id=app_id))
+
+    def create_env(self, env_template_id, name):
+        """It creates new environment from template.
+        :param env_template_id: The environment template ID.
+        :param name: The name for the environment.
+        """
+        return self._create('/v1/templates/{id}/create-environment'.
+                            format(id=env_template_id), data={'name': name})

@@ -1,5 +1,5 @@
-#    Copyright (c) 2013 Mirantis, Inc.
 #
+#    Copyright (c) 2013 Mirantis, Inc.
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
 #    a copy of the License at
@@ -500,6 +500,17 @@ class ShellCommandTest(ShellTest):
         self.register_keystone_token_fixture(m_requests)
         self.shell('env-template-show env-id')
         self.client.env_templates.get.assert_called_once_with('env-id')
+
+    @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
+    @requests_mock.mock()
+    def test_env_template_create_env(self, mock_manager, m_requests):
+        self.client.env_templates = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('env-template-create-env env-id env-name')
+        self.client.env_templates.create_env.\
+            assert_called_once_with('env-id', 'env-name')
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     @mock.patch('muranoclient.v1.deployments.DeploymentManager')

@@ -328,6 +328,21 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
         self.assertIn(env_template['Updated'], tested_env)
         self.assertIn(env_template['Created'], tested_env)
 
+    def test_env_template_create_environment(self):
+        """Test scenario:
+            1) create environment template
+            2) create environment from template
+        """
+        env_template = self.create_murano_object('env-template',
+                                                 'TestMuranoSanityEnvTemp')
+        new_env_name = self.generate_name('EnvFromTemp')
+        params = "{0} {1}".format(env_template['ID'], new_env_name)
+        env_created = self.listing('env-template-create-env', params=params)
+        tested_env_created = map(lambda x: x['Property'], env_created)
+
+        self.assertIn('environment_id', tested_env_created)
+        self.assertIn('session_id', tested_env_created)
+
 
 class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
     """Sanity tests for testing actions with Packages.
