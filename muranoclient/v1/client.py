@@ -26,7 +26,7 @@ from muranoclient.v1 import sessions
 from muranoclient.v1 import templates
 
 
-class Client(http.HTTPClient):
+class Client(object):
     """Client for the Murano v1 API.
 
     :param string endpoint: A user-supplied endpoint URL for the service.
@@ -39,18 +39,18 @@ class Client(http.HTTPClient):
         """Initialize a new client for the Murano v1 API."""
         self.glance_client = kwargs.pop('glance_client', None)
         tenant = kwargs.pop('tenant', None)
-        super(Client, self).__init__(*args, **kwargs)
-        self.environments = environments.EnvironmentManager(self)
-        self.env_templates = templates.EnvTemplateManager(self)
-        self.sessions = sessions.SessionManager(self)
-        self.services = services.ServiceManager(self)
-        self.deployments = deployments.DeploymentManager(self)
+        self.http_client = http._construct_http_client(*args, **kwargs)
+        self.environments = environments.EnvironmentManager(self.http_client)
+        self.env_templates = templates.EnvTemplateManager(self.http_client)
+        self.sessions = sessions.SessionManager(self.http_client)
+        self.services = services.ServiceManager(self.http_client)
+        self.deployments = deployments.DeploymentManager(self.http_client)
         self.request_statistics = \
-            request_statistics.RequestStatisticsManager(self)
+            request_statistics.RequestStatisticsManager(self.http_client)
         self.instance_statistics = \
-            instance_statistics.InstanceStatisticsManager(self)
+            instance_statistics.InstanceStatisticsManager(self.http_client)
         artifacts_client = kwargs.pop('artifacts_client', None)
-        pkg_mgr = packages.PackageManager(self)
+        pkg_mgr = packages.PackageManager(self.http_client)
         if artifacts_client:
             artifact_repo = artifact_packages.ArtifactRepo(artifacts_client,
                                                            tenant)
@@ -58,5 +58,5 @@ class Client(http.HTTPClient):
                 pkg_mgr, artifact_repo)
         else:
             self.packages = pkg_mgr
-        self.actions = actions.ActionManager(self)
-        self.categories = categories.CategoryManager(self)
+        self.actions = actions.ActionManager(self.http_client)
+        self.categories = categories.CategoryManager(self.http_client)

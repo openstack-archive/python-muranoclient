@@ -22,17 +22,22 @@ import argparse
 import sys
 
 import glanceclient
-from keystoneclient.v2_0 import client as ksclient
+from keystoneclient.auth.identity.generic import password
+from keystoneclient.auth.identity.generic import token
+from keystoneclient.auth.identity import v3 as identity
+from keystoneclient import discover
+from keystoneclient.openstack.common.apiclient import exceptions as ks_exc
+from keystoneclient import session as ksession
 from oslo_log import handlers
 from oslo_log import log as logging
 from oslo_utils import encodeutils
 import six
+import six.moves.urllib.parse as urlparse
 
 import muranoclient
-from muranoclient import client as apiclient
+from muranoclient import client as murano_client
 from muranoclient.common import utils
 from muranoclient.openstack.common.apiclient import exceptions as exc
-from muranoclient.openstack.common.gettextutils import _
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +46,15 @@ DEFAULT_REPO_URL = "http://apps.openstack.org/api/v1/murano_repo/liberty/"
 
 
 class MuranoShell(object):
+
+    def _append_global_identity_args(self, parser):
+        # Register the CLI arguments that have moved to the session object.
+        ksession.Session.register_cli_options(parser)
+
+        identity.Password.register_argparse_arguments(parser)
+
     def get_base_parser(self):
+
         parser = argparse.ArgumentParser(
             prog='murano',
             description=__doc__.strip(),
@@ -70,52 +83,24 @@ class MuranoShell(object):
                             default=False, action="store_true",
                             help="Print more verbose output.")
 
-        parser.add_argument('-k', '--insecure',
-                            default=False,
-                            action='store_true',
-                            help="Explicitly allow muranoclient to perform "
-                                 "\"insecure\" SSL (https) requests. "
-                                 "The server's certificate will "
-                                 "not be verified against any certificate "
-                                 "authorities. This option should be used "
-                                 "with caution.")
-
-        parser.add_argument('--os-cacert',
-                            metavar='<ca-certificate>',
-                            default=utils.env('OS_CACERT', default=None),
-                            dest='os_cacert',
-                            help='Specify a CA bundle file to use in '
-                                 'verifying a TLS (https) server certificate. '
-                                 'Defaults to env[OS_CACERT].')
-
+        # os-cert, os-key, insecure, ca-file are all added
+        # by keystone session register_cli_opts later
         parser.add_argument('--cert-file',
-                            help='Path of certificate file to use in SSL '
-                                 'connection. This file can optionally be '
-                                 'prepended with the private key.')
+                            dest='os_cert',
+                            help='DEPRECATED! Use --os-cert.')
 
         parser.add_argument('--key-file',
-                            help='Path of client key to use '
-                                 'in SSL connection. This option '
-                                 'is not necessary if your key '
-                                 'is prepended to your cert file.')
+                            dest='os_key',
+                            help='DEPRECATED! Use --os-key.')
 
         parser.add_argument('--ca-file',
                             dest='os_cacert',
-                            help=_('DEPRECATED! Use %(arg)s.') %
-                                 {'arg': '--os-cacert'})
+                            help='DEPRECATED! Use --os-cacert.')
 
         parser.add_argument('--api-timeout',
                             help='Number of seconds to wait for an '
                                  'API response, '
                                  'defaults to system socket timeout.')
-
-        parser.add_argument('--os-username',
-                            default=utils.env('OS_USERNAME'),
-                            help='Defaults to env[OS_USERNAME].')
-
-        parser.add_argument('--os-password',
-                            default=utils.env('OS_PASSWORD'),
-                            help='Defaults to env[OS_PASSWORD].')
 
         parser.add_argument('--os-tenant-id',
                             default=utils.env('OS_TENANT_ID'),
@@ -124,10 +109,6 @@ class MuranoShell(object):
         parser.add_argument('--os-tenant-name',
                             default=utils.env('OS_TENANT_NAME'),
                             help='Defaults to env[OS_TENANT_NAME].')
-
-        parser.add_argument('--os-auth-url',
-                            default=utils.env('OS_AUTH_URL'),
-                            help='Defaults to env[OS_AUTH_URL].')
 
         parser.add_argument('--os-region-name',
                             default=utils.env('OS_REGION_NAME'),
@@ -142,7 +123,6 @@ class MuranoShell(object):
                             action='store_true',
                             help="Do not contact keystone for a token. "
                                  "Defaults to env[OS_NO_CLIENT_AUTH].")
-
         parser.add_argument('--murano-url',
                             default=utils.env('MURANO_URL'),
                             help='Defaults to env[MURANO_URL].')
@@ -176,6 +156,8 @@ class MuranoShell(object):
                                 default=DEFAULT_REPO_URL),
                             help=('Defaults to env[MURANO_REPO_URL] '
                                   'or {0}'.format(DEFAULT_REPO_URL)))
+
+        self._append_global_identity_args(parser)
 
         return parser
 
@@ -221,38 +203,82 @@ class MuranoShell(object):
                 subparser.add_argument(*args, **kwargs)
             subparser.set_defaults(func=callback)
 
-    def _get_ksclient(self, **kwargs):
-        """Get an endpoint and auth token from Keystone.
+    def _discover_auth_versions(self, session, auth_url):
+        # discover the API versions the server is supporting base on the
+        # given URL
+        v2_auth_url = None
+        v3_auth_url = None
+        try:
+            ks_discover = discover.Discover(session=session, auth_url=auth_url)
+            v2_auth_url = ks_discover.url_for('2.0')
+            v3_auth_url = ks_discover.url_for('3.0')
+        except ks_exc.ClientException as e:
+            # Identity service may not support discover API version.
+            # Lets trying to figure out the API version from the original URL.
+            url_parts = urlparse.urlparse(auth_url)
+            (scheme, netloc, path, params, query, fragment) = url_parts
+            path = path.lower()
+            if path.startswith('/v3'):
+                v3_auth_url = auth_url
+            elif path.startswith('/v2'):
+                v2_auth_url = auth_url
+            else:
+                # not enough information to determine the auth version
+                msg = ('Unable to determine the Keystone version '
+                       'to authenticate with using the given '
+                       'auth_url. Identity service may not support API '
+                       'version discovery. Please provide a versioned '
+                       'auth_url instead. error=%s') % (e)
+                raise exc.CommandError(msg)
 
-        :param username: name of user
-        :param password: user's password
-        :param tenant_id: unique identifier of tenant
-        :param tenant_name: name of tenant
-        :param auth_url: endpoint to authenticate against
-        """
-        kc_args = {
-            'auth_url': kwargs.get('auth_url'),
-            'insecure': kwargs.get('insecure'),
-            'cacert': kwargs.get('cacert')}
+        return (v2_auth_url, v3_auth_url)
 
-        if kwargs.get('tenant_id'):
-            kc_args['tenant_id'] = kwargs.get('tenant_id')
+    def _get_keystone_auth(self, session, auth_url, **kwargs):
+        auth_token = kwargs.pop('auth_token', None)
+        if auth_token:
+            return token.Token(auth_url, auth_token, **kwargs)
+
+        # NOTE(starodubcevna): this is a workaround for the bug:
+        # https://bugs.launchpad.net/python-openstackclient/+bug/1447704
+        # Change that fix this error in keystoneclient was abandoned,
+        # so we should use workaround until we move to keystoneauth.
+        # The idea of the code came from glanceclient.
+
+        (v2_auth_url, v3_auth_url) = self._discover_auth_versions(
+            session=session,
+            auth_url=auth_url)
+
+        if v3_auth_url:
+            # NOTE(starodubcevna): set user_domain_id and project_domain_id
+            # to default as it done in other projects.
+            return password.Password(auth_url,
+                                     username=kwargs.pop('username'),
+                                     user_id=kwargs.pop('user_id'),
+                                     password=kwargs.pop('password'),
+                                     user_domain_id=kwargs.pop(
+                                         'user_domain_id') or 'default',
+                                     user_domain_name=kwargs.pop(
+                                         'user_domain_name'),
+                                     project_id=kwargs.pop('project_id'),
+                                     project_name=kwargs.pop('project_name'),
+                                     project_domain_id=kwargs.pop(
+                                         'project_domain_id') or 'default')
+        elif v2_auth_url:
+            return password.Password(auth_url,
+                                     username=kwargs.pop('username'),
+                                     user_id=kwargs.pop('user_id'),
+                                     password=kwargs.pop('password'),
+                                     project_id=kwargs.pop('project_id'),
+                                     project_name=kwargs.pop('project_name'))
         else:
-            kc_args['tenant_name'] = kwargs.get('tenant_name')
-
-        if kwargs.get('token'):
-            kc_args['token'] = kwargs.get('token')
-        else:
-            kc_args['username'] = kwargs.get('username')
-            kc_args['password'] = kwargs.get('password')
-
-        return ksclient.Client(**kc_args)
-
-    def _get_endpoint(self, client, **kwargs):
-        """Get an endpoint using the provided keystone client."""
-        return client.service_catalog.url_for(
-            service_type=kwargs.get('service_type') or 'application_catalog',
-            endpoint_type=kwargs.get('endpoint_type') or 'publicURL')
+            # if we get here it means domain information is provided
+            # (caller meant to use Keystone V3) but the auth url is
+            # actually Keystone V2. Obviously we can't authenticate a V3
+            # user using V2.
+            exc.CommandError("Credential and auth_url mismatch. The given "
+                             "auth_url is using Keystone V2 endpoint, which "
+                             "may not able to handle Keystone V3 credentials. "
+                             "Please provide a correct Keystone V3 auth_url.")
 
     def _setup_logging(self, debug):
         # Output the logs to command-line interface
@@ -278,6 +304,9 @@ class MuranoShell(object):
         subcommand_parser = self.get_subcommand_parser(api_version)
         self.parser = subcommand_parser
 
+        keystone_session = None
+        keystone_auth = None
+
         # Handle top-level --help/-h before attempting to parse
         # a command off the command line.
         if (not args and options.help) or not argv:
@@ -301,11 +330,14 @@ class MuranoShell(object):
                                    " or a token via --os-auth-token or"
                                    " env[OS_AUTH_TOKEN]")
 
-        if not args.os_password and not args.os_auth_token:
-            raise exc.CommandError("You must provide a password via"
-                                   " either --os-password or env[OS_PASSWORD]"
-                                   " or a token via --os-auth-token or"
-                                   " env[OS_AUTH_TOKEN]")
+        if not any([args.os_tenant_name, args.os_tenant_id,
+                    args.os_project_id, args.os_project_name]):
+            raise exc.CommandError("You must provide a project name or"
+                                   " project id via --os-project-name,"
+                                   " --os-project-id, env[OS_PROJECT_ID]"
+                                   " or env[OS_PROJECT_NAME]. You may"
+                                   " use os-project and os-tenant"
+                                   " interchangeably.")
 
         if args.os_no_client_auth:
             if not args.murano_url:
@@ -318,10 +350,14 @@ class MuranoShell(object):
             # service catalog, it's not required if os_no_client_auth is
             # specified, neither is the auth URL.
             if not (args.os_tenant_id or args.os_tenant_name):
-                raise exc.CommandError("You must provide a tenant name "
-                                       "or tenant id via --os-tenant-name, "
-                                       "--os-tenant-id, env[OS_TENANT_NAME] "
-                                       "or env[OS_TENANT_ID]")
+                raise exc.CommandError(
+                    "You must provide a tenant name "
+                    "or tenant id via --os-tenant-name, "
+                    "--os-tenant-id, env[OS_TENANT_NAME] "
+                    "or env[OS_TENANT_ID] OR a project name "
+                    "or project id via --os-project-name, "
+                    "--os-project-id, env[OS_PROJECT_ID] or "
+                    "env[OS_PROJECT_NAME]")
 
             if not args.os_auth_url:
                 raise exc.CommandError("You must provide an auth url via"
@@ -347,37 +383,72 @@ class MuranoShell(object):
         endpoint = args.murano_url
         glance_endpoint = args.glance_url
 
-        if not args.os_no_client_auth:
-            _ksclient = self._get_ksclient(**kwargs)
-            token = args.os_auth_token or _ksclient.auth_token
-
+        if args.os_no_client_auth:
+            # Authenticate through murano, don't use session
             kwargs = {
-                'token': token,
-                'insecure': args.insecure,
-                'cacert': args.os_cacert,
-                'cert_file': args.cert_file,
-                'key_file': args.key_file,
                 'username': args.os_username,
                 'password': args.os_password,
-                'endpoint_type': args.os_endpoint_type,
-                'include_pass': args.include_password
+                'auth_token': args.os_auth_token,
+                'auth_url': args.os_auth_url,
+                'token': args.os_auth_token,
+                'insecure': args.insecure,
+                'timeout': args.api_timeout
             }
             glance_kwargs = kwargs.copy()
 
             if args.os_region_name:
                 kwargs['region_name'] = args.os_region_name
                 glance_kwargs['region_name'] = args.os_region_name
+        else:
+            # Create a keystone session and keystone auth
+            keystone_session = ksession.Session.load_from_cli_options(args)
+            project_id = args.os_project_id or args.os_tenant_id
+            project_name = args.os_project_name or args.os_tenant_name
+
+            keystone_session = ksession.Session.load_from_cli_options(args)
+
+            keystone_auth = self._get_keystone_auth(
+                keystone_session,
+                args.os_auth_url,
+                username=args.os_username,
+                user_id=args.os_user_id,
+                user_domain_id=args.os_user_domain_id,
+                user_domain_name=args.os_user_domain_name,
+                password=args.os_password,
+                auth_token=args.os_auth_token,
+                project_id=project_id,
+                project_name=project_name,
+                project_domain_id=args.os_project_domain_id,
+                project_domain_name=args.os_project_domain_name)
+
+            endpoint_type = args.os_endpoint_type or 'publicURL'
+            service_type = args.os_service_type or 'application_catalog'
 
             if not endpoint:
-                endpoint = self._get_endpoint(_ksclient, **kwargs)
+                endpoint = keystone_auth.get_endpoint(
+                    keystone_session,
+                    service_type=service_type,
+                    region_name=args.os_region_name)
+
+            kwargs = {
+                'session': keystone_session,
+                'auth': keystone_auth,
+                'service_type': service_type,
+                'endpoint_type': endpoint_type,
+                'region_name': args.os_region_name,
+            }
+            glance_kwargs = kwargs.copy()
+            del glance_kwargs['endpoint_type']
 
         if args.api_timeout:
             kwargs['timeout'] = args.api_timeout
 
         if not glance_endpoint:
             try:
-                glance_endpoint = self._get_endpoint(
-                    _ksclient, service_type='image')
+                glance_endpoint = keystone_auth.get_endpoint(
+                    keystone_session,
+                    service_type='image',
+                    region_name=args.os_region_name)
             except Exception:
                 pass
 
@@ -385,7 +456,7 @@ class MuranoShell(object):
         if glance_endpoint:
             try:
                 glance_client = glanceclient.Client(
-                    '1', glance_endpoint, **glance_kwargs)
+                    '2', glance_endpoint, **glance_kwargs)
             except Exception:
                 pass
         if glance_client:
@@ -395,7 +466,7 @@ class MuranoShell(object):
                            "Image creation will be unavailable.")
             kwargs['glance_client'] = None
 
-        client = apiclient.Client(api_version, endpoint, **kwargs)
+        client = murano_client.Client(api_version, endpoint, **kwargs)
 
         args.func(client, args)
 
