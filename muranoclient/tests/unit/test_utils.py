@@ -15,16 +15,15 @@
 
 import json
 import os.path
-import StringIO
 import tempfile
 import zipfile
 
 import mock
 import requests
 import requests_mock
+import six
 import testtools
 import yaml
-
 
 from muranoclient.common import utils
 
@@ -46,7 +45,7 @@ class FileTest(testtools.TestCase):
     def test_file_object_url_fails(self):
         resp = requests.Response()
         resp.status_code = 400
-        resp.raw = StringIO.StringIO("123")
+        resp.raw = six.BytesIO(six.b("123"))
 
         with mock.patch(
                 'requests.get',
@@ -56,7 +55,7 @@ class FileTest(testtools.TestCase):
 
     def test_file_object_url(self):
         resp = requests.Response()
-        resp.raw = StringIO.StringIO("123")
+        resp.raw = six.BytesIO(six.b("123"))
         resp.status_code = 200
         with mock.patch(
                 'requests.get',
@@ -75,7 +74,7 @@ def make_pkg(manifest_override, image_dicts=None):
         'Name': 'Apache HTTP Server',
         'Type': 'Application'}
     manifest.update(manifest_override)
-    file_obj = StringIO.StringIO()
+    file_obj = six.BytesIO()
     zfile = zipfile.ZipFile(file_obj, "a")
     zfile.writestr('manifest.yaml', yaml.dump(manifest))
     if image_dicts:
@@ -212,7 +211,7 @@ class PackageTest(testtools.TestCase):
 
     def test_file_object_repo_fails(self):
         resp = requests.Response()
-        resp.raw = StringIO.StringIO("123")
+        resp.raw = six.BytesIO(six.b("123"))
         resp.status_code = 400
         with mock.patch(
                 'requests.get',
@@ -227,7 +226,7 @@ class PackageTest(testtools.TestCase):
 
     def test_file_object_repo(self):
         resp = requests.Response()
-        resp.raw = StringIO.StringIO("123")
+        resp.raw = six.BytesIO(six.b("123"))
         resp.status_code = 200
         with mock.patch(
                 'requests.get',
@@ -242,7 +241,7 @@ class BundleTest(testtools.TestCase):
 
     @requests_mock.mock()
     def test_packages(self, m):
-        s = StringIO.StringIO()
+        s = six.StringIO()
         bundle_contents = {'Packages': [
             {'Name': 'first_app'},
             {'Name': 'second_app', 'Version': '1.0'}

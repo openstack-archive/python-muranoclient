@@ -24,7 +24,7 @@ from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import requests
 import six
-from six.moves.urllib import parse
+from six.moves import urllib
 
 from muranoclient.common import exceptions as exc
 
@@ -75,7 +75,7 @@ class HTTPClient(object):
         }
 
         self.verify_cert = None
-        if parse.urlparse(endpoint).scheme == "https":
+        if urllib.parse.urlparse(endpoint).scheme == "https":
             if kwargs.get('insecure'):
                 self.verify_cert = False
             else:
