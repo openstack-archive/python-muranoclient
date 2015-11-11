@@ -38,7 +38,7 @@ from oslo_log import log as logging
 from oslo_utils import importutils
 
 from muranoclient.openstack.common.apiclient import exceptions
-from muranoclient.openstack.common.gettextutils import _
+from muranoclient.i18n import _
 
 
 _logger = logging.getLogger(__name__)

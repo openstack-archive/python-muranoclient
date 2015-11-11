@@ -39,7 +39,7 @@ import yaml
 import yaql
 
 from muranoclient.common import exceptions
-from muranoclient.openstack.common.gettextutils import _
+from muranoclient.i18n import _
 
 try:
     import yaql.language  # noqa

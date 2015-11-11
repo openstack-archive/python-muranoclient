@@ -24,7 +24,7 @@ import sys
 
 import six
 
-from muranoclient.openstack.common.gettextutils import _
+from muranoclient.i18n import _
 
 
 class ClientException(Exception):

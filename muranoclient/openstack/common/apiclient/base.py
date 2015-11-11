@@ -32,7 +32,7 @@ import six
 from six.moves.urllib import parse
 
 from muranoclient.openstack.common.apiclient import exceptions
-from muranoclient.openstack.common.gettextutils import _
+from muranoclient.i18n import _
 
 
 def getid(obj):
