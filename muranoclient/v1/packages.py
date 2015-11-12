@@ -13,7 +13,7 @@
 #    under the License.
 
 import six
-import urllib
+from six.moves import urllib
 
 from oslo_serialization import jsonutils
 import yaml
@@ -75,7 +75,8 @@ class PackageManager(base.Manager):
                     v = v.encode('utf-8')
                     params[k] = v
             return '?'.join(
-                ['/v1/catalog/packages', urllib.urlencode(params, doseq=True)]
+                ['/v1/catalog/packages',
+                 urllib.parse.urlencode(params, doseq=True)]
             )
 
         def paginate(_url):
@@ -84,10 +85,9 @@ class PackageManager(base.Manager):
             for image in body['packages']:
                 yield image
             try:
-                next_url = construct_url(
-                    dict(kwargs.items() +
-                         {'marker': body['next_marker']}.items())
-                )
+                m_kwargs = kwargs.copy()
+                m_kwargs['marker'] = body['next_marker']
+                next_url = construct_url(m_kwargs)
             except KeyError:
                 return
             else:

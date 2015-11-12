@@ -19,15 +19,14 @@ import collections
 import os
 import re
 import shutil
-import StringIO
 import sys
 import tempfile
 import textwrap
-import urlparse
 import uuid
 import warnings
 import zipfile
 
+import json
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
@@ -35,6 +34,7 @@ from oslo_utils import importutils
 import prettytable
 import requests
 import six
+from six.moves import urllib
 import yaml
 import yaql
 
@@ -195,10 +195,12 @@ class NoCloseProxy(object):
 
 
 class File(object):
-    def __init__(self, name):
+    def __init__(self, name, binary=True):
         self.name = name
+        self.binary = binary
 
     def open(self):
+        mode = 'rb' if self.binary else 'r'
         if hasattr(self.name, 'read'):
             # NOTE(kzaitsev) We do not want to close a file object
             # passed to File wrapper. The caller should be responsible
@@ -206,25 +208,24 @@ class File(object):
             return NoCloseProxy(self.name)
         else:
             if os.path.isfile(self.name):
-                return open(self.name)
-            url = urlparse.urlparse(self.name)
+                return open(self.name, mode)
+            url = urllib.parse.urlparse(self.name)
             if url.scheme in ('http', 'https'):
                 resp = requests.get(self.name, stream=True)
                 if not resp.ok:
                     raise ValueError("Got non-ok status({0}) "
                                      "while connecting to {1}".format(
                                          resp.status_code, self.name))
-                temp_file = tempfile.NamedTemporaryFile()
+                temp_file = tempfile.NamedTemporaryFile(mode='w+b')
                 for chunk in resp.iter_content(1024 * 1024):
                     temp_file.write(chunk)
                 temp_file.flush()
-                temp_file.seek(0)
-                return temp_file
+                return open(temp_file.name, mode)
             raise ValueError("Can't open {0}".format(self.name))
 
 
 def to_url(filename, base_url, version='', path='/', extension=''):
-    if urlparse.urlparse(filename).scheme in ('http', 'https'):
+    if urllib.parse.urlparse(filename).scheme in ('http', 'https'):
         return filename
     if not base_url:
         raise ValueError("No base_url for repository supplied")
@@ -232,7 +233,8 @@ def to_url(filename, base_url, version='', path='/', extension=''):
         raise ValueError("Invalid filename path supplied: {0}".format(
             filename))
     version = '.' + version if version else ''
-    return urlparse.urljoin(base_url, path + filename + version + extension)
+    return urllib.parse.urljoin(base_url,
+                                path + filename + version + extension)
 
 
 class FileWrapperMixin(object):
@@ -253,15 +255,16 @@ class FileWrapperMixin(object):
         if self._file and not self._file.closed:
             self._file.close()
 
-    def save(self, dst):
+    def save(self, dst, binary=True):
         file_name = self.file_wrapper.name
 
-        if urlparse.urlparse(file_name).scheme:
+        if urllib.parse.urlparse(file_name).scheme:
             file_name = file_name.split('/')[-1]
 
         dst = os.path.join(dst, file_name)
 
-        with open(dst, 'wb') as dst_file:
+        mode = 'wb' if binary else 'w'
+        with open(dst, mode) as dst_file:
             self._file.seek(0)
             shutil.copyfileobj(self._file, dst_file)
 
@@ -316,7 +319,7 @@ class Package(FileWrapperMixin):
             try:
                 self._file.seek(0)
                 self._zip_obj = zipfile.ZipFile(
-                    StringIO.StringIO(self._file.read()))
+                    six.BytesIO(self._file.read()))
             except Exception as e:
                 LOG.error("Error {0} occurred,"
                           " while parsing the package".format(e))
@@ -386,7 +389,7 @@ class Package(FileWrapperMixin):
             dep_dict = {}
         dep_dict[self.manifest['FullName']] = self
         if 'Require' in self.manifest:
-            for dep_name, ver in self.manifest['Require'].iteritems():
+            for dep_name, ver in six.iteritems(self.manifest['Require']):
                 if dep_name in dep_dict:
                     continue
                 try:
@@ -419,7 +422,7 @@ def save_image_local(image_spec, base_url, dst):
         path='images/'
     )
 
-    with open(dst, "wb") as image_file:
+    with open(dst, "w") as image_file:
         response = requests.get(download_url, stream=True)
         total_length = response.headers.get('content-length')
 
@@ -543,7 +546,7 @@ class Bundle(FileWrapperMixin):
     @staticmethod
     def from_file(file_obj):
         if not isinstance(file_obj, File):
-            file_obj = File(file_obj)
+            file_obj = File(file_obj, binary=False)
         return Bundle(file_obj)
 
     @staticmethod
@@ -558,7 +561,9 @@ class Bundle(FileWrapperMixin):
         self._file.seek(0)
         bundle = None
         try:
-            bundle = jsonutils.load(self._file)
+            # NOTE(kzaitsev) jsonutils throws a type error here
+            # see bug 1515231
+            bundle = json.load(self._file)
         except ValueError:
             pass
         if bundle is None:

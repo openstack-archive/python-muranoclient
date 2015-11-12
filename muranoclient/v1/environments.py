@@ -11,7 +11,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import urllib
+from six.moves import urllib
 
 from muranoclient.common import base
 
@@ -37,7 +37,7 @@ class EnvironmentManager(base.ManagerWithFind):
 
     def list(self, all_tenants=False):
         path = '/v1/environments?{query}'.format(
-            query=urllib.urlencode({'all_tenants': all_tenants}))
+            query=urllib.parse.urlencode({'all_tenants': all_tenants}))
         return self._list(path, 'environments')
 
     def create(self, data):
@@ -49,7 +49,8 @@ class EnvironmentManager(base.ManagerWithFind):
 
     def delete(self, environment_id, abandon=False):
         path = '/v1/environments/{id}?{query}'.format(
-            id=environment_id, query=urllib.urlencode({'abandon': abandon}))
+            id=environment_id,
+            query=urllib.parse.urlencode({'abandon': abandon}))
         return self._delete(path)
 
     def get(self, environment_id, session_id=None):

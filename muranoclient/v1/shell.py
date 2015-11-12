@@ -16,6 +16,8 @@ import functools
 import json
 import os
 import shutil
+import six
+import six.moves
 import sys
 import tempfile
 import uuid
@@ -466,7 +468,7 @@ def _handle_package_exists(mc, data, package, exists_action):
             if not res:
                 while True:
                     print("What do you want to do? (s)kip, (u)pdate, (a)bort")
-                    res = raw_input()
+                    res = six.moves.input()
                     if res in allowed_results:
                         break
             if res == 's':
@@ -552,7 +554,7 @@ def do_package_import(mc, args):
         should_do_list = True
         total_reqs.update(package.requirements(base_url=args.murano_repo_url))
 
-    for name, package in total_reqs.iteritems():
+    for name, package in six.iteritems(total_reqs):
         image_specs = package.images()
         if image_specs:
             print("Inspecting required images")
@@ -654,7 +656,7 @@ def do_bundle_import(mc, args):
             )
             total_reqs.update(requirements)
 
-    for name, dep_package in total_reqs.iteritems():
+    for name, dep_package in six.iteritems(total_reqs):
         image_specs = dep_package.images()
         if image_specs:
             print("Inspecting required images")
@@ -686,7 +688,7 @@ def do_bundle_import(mc, args):
 def _handle_save_packages(packages, dst, base_url, no_images):
     downloaded_images = []
 
-    for name, pkg in packages.iteritems():
+    for name, pkg in six.iteritems(packages):
         if not no_images:
             image_specs = pkg.images()
             for image_spec in image_specs:
@@ -763,7 +765,7 @@ def do_bundle_save(mc, args):
     _handle_save_packages(total_reqs, dst, base_url, no_images)
 
     try:
-        bundle_file.save(dst)
+        bundle_file.save(dst, binary=False)
         print("Bundle file {0} has been successfully saved".format(bundle))
     except Exception as e:
         print("Error {0} occurred while saving bundle {1}".format(e, bundle))
