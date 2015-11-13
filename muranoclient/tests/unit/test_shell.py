@@ -140,7 +140,7 @@ class ShellCommandTest(ShellTest):
 
     def register_keystone_token_fixture(self, mreq):
         v2_token = ks_v2_fixture.Token(token_id='token')
-        service = v2_token.add_service('application_catalog')
+        service = v2_token.add_service('application-catalog')
         service.add_endpoint('http://no.where', region='RegionOne')
         mreq.register_uri('POST',
                           'http://no.where/v2.0/tokens',
@@ -1208,7 +1208,7 @@ class ShellPackagesOperationsV3(ShellPackagesOperations):
 
     def register_keystone_token_fixture(self, mreq):
         v3_token = ks_v3_fixture.Token()
-        service = v3_token.add_service('application_catalog')
+        service = v3_token.add_service('application-catalog')
         service.add_standard_endpoints(public='http://no.where')
         mreq.register_uri('POST',
                           'http://no.where/v3/auth/tokens',

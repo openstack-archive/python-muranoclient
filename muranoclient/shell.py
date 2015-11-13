@@ -422,7 +422,7 @@ class MuranoShell(object):
                 project_domain_name=args.os_project_domain_name)
 
             endpoint_type = args.os_endpoint_type or 'publicURL'
-            service_type = args.os_service_type or 'application_catalog'
+            service_type = args.os_service_type or 'application-catalog'
 
             if not endpoint:
                 endpoint = keystone_auth.get_endpoint(
