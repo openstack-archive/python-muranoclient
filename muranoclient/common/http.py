@@ -312,7 +312,8 @@ class SessionClient(keystone_adapter.LegacyJsonAdapter):
                                                         **kwargs)
 
         if raise_exc and resp.status_code >= 400:
-            LOG.warning(exc.from_response(resp))
+            LOG.trace("Error communicating with {url}: {exc}"
+                      .format(url=url, exc=exc.from_response(resp)))
             raise exc.from_response(resp)
 
         return resp, body
@@ -355,7 +356,8 @@ class SessionClient(keystone_adapter.LegacyJsonAdapter):
         body = resp.text
 
         if raise_exc and resp.status_code >= 400:
-            LOG.warning(exc.from_response(resp))
+            LOG.trace("Error communicating with {url}: {exc}"
+                      .format(url=url, exc=exc.from_response(resp)))
             raise exc.from_response(resp)
 
         return resp, body
