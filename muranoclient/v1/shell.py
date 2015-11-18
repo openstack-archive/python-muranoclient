@@ -907,7 +907,7 @@ def do_package_create(mc, args):
     if not args.template and not args.classes_dir:
         raise exceptions.CommandError(
             "Provide --template for a HOT-based package, OR at least"
-            "--classes-dir for a MuranoPL-based package")
+            " --classes-dir for a MuranoPL-based package")
     directory_path = None
     try:
         archive_name = args.output if args.output else None
