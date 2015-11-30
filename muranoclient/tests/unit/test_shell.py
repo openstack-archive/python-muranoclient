@@ -594,6 +594,23 @@ class ShellCommandTest(ShellTest):
             self.assertIn(r, result[0])
         self.client.services.list.assert_called_once_with('env-id')
 
+    @mock.patch('muranoclient.v1.services.ServiceManager')
+    @requests_mock.mock()
+    def test_app_show_with_path(self, mock_services, m_requests):
+        self.client.services = mock_services()
+        mock_app = mock.MagicMock()
+        mock_app.name = "app_name"
+        setattr(mock_app, '?', {'type': 'app_type', 'id': 'app_id'})
+        self.client.services.get.return_value = mock_app
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        result = self.shell('app-show env-id --path app-id')
+        required = ['Property', 'Value']
+        for r in required:
+            self.assertIn(r, result[0])
+        self.client.services.get.assert_called_once_with('env-id', '/app-id')
+
     @mock.patch('muranoclient.v1.categories.CategoryManager')
     @requests_mock.mock()
     def test_category_list(self, mock_manager, m_requests):

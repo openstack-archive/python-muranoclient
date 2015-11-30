@@ -854,22 +854,25 @@ def do_app_show(mc, args):
     """
     if args.path == '/':
         apps = mc.services.list(args.id)
+        formatters = {'id': lambda x: getattr(x, '?')['id'],
+                      'type': lambda x: getattr(x, '?')['type']}
+        field_labels = ['Id', 'Name', 'Type']
+        fields = ['id', 'name', 'type']
+        utils.print_list(apps, fields, field_labels, formatters=formatters)
     else:
         if not args.path.startswith('/'):
             args.path = '/' + args.path
-        apps = [mc.services.get(args.id, args.path)]
+        app = mc.services.get(args.id, args.path)
 
-    field_labels = ['Id', 'Name', 'Type']
-    fields = ['id', 'name', 'type']
-    formatters = {}
-
-    # If app with specified path is not found, first element exists
-    # and it's None.
-    if apps and hasattr(apps[0], '?'):
-        formatters = {'id': lambda x: getattr(x, '?')['id'],
-                      'type': lambda x: getattr(x, '?')['type']}
-
-    utils.print_list(apps, fields, field_labels, formatters=formatters)
+        # If app with specified path is not found, it is empty.
+        if hasattr(app, '?'):
+            formatters = {}
+            for key in app.to_dict().keys():
+                formatters[key] = utils.json_formatter
+            utils.print_dict(app.to_dict(), formatters)
+        else:
+            raise exceptions.CommandError("Could not find application at path"
+                                          " %s" % args.path)
 
 
 @utils.arg('-t', '--template', metavar='<HEAT_TEMPLATE>',
