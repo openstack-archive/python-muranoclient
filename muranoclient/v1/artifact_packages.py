@@ -318,6 +318,9 @@ class PackageWrapper(object):
         else:
             return getattr(self._item, name)
 
+    def to_dict(self):
+        return {'id': self.id, 'name': self.name, 'owner_id': self.owner_id}
+
 
 class NamespaceResolver(object):
     """Copied from main murano repo
