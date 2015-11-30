@@ -104,8 +104,8 @@ class PackageManager(base.Manager):
         for package in paginate(url):
             yield self.resource_class(self, package, loaded=True)
 
-    def list(self, include_disabled=False):
-        return self.filter(include_disabled=include_disabled)
+    def list(self, include_disabled=False, limit=20):
+        return self.filter(include_disabled=include_disabled, limit=limit)
 
     def delete(self, app_id):
         return self._delete('/v1/catalog/packages/{0}'.format(app_id))
