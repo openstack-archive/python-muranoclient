@@ -153,7 +153,7 @@ class ArtifactRepo(object):
             new_props['keywords'] = new_keywords
         visibility = new_props.get('visibility')
         if visibility == 'public':
-            package = self.client.get(app_id)
+            package = self.client.artifacts.get(app_id)
             # NOTE(ativelkov): this is very racy, but until we have a chance to
             # enforce uniqueness right in glance this is the only way to do it
             existing = self.list(name=package.name,
