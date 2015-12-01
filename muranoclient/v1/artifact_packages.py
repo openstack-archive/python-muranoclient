@@ -267,7 +267,7 @@ class PackageManagerAdapter(object):
 
     @rewrap_http_exceptions
     def download(self, app_id):
-        return self.glare.download(app_id)
+        return "".join(self.glare.download(app_id))
 
     @rewrap_http_exceptions
     def get_logo(self, app_id):
