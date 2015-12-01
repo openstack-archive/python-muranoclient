@@ -664,7 +664,8 @@ class ShellCommandTest(ShellTest):
             self.assertIn(r, result[0])
         self.client.categories.delete.assert_called_once_with('category-id')
 
-        self.client.categories.delete.side_effect = exceptions.NotFound()
+        self.client.categories.delete.side_effect =\
+            common_exceptions.HTTPNotFound()
         ex = self.assertRaises(exceptions.CommandError, self.shell,
                                'category-delete category-id')
         expected = 'Unable to find and delete any of the specified categories.'

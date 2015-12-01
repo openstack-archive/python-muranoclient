@@ -300,7 +300,7 @@ def do_env_template_show(mc, args):
     """Display environment template details."""
     try:
         env_template = mc.env_templates.get(args.id)
-    except exceptions.NotFound:
+    except common_exceptions.HTTPNotFound:
         raise exceptions.CommandError("Environment template %s not found"
                                       % args.id)
     else:
@@ -355,7 +355,7 @@ def do_env_template_delete(mc, args):
     for env_template_id in args.id:
         try:
             mc.env_templates.delete(env_template_id)
-        except exceptions.NotFound:
+        except common_exceptions.HTTPNotFound:
             failure_count += 1
             mns = "Failed to delete '{0}'; environment template not found".\
                 format(env_template_id)
@@ -416,7 +416,7 @@ def do_package_download(mc, args):
                    'downloaded package. Please specify a local file to save '
                    'downloaded package or redirect output to another source.')
             raise exceptions.CommandError(msg)
-    except exceptions.NotFound:
+    except common_exceptions.HTTPNotFound:
         raise exceptions.CommandError("Package %s not found" % args.id)
 
 
@@ -426,7 +426,7 @@ def do_package_show(mc, args):
     """Display details for a package."""
     try:
         package = mc.packages.get(args.id)
-    except exceptions.NotFound:
+    except common_exceptions.HTTPNotFound:
         raise exceptions.CommandError("Package %s not found" % args.id)
     else:
         to_display = dict(
@@ -975,7 +975,7 @@ def do_category_delete(mc, args):
     for category_id in args.id:
         try:
             mc.categories.delete(category_id)
-        except exceptions.NotFound:
+        except common_exceptions.HTTPNotFound:
             failure_count += 1
             print("Failed to delete '{0}'; category not found".
                   format(category_id))
