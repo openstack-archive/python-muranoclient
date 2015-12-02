@@ -202,8 +202,6 @@ class Resource(object):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        if hasattr(self, 'id') and hasattr(other, 'id'):
-            return self.id == other.id
         return self._info == other._info
 
     def is_loaded(self):
