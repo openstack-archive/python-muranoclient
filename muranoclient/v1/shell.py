@@ -35,6 +35,8 @@ from muranoclient.v1.package_creator import mpl_package
 _bool_from_str_strict = functools.partial(
     strutils.bool_from_string, strict=True)
 
+DEFAULT_PAGE_SIZE = 20
+
 
 @utils.arg('--all-tenants', action='store_true', default=False,
            help='Allows to list environments from all tenants'
@@ -380,11 +382,13 @@ def do_deployment_list(mc, args):
         utils.print_list(deployments, fields, field_labels, sortby=0)
 
 
+@utils.arg("--limit", type=int, default=DEFAULT_PAGE_SIZE)
 @utils.arg("--include-disabled", default=False, action="store_true")
 def do_package_list(mc, args={}):
     """List available packages."""
     filter_args = {
         "include_disabled": getattr(args, 'include_disabled', False),
+        "limit": getattr(args, 'limit', DEFAULT_PAGE_SIZE),
     }
     packages = mc.packages.filter(**filter_args)
     field_labels = ["ID", "Name", "FQN", "Author", "Active", "Is Public"]
