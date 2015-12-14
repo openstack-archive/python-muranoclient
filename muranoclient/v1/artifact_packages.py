@@ -219,6 +219,7 @@ class PackageManagerAdapter(object):
         search = kwargs.pop('search', None)
         category = kwargs.pop('category', None)
         fqn = kwargs.pop('fqn', None)
+        class_name = kwargs.pop('class_name', None)
         if category:
             kwargs['categories'] = category
         if search:
@@ -229,6 +230,8 @@ class PackageManagerAdapter(object):
             kwargs['enabled'] = True
         if fqn:
             kwargs['name'] = fqn
+        if class_name:
+            kwargs['class_definitions'] = class_name
 
         for pkg in self.glare.list(**kwargs):
             yield PackageWrapper(pkg)
