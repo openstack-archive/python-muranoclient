@@ -463,7 +463,7 @@ def do_package_delete(mc, args):
     for package_id in args.id:
         try:
             mc.packages.delete(package_id)
-            print("Deleted package  '{0}'".format(package_id))
+            print("Deleted package '{0}'".format(package_id))
         except exceptions.NotFound:
             raise exceptions.CommandError("Package %s not found" % package_id)
             failure_count += 1
