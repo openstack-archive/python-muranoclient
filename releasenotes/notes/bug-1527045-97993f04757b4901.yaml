@@ -1,0 +1,6 @@
+---
+
+fixes:
+  - fixes no attribute error caused by the new raw_request
+    return, by let the SessionClient raw_request only
+    return response without data.
