@@ -615,7 +615,7 @@ def do_package_import(mc, args):
            default=None,
            help='A list of keywords connected to the application.')
 def do_package_update(mc, args):
-    """Edit the package in question"""
+    """Update an existing package."""
     data = {}
     parameters = ('is_public', 'enabled',
                   'name', 'description',
