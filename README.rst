@@ -11,7 +11,7 @@ Murano
 
 Murano Project introduces an application catalog, which allows application
 developers and cloud administrators to publish various cloud-ready
-applications in a browsable‎ categorised catalog, which may be used by the
+applications in a browsable categorised catalog, which may be used by the
 cloud users (including the inexperienced ones) to pick-up the needed
 applications and services and composes the reliable environments out of them
 in a "push-the-button" manner.
