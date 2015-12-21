@@ -353,14 +353,13 @@ class SessionClient(keystone_adapter.LegacyJsonAdapter):
                                                 method,
                                                 raise_exc=False,
                                                 **kwargs)
-        body = resp.text
 
         if raise_exc and resp.status_code >= 400:
             LOG.trace("Error communicating with {url}: {exc}"
                       .format(url=url, exc=exc.from_response(resp)))
             raise exc.from_response(resp)
 
-        return resp, body
+        return resp
 
 
 def _construct_http_client(*args, **kwargs):
