@@ -41,8 +41,10 @@ DEFAULT_PAGE_SIZE = 20
 @utils.arg('--all-tenants', action='store_true', default=False,
            help='Allows to list environments from all tenants'
                 ' (admin only).')
-def do_environment_list(mc, args={}):
+def do_environment_list(mc, args=None):
     """List the environments."""
+    if args is None:
+        args = {}
     all_tenants = getattr(args, 'all_tenants', False)
     environments = mc.environments.list(all_tenants)
     field_labels = ['ID', 'Name', 'Created', 'Updated']
@@ -261,8 +263,10 @@ def do_environment_apps_edit(mc, args):
         session_id=session_id)
 
 
-def do_env_template_list(mc, args={}):
+def do_env_template_list(mc, args=None):
     """List the environments templates."""
+    if args is None:
+        args = {}
     env_templates = mc.env_templates.list()
     field_labels = ['ID', 'Name', 'Created', 'Updated']
     fields = ['id', 'name', 'created', 'updated']
@@ -384,8 +388,10 @@ def do_deployment_list(mc, args):
 
 @utils.arg("--limit", type=int, default=DEFAULT_PAGE_SIZE)
 @utils.arg("--include-disabled", default=False, action="store_true")
-def do_package_list(mc, args={}):
+def do_package_list(mc, args=None):
     """List available packages."""
+    if args is None:
+        args = {}
     filter_args = {
         "include_disabled": getattr(args, 'include_disabled', False),
         "limit": getattr(args, 'limit', DEFAULT_PAGE_SIZE),
@@ -944,8 +950,10 @@ def _make_archive(archive_name, path):
                                                 f))
 
 
-def do_category_list(mc, args={}):
+def do_category_list(mc, args=None):
     """List all available categories."""
+    if args is None:
+        args = {}
     categories = mc.categories.list()
     field_labels = ["ID", "Name"]
     fields = ["id", "name"]

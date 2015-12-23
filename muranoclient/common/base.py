@@ -53,8 +53,10 @@ class Manager(object):
         self.api = api
 
     def _list(self, url, response_key=None, obj_class=None,
-              data=None, headers={}):
+              data=None, headers=None):
 
+        if headers is None:
+            headers = {}
         resp, body = self.api.json_request('GET', url, headers=headers)
 
         if obj_class is None:
@@ -68,10 +70,14 @@ class Manager(object):
             data = body
         return [obj_class(self, res, loaded=True) for res in data if res]
 
-    def _delete(self, url, headers={}):
+    def _delete(self, url, headers=None):
+        if headers is None:
+            headers = {}
         self.api.raw_request('DELETE', url, headers=headers)
 
-    def _update(self, url, data, response_key=None, headers={}):
+    def _update(self, url, data, response_key=None, headers=None):
+        if headers is None:
+            headers = {}
         resp, body = self.api.json_request('PUT', url, data=data,
                                            headers=headers)
         # PUT requests may not return a body
@@ -81,7 +87,9 @@ class Manager(object):
             return self.resource_class(self, body)
 
     def _create(self, url, data=None, response_key=None,
-                return_raw=False, headers={}):
+                return_raw=False, headers=None):
+        if headers is None:
+            headers = {}
         if data:
             resp, body = self.api.json_request('POST', url,
                                                data=data, headers=headers)
@@ -95,7 +103,9 @@ class Manager(object):
             return self.resource_class(self, body[response_key])
         return self.resource_class(self, body)
 
-    def _get(self, url, response_key=None, return_raw=False, headers={}):
+    def _get(self, url, response_key=None, return_raw=False, headers=None):
+        if headers is None:
+            headers = {}
         resp, body = self.api.json_request('GET', url, headers=headers)
         if return_raw:
             if response_key:
