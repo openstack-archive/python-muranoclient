@@ -40,7 +40,7 @@ class SimpleReadOnlyMuranoClientTest(utils.CLIUtilsTestBase):
     def test_package_list(self):
         packages = self.get_table_struct('package-list')
         self.assertEqual(['ID', 'Name', 'FQN', 'Author', 'Active',
-                          'Is Public'], packages)
+                          'Is Public', 'Type'], packages)
 
 
 class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):

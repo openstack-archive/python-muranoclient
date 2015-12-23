@@ -391,9 +391,10 @@ def do_package_list(mc, args={}):
         "limit": getattr(args, 'limit', DEFAULT_PAGE_SIZE),
     }
     packages = mc.packages.filter(**filter_args)
-    field_labels = ["ID", "Name", "FQN", "Author", "Active", "Is Public"]
+    field_labels = ["ID", "Name", "FQN", "Author", "Active",
+                    "Is Public", "Type"]
     fields = ["id", "name", "fully_qualified_name", "author",
-              "enabled", "is_public"]
+              "enabled", "is_public", "type"]
     utils.print_list(packages, fields, field_labels, sortby=0)
 
 
