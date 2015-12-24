@@ -21,7 +21,6 @@ develop-eggs/
 
 #Translation build
 *.mo
-*.pot
 
 #SQLite Database files
 *.sqlite

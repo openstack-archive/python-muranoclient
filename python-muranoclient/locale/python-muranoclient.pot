@@ -1,0 +1,181 @@
+# Translations template for python-muranoclient.
+# Copyright (C) 2015 ORGANIZATION
+# This file is distributed under the same license as the python-muranoclient
+# project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2015.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: python-muranoclient 0.8.1.dev25\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2015-12-25 13:18+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.1.1\n"
+
+#: muranoclient/common/utils.py:532
+msgid "Error {0} occured while setting image {1} public"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/base.py:224
+#: muranoclient/openstack/common/apiclient/base.py:381
+#, python-format
+msgid "No %(name)s matching %(args)s."
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/client.py:234
+msgid "Cannot find endpoint or token for request"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/client.py:357
+#, python-format
+msgid ""
+"Invalid %(api_name)s client version '%(version)s'. Must be one of: "
+"%(version_map)s"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:40
+#, python-format
+msgid "Missing arguments: %s"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:73
+#, python-format
+msgid "Authentication failed. Missing options: %s"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:82
+#, python-format
+msgid "AuthSystemNotFound: %s"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:105
+#, python-format
+msgid "AmbiguousEndpoints: %s"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:113
+msgid "HTTP Error"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:133
+msgid "HTTP Redirection"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:141
+msgid "HTTP Client Error"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:150
+msgid "HTTP Server Error"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:160
+msgid "Multiple Choices"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:169
+msgid "Bad Request"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:179
+msgid "Unauthorized"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:188
+msgid "Payment Required"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:198
+msgid "Forbidden"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:208
+msgid "Not Found"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:218
+msgid "Method Not Allowed"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:228
+msgid "Not Acceptable"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:237
+msgid "Proxy Authentication Required"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:246
+msgid "Request Timeout"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:256
+msgid "Conflict"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:266
+msgid "Gone"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:276
+msgid "Length Required"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:286
+msgid "Precondition Failed"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:295
+msgid "Request Entity Too Large"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:312
+msgid "Request-URI Too Long"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:322
+msgid "Unsupported Media Type"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:332
+msgid "Requested Range Not Satisfiable"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:341
+msgid "Expectation Failed"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:351
+msgid "Unprocessable Entity"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:360
+msgid "Internal Server Error"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:371
+msgid "Not Implemented"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:381
+msgid "Bad Gateway"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:390
+msgid "Service Unavailable"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:400
+msgid "Gateway Timeout"
+msgstr ""
+
+#: muranoclient/openstack/common/apiclient/exceptions.py:409
+msgid "HTTP Version Not Supported"
+msgstr ""
+
