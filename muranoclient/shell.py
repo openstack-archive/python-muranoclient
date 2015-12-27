@@ -26,7 +26,7 @@ from keystoneclient.auth.identity.generic import password
 from keystoneclient.auth.identity.generic import token
 from keystoneclient.auth.identity import v3 as identity
 from keystoneclient import discover
-from keystoneclient.openstack.common.apiclient import exceptions as ks_exc
+from keystoneclient import exceptions as ks_exc
 from keystoneclient import session as ksession
 from oslo_log import handlers
 from oslo_log import log as logging
