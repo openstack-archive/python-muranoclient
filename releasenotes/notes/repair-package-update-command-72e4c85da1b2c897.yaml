@@ -1,0 +1,4 @@
+fixes:
+  - command 'package_update' was broken since murano start support of keystone v3.
+   The error occured because murano tried to pass custom content type parameter
+   in the request kwargs, not headers.
