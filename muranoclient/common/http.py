@@ -48,7 +48,7 @@ def get_system_ca_file():
         if os.path.exists(ca):
             LOG.debug("Using ca file %s", ca)
             return ca
-    LOG.warn("System ca file could not be found.")
+    LOG.warning("System ca file could not be found.")
 
 
 class HTTPClient(object):
