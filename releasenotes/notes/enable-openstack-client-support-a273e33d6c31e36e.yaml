@@ -1,0 +1,4 @@
+---
+features:
+  - Added python-muranoclient support in openstack-client by setting entry
+    points and implementing interface functions.
