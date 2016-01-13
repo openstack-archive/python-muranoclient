@@ -505,9 +505,7 @@ class HelpFormatter(argparse.HelpFormatter):
         super(HelpFormatter, self).start_section(heading)
 
 
-def main(args=None):
-    if args is None:
-        args = sys.argv[1:]
+def main(args=sys.argv[1:]):
     try:
         MuranoShell().main(args)
 
