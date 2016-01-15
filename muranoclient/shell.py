@@ -37,8 +37,8 @@ import six.moves.urllib.parse as urlparse
 import muranoclient
 from muranoclient import client as murano_client
 from muranoclient.common import utils
+from muranoclient.glance import client as art_client
 from muranoclient.openstack.common.apiclient import exceptions as exc
-
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class MuranoShell(object):
         # Global arguments
         parser.add_argument('-h', '--help',
                             action='store_true',
-                            help=argparse.SUPPRESS,)
+                            help=argparse.SUPPRESS, )
 
         parser.add_argument('--version',
                             action='version',
@@ -156,6 +156,16 @@ class MuranoShell(object):
                                 default=DEFAULT_REPO_URL),
                             help=('Defaults to env[MURANO_REPO_URL] '
                                   'or {0}'.format(DEFAULT_REPO_URL)))
+
+        parser.add_argument('--murano-packages-service',
+                            choices=['murano', 'glance'],
+                            default=utils.env('MURANO_PACKAGES_SERVICE',
+                                              default='murano'),
+                            help='Specifies if murano-api ("murano") or '
+                                 'Glance Artifact Repository ("glance") '
+                                 'should be used to store murano packages. '
+                                 'Defaults to env[MURANO_PACKAGES_SERVICE] or '
+                                 'to "murano"')
 
         self._append_global_identity_args(parser)
 
@@ -289,9 +299,9 @@ class MuranoShell(object):
 
         # Set the logger level of special library
         logging.getLogger('iso8601') \
-               .logger.setLevel(logging.WARNING)
+            .logger.setLevel(logging.WARNING)
         logging.getLogger('urllib3.connectionpool') \
-               .logger.setLevel(logging.WARNING)
+            .logger.setLevel(logging.WARNING)
 
     def main(self, argv):
         # Parse args once to find version
@@ -345,6 +355,14 @@ class MuranoShell(object):
                     "If you specify --os-no-client-auth"
                     " you must also specify a Murano API URL"
                     " via either --murano-url or env[MURANO_URL]")
+            if (not args.glance_url and
+                    args.murano_packages_service == 'glance'):
+                raise exc.CommandError(
+                    "If you specify --os-no-client-auth and"
+                    " set murano-packages-service to 'glance'"
+                    " you must also specify a Glance API URL"
+                    " via either --glance-url or env[GLANCE_URL]")
+
         else:
             # Tenant name or ID is needed to make keystoneclient retrieve a
             # service catalog, it's not required if os_no_client_auth is
@@ -449,6 +467,16 @@ class MuranoShell(object):
             logger.warning("Could not initialise glance client. "
                            "Image creation will be unavailable.")
             kwargs['glance_client'] = None
+
+        if args.murano_packages_service == 'glance':
+            artifacts_client = art_client.Client(endpoint=glance_endpoint,
+                                                 type_name='murano',
+                                                 type_version=1,
+                                                 username=args.os_username,
+                                                 password=args.os_password,
+                                                 token=args.os_auth_token,
+                                                 insecure=args.insecure)
+            kwargs['artifacts_client'] = artifacts_client
 
         client = murano_client.Client(api_version, endpoint, **kwargs)
 
