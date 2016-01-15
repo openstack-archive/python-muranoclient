@@ -364,22 +364,6 @@ class MuranoShell(object):
                                        " either --os-auth-url or via"
                                        " env[OS_AUTH_URL]")
 
-        kwargs = {
-            'username': args.os_username,
-            'password': args.os_password,
-            'token': args.os_auth_token,
-            'tenant_id': args.os_tenant_id,
-            'tenant_name': args.os_tenant_name,
-            'auth_url': args.os_auth_url,
-            'service_type': args.os_service_type,
-            'endpoint_type': args.os_endpoint_type,
-            'insecure': args.insecure,
-            'cacert': args.os_cacert,
-            'include_pass': args.include_password
-        }
-        glance_kwargs = kwargs
-        glance_kwargs = kwargs.copy()
-
         endpoint = args.murano_url
         glance_endpoint = args.glance_url
 
