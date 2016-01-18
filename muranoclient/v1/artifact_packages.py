@@ -207,6 +207,9 @@ class PackageManagerAdapter(object):
 
     @rewrap_http_exceptions
     def create(self, data, files):
+        is_public = data.pop('is_public', None)
+        if is_public is not None:
+            data['visibility'] = 'public' if is_public else 'private'
         fqn = list(files.keys())[0]
         pkg = self.glare.create(fqn, files[fqn], **data)
         return PackageWrapper(pkg)
