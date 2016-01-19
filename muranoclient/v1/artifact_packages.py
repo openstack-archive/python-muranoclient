@@ -71,7 +71,7 @@ class ArtifactRepo(object):
         existing = self.list(name=package_draft['name'],
                              version=package_draft['version'], **filters)
         try:
-            existing.next()
+            next(existing)
             raise exc.HTTPConflict("Package already exists")
         except StopIteration:
             pass
@@ -161,7 +161,7 @@ class ArtifactRepo(object):
                                  visibility='public')
             try:
                 while True:
-                    package = existing.next()
+                    package = next(existing)
                     if package.id == app_id:
                         continue
                     else:
@@ -207,7 +207,7 @@ class PackageManagerAdapter(object):
 
     @rewrap_http_exceptions
     def create(self, data, files):
-        fqn = files.keys()[0]
+        fqn = list(files.keys())[0]
         pkg = self.glare.create(fqn, files[fqn], **data)
         return PackageWrapper(pkg)
 

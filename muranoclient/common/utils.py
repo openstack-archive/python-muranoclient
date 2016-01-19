@@ -474,7 +474,7 @@ def ensure_images(glance_client, image_specs, base_url,
 
         images = glance_client.images.list(filters=filters)
         try:
-            img = images.next().to_dict()
+            img = next(images).to_dict()
         except StopIteration:
             img = None
 

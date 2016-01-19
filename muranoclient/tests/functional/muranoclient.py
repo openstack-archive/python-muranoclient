@@ -12,9 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import ConfigParser
 import os
 
+from six.moves import configparser
 from tempest_lib.cli import base
 
 
@@ -34,7 +34,7 @@ class ClientTestBase(base.ClientTestBase):
         self.password = os.environ.get('OS_PASSWORD')
         self.tenant_name = os.environ.get('OS_TENANT_NAME')
         self.uri = os.environ.get('OS_AUTH_URL')
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         if config.read('functional_creds.conf'):
             # the OR pattern means the environment is preferred for
             # override

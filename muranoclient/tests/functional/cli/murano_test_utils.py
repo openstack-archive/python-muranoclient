@@ -16,11 +16,12 @@ import json
 import multiprocessing
 import os
 import shutil
-import SimpleHTTPServer
 import SocketServer
 import tempfile
 import time
 import uuid
+
+from six.moves import SimpleHTTPServer
 
 from muranoclient.tests.functional.cli import utils
 from muranoclient.tests.functional import muranoclient
