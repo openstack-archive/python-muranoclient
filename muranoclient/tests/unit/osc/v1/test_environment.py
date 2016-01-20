@@ -1,0 +1,219 @@
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
+import mock
+
+from muranoclient.osc.v1 import environment as osc_env
+from muranoclient.tests.unit.osc.v1 import fakes
+from muranoclient.v1 import environments as api_env
+
+ENV_INFO = {'id': '1234',
+            'name': 'Fake Environment',
+            'created': '2015-12-16T17:31:54',
+            'updated': '2015-12-16T17:31:54',
+            'networking': {},
+            'services': ['fake services'],
+            'status': 'fake deployed',
+            'tenant_id': 'xyz123',
+            'version': '1'}
+
+
+class TestEnvironment(fakes.TestApplicationCatalog):
+    def setUp(self):
+        super(TestEnvironment, self).setUp()
+        self.environment_mock = self.app.client_manager.application_catalog.\
+            environments
+        self.environment_mock.reset_mock()
+
+
+class TestListEnvironment(TestEnvironment):
+    def setUp(self):
+        super(TestListEnvironment, self).setUp()
+        self.environment_mock.list.return_value = [api_env.Environment(None,
+                                                   ENV_INFO)]
+
+        # Command to test
+        self.cmd = osc_env.ListEnvironments(self.app, None)
+
+    @mock.patch('openstackclient.common.utils.get_item_properties')
+    def test_environment_list_with_no_options(self, mock_util):
+        arglist = []
+        verifylist = []
+
+        mock_util.return_value = ('1234', 'Environment of all tenants',
+                                  '2015-12-16T17:31:54', '2015-12-16T17:31:54'
+                                  )
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ['Id', 'Name', 'Created', 'Updated']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'Environment of all tenants',
+                          '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
+        self.assertEqual(expected_data, data)
+
+    @mock.patch('openstackclient.common.utils.get_item_properties')
+    def test_environment_list_with_options(self, mock_util):
+        arglist = ['--all-tenants']
+        verifylist = [('all_tenants', True)]
+
+        mock_util.return_value = ('1234', 'Environment of all tenants',
+                                  '2015-12-16T17:31:54', '2015-12-16T17:31:54'
+                                  )
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ['Id', 'Name', 'Created', 'Updated']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'Environment of all tenants',
+                          '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
+        self.assertEqual(expected_data, data)
+
+
+class TestShowEnvironment(TestEnvironment):
+    def setUp(self):
+        super(TestShowEnvironment, self).setUp()
+        mock_to_dict = self.environment_mock.get.return_value.to_dict
+        mock_to_dict.return_value = ENV_INFO
+
+        self.cmd = osc_env.ShowEnvironment(self.app, None)
+
+    @mock.patch('oslo_serialization.jsonutils.dumps')
+    def test_environment_show_with_no_options(self, mock_json):
+        arglist = ['fake']
+        verifylist = [('id', 'fake')]
+
+        mock_json.return_value = ['fake services']
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ('created', 'id', 'name', 'networking', 'services',
+                            'status', 'tenant_id', 'updated', 'version')
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = ('2015-12-16T17:31:54', '1234', 'Fake Environment',
+                         {}, ['fake services'], 'fake deployed', 'xyz123',
+                         '2015-12-16T17:31:54', '1')
+        self.assertEqual(expected_data, data)
+
+    @mock.patch('oslo_serialization.jsonutils.dumps')
+    def test_environment_show_with_only_app_option(self, mock_json):
+        arglist = ['fake', '--only-apps']
+        verifylist = [('id', 'fake'), ('only_apps', True)]
+
+        mock_json.return_value = ['fake services']
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ['services']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [['fake services']]
+        self.assertEqual(expected_data, data)
+
+    @mock.patch('oslo_serialization.jsonutils.dumps')
+    def test_environment_show_with_session_id_option(self, mock_json):
+        arglist = ['fake', '--session-id', 'abc123']
+        verifylist = [('id', 'fake'), ('session_id', 'abc123')]
+
+        mock_json.return_value = ['fake services']
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ('created', 'id', 'name', 'networking', 'services',
+                            'status', 'tenant_id', 'updated', 'version')
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = ('2015-12-16T17:31:54', '1234', 'Fake Environment',
+                         {}, ['fake services'], 'fake deployed', 'xyz123',
+                         '2015-12-16T17:31:54', '1')
+        self.assertEqual(expected_data, data)
+
+
+class TestRenameEnvironment(TestEnvironment):
+    def setUp(self):
+        super(TestRenameEnvironment, self).setUp()
+        self.environment_mock.update.return_value = [api_env.Environment(None,
+                                                     ENV_INFO)]
+
+        # Command to test
+        self.cmd = osc_env.RenameEnvironment(self.app, None)
+
+    @mock.patch('openstackclient.common.utils.get_item_properties')
+    def test_environment_rename(self, mock_util):
+        arglist = ['1234', 'fake-1']
+        verifylist = [('id', '1234'), ('name', 'fake-1')]
+
+        mock_util.return_value = ('1234', 'fake-1', '2015-12-16T17:31:54',
+                                  '2015-12-16T17:31:54')
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ['Id', 'Name', 'Created', 'Updated']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'fake-1',
+                          '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
+        self.assertEqual(expected_data, data)
+
+
+class TestEnvironmentSessionCreate(TestEnvironment):
+    def setUp(self):
+        super(TestEnvironmentSessionCreate, self).setUp()
+
+        # Command to test
+        self.cmd = osc_env.EnvironmentSessionCreate(self.app, None)
+
+    @mock.patch('muranoclient.common.utils.text_wrap_formatter')
+    def test_environment_session_create(self, mock_util):
+        arglist = ['1234']
+        verifylist = [('id', '1234')]
+
+        mock_util.return_value = '1abc2xyz'
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ['id']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = ['1abc2xyz']
+        self.assertEqual(expected_data, data)
