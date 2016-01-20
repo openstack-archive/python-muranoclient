@@ -21,8 +21,8 @@
 Installation script for python-muranoclient's development virtualenv
 """
 
-import os
 import ConfigParser
+import os
 import sys
 
 import install_venv_common as install_venv

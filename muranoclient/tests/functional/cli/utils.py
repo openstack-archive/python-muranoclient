@@ -13,8 +13,10 @@
 # under the License.
 
 import os
-import yaml
 import zipfile
+
+import yaml
+
 
 MANIFEST = {'Format': 'MuranoPL/1.0',
             'Type': 'Application',

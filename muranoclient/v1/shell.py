@@ -16,8 +16,6 @@ import functools
 import json
 import os
 import shutil
-import six
-import six.moves
 import sys
 import tempfile
 import uuid
@@ -25,6 +23,8 @@ import zipfile
 
 import jsonpatch
 from oslo_utils import strutils
+import six
+import six.moves
 
 from muranoclient.common import exceptions as common_exceptions
 from muranoclient.common import utils

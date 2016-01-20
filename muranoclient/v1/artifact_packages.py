@@ -12,10 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from glanceclient import exc as glance_exc
 import six
 import yaml
-
-from glanceclient import exc as glance_exc
 
 from muranoclient.common import exceptions as exc
 from muranoclient.common import utils

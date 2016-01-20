@@ -12,10 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_serialization import jsonutils
 import six
 from six.moves import urllib
-
-from oslo_serialization import jsonutils
 import yaml
 
 from muranoclient.common import base
