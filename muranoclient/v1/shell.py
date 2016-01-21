@@ -47,8 +47,8 @@ def do_environment_list(mc, args=None):
         args = {}
     all_tenants = getattr(args, 'all_tenants', False)
     environments = mc.environments.list(all_tenants)
-    field_labels = ['ID', 'Name', 'Created', 'Updated']
-    fields = ['id', 'name', 'created', 'updated']
+    field_labels = ['ID', 'Name', 'Status', 'Created', 'Updated']
+    fields = ['id', 'name', 'status', 'created', 'updated']
     utils.print_list(environments, fields, field_labels, sortby=0)
 
 
