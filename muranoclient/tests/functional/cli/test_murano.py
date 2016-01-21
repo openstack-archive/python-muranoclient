@@ -343,6 +343,27 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
         self.assertIn('environment_id', tested_env_created)
         self.assertIn('session_id', tested_env_created)
 
+    def test_env_template_clone(self):
+        """Test scenario:
+            1) create environment template
+            2) clone template
+            3) check that create environment template has the new name
+            4) delete new template
+        """
+
+        env_template = self.create_murano_object_parameter(
+            'env-template', 'TestMuranoSanityEnvTemp', '--is-public true')
+        new_template = self.generate_name('TestMuranoSanityEnvTemp')
+
+        params = "{0} {1}".format(env_template['ID'], new_template)
+        template_created = self.listing('env-template-clone', params=params)
+        list = map(lambda x: ({x['Property']: x['Value']}), template_created)
+        result_name = filter(lambda x: x.get('name'), list)[0]['name']
+        result_id = filter(lambda x: x.get('id'), list)[0]['id']
+        self.listing('env-template-delete', params=result_id)
+
+        self.assertIn(result_name, new_template)
+
 
 class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
     """Sanity tests for testing actions with Packages.
