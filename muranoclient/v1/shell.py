@@ -268,8 +268,8 @@ def do_env_template_list(mc, args=None):
     if args is None:
         args = {}
     env_templates = mc.env_templates.list()
-    field_labels = ['ID', 'Name', 'Created', 'Updated']
-    fields = ['id', 'name', 'created', 'updated']
+    field_labels = ['ID', 'Name', 'Created', 'Updated', 'Is public']
+    fields = ['id', 'name', 'created', 'updated', 'is_public']
     utils.print_list(env_templates, fields, field_labels, sortby=0)
 
 
