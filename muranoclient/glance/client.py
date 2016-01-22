@@ -12,9 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 from glanceclient.common import http
 from glanceclient.common import utils
+
 from muranoclient.glance import artifacts
 
 

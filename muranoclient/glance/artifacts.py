@@ -12,12 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from glanceclient.common import utils
+from glanceclient import exc
 from oslo_utils import encodeutils
 import six
 from six.moves.urllib import parse
 
-from glanceclient.common import utils
-from glanceclient import exc
 from muranoclient.glance import ArtifactType
 
 

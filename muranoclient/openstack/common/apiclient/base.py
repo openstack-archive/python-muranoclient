@@ -31,8 +31,8 @@ from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse
 
-from muranoclient.openstack.common.apiclient import exceptions
 from muranoclient.i18n import _
+from muranoclient.openstack.common.apiclient import exceptions
 
 
 def getid(obj):

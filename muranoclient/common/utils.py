@@ -16,6 +16,7 @@
 from __future__ import print_function
 
 import collections
+import json
 import os
 import re
 import shutil
@@ -26,7 +27,6 @@ import uuid
 import warnings
 import zipfile
 
-import json
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
