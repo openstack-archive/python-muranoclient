@@ -329,11 +329,13 @@ class SessionClient(keystone_adapter.Adapter):
         headers = kwargs.setdefault('headers', {})
         headers['Content-Type'] = kwargs.pop('content_type',
                                              'application/json')
-        if 'data' in kwargs:
-            if 'body' in kwargs:
+        if 'body' in kwargs:
+            if 'data' in kwargs:
                 raise ValueError("Can't provide both 'data' and "
                                  "'body' to a request")
             LOG.warning("Use of 'body' is deprecated; use 'data' instead")
+            kwargs['data'] = kwargs.pop('body')
+        if 'data' in kwargs:
             kwargs['data'] = jsonutils.dumps(kwargs['data'])
             # NOTE(starodubcevna): We need to prove that json field is empty,
             # or it will be modified by keystone adapter.
