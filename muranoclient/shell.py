@@ -31,6 +31,7 @@ import six
 import muranoclient
 from muranoclient import client as apiclient
 from muranoclient.common import utils
+from muranoclient.glance import client as art_client
 from muranoclient.openstack.common.apiclient import exceptions as exc
 from muranoclient.openstack.common.gettextutils import _
 
@@ -177,6 +178,16 @@ class MuranoShell(object):
                             help=('Defaults to env[MURANO_REPO_URL] '
                                   'or {0}'.format(DEFAULT_REPO_URL)))
 
+        parser.add_argument('--murano-packages-service',
+                            choices=['murano', 'glance'],
+                            default=utils.env('MURANO_PACKAGES_SERVICE',
+                                              default='murano'),
+                            help='Specifies if murano-api ("murano") or '
+                                 'Glance Artifact Repository ("glance") '
+                                 'should be used to store murano packages. '
+                                 'Defaults to env[MURANO_PACKAGES_SERVICE] or '
+                                 'to "murano"')
+
         return parser
 
     def get_subcommand_parser(self, version):
@@ -313,6 +324,14 @@ class MuranoShell(object):
                     "If you specify --os-no-client-auth"
                     " you must also specify a Murano API URL"
                     " via either --murano-url or env[MURANO_URL]")
+            if (not args.glance_url and
+                    args.murano_packages_service == 'glance'):
+                raise exc.CommandError(
+                    "If you specify --os-no-client-auth and"
+                    " set murano-packages-service to 'glance'"
+                    " you must also specify a Glance API URL"
+                    " via either --glance-url or env[GLANCE_URL]")
+
         else:
             # Tenant name or ID is needed to make keystoneclient retrieve a
             # service catalog, it's not required if os_no_client_auth is
@@ -394,6 +413,17 @@ class MuranoShell(object):
             logger.warning("Could not initialise glance client. "
                            "Image creation will be unavailable.")
             kwargs['glance_client'] = None
+
+        if args.murano_packages_service == 'glance':
+            artifacts_client = art_client.Client(endpoint=glance_endpoint,
+                                                 type_name='murano',
+                                                 type_version=1,
+                                                 username=args.os_username,
+                                                 password=args.os_password,
+                                                 token=(args.os_auth_token or
+                                                        _ksclient.auth_token),
+                                                 insecure=args.insecure)
+            kwargs['artifacts_client'] = artifacts_client
 
         client = apiclient.Client(api_version, endpoint, **kwargs)
 
