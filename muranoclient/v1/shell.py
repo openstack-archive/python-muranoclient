@@ -275,9 +275,11 @@ def do_env_template_list(mc, args=None):
 
 @utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
            help="Environment template name.")
+@utils.arg("--is-public", type=bool,
+           help='Make the template available for users from other tenants.')
 def do_env_template_create(mc, args):
     """Create an environment template."""
-    mc.env_templates.create({"name": args.name})
+    mc.env_templates.create({"name": args.name, "is_public": args.is_public})
     do_env_template_list(mc)
 
 
@@ -369,6 +371,32 @@ def do_env_template_delete(mc, args):
     if failure_count == len(args.id):
         raise exceptions.CommandError(mns)
     do_env_template_list(mc)
+
+
+@utils.arg("id", metavar="<ID>",
+           help="Environment template ID.")
+@utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
+           help="New environment template name.")
+def do_env_template_clone(mc, args):
+    """Create a new template, cloned from template."""
+    try:
+        env_template = mc.env_templates.clone(args.id, args.name)
+    except common_exceptions.HTTPNotFound:
+        raise exceptions.CommandError("Environment template %s not found"
+                                      % args.id)
+    else:
+        formatters = {
+            "id": utils.text_wrap_formatter,
+            "created": utils.text_wrap_formatter,
+            "updated": utils.text_wrap_formatter,
+            "version": utils.text_wrap_formatter,
+            "name": utils.text_wrap_formatter,
+            "tenant_id": utils.text_wrap_formatter,
+            "is_public": utils.text_wrap_formatter,
+            "services": utils.json_formatter,
+
+        }
+        utils.print_dict(env_template.to_dict(), formatters=formatters)
 
 
 @utils.arg("id", metavar="<ID>",

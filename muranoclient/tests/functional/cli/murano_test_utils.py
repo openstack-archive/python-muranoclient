@@ -65,6 +65,27 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
         self.addCleanup(self.delete_murano_object, murano_object, mrn_object)
         return mrn_object
 
+    def create_murano_object_parameter(self, murano_object, prefix_object_name,
+                                       param):
+        """Create Murano object like environment, category
+        or environment-template.
+        """
+        object_name = self.generate_name(prefix_object_name)
+        params = '{0} {1}'.format(param, object_name)
+
+        mrn_objects = self.listing('{0}-create'.format(murano_object),
+                                   params=params)
+        mrn_object = None
+        for obj in mrn_objects:
+            if object_name == obj['Name']:
+                mrn_object = obj
+                break
+        if mrn_object is None:
+            self.fail("Murano {0} has not been created!".format(murano_object))
+
+        self.addCleanup(self.delete_murano_object, murano_object, mrn_object)
+        return mrn_object
+
     @staticmethod
     def generate_uuid():
         """Generate uuid for objects."""

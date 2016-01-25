@@ -502,7 +502,7 @@ class ShellCommandTest(ShellTest):
         self.register_keystone_token_fixture(m_requests)
         self.shell('env-template-create env-name')
         self.client.env_templates.create.assert_called_once_with(
-            {'name': 'env-name'})
+            {'name': 'env-name', 'is_public': None})
 
     @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
     @requests_mock.mock()
@@ -524,6 +524,17 @@ class ShellCommandTest(ShellTest):
         self.shell('env-template-create-env env-id env-name')
         self.client.env_templates.create_env.\
             assert_called_once_with('env-id', 'env-name')
+
+    @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
+    @requests_mock.mock()
+    def test_env_template_clone(self, mock_manager, m_requests):
+        self.client.env_templates = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('env-template-clone env-id env-name')
+        self.client.env_templates.clone.assert_called_once_with(
+            'env-id', 'env-name')
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     @mock.patch('muranoclient.v1.deployments.DeploymentManager')
