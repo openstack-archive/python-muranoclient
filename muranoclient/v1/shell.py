@@ -514,6 +514,7 @@ def do_package_delete(mc, args):
 
 def _handle_package_exists(mc, data, package, exists_action):
     name = package.manifest['FullName']
+    version = package.manifest.get('Version', '0')
     while True:
         print("Importing package {0}".format(name))
         try:
@@ -536,7 +537,8 @@ def _handle_package_exists(mc, data, package, exists_action):
                 print("Exiting.")
                 sys.exit()
             elif res == 'u':
-                pkgs = list(mc.packages.filter(fqn=name, owned=True))
+                pkgs = list(mc.packages.filter(fqn=name, version=version,
+                                               owned=True))
                 if not pkgs:
                     msg = (
                         "Got a conflict response, but could not find the "

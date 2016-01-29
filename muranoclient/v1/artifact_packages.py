@@ -216,6 +216,7 @@ class PackageManagerAdapter(object):
     @rewrap_http_exceptions
     def filter(self, **kwargs):
         kwargs.pop('catalog', None)  # NOTE(ativelkov): Glare ignores 'catalog'
+        kwargs.pop('owned', None)  # NOTE(ativelkov): Glare ignores 'owned'
         include_disabled = kwargs.pop('include_disabled', False)
         order_by = kwargs.pop('order_by', None)
         search = kwargs.pop('search', None)
