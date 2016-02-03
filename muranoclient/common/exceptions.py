@@ -155,7 +155,7 @@ def from_response(response):
     body = response.content
     if body and response.headers['content-type'].\
        lower().startswith("application/json"):
-        # Iterate over the nested objects and retreive the "message" attribute.
+        # Iterate over the nested objects and retrieve the "message" attribute.
         messages = [obj.get('message') for obj in response.json().values()]
         # Join all of the messages together nicely and filter out any objects
         # that don't have a "message" attr.

@@ -404,7 +404,7 @@ class Package(FileWrapperMixin):
                         base_url=base_url,
                     )
                 except Exception as e:
-                    LOG.error("Error {0} occured while parsing package {1}, "
+                    LOG.error("Error {0} occurred while parsing package {1}, "
                               "required by {2} package".format(
                                   e, dep_name,
                                   self.manifest['FullName']))
@@ -529,7 +529,7 @@ def ensure_images(glance_client, image_specs, base_url,
                     glance_client.images.update(img['id'], is_public=True)
                     LOG.debug('Success update for image {0}'.format(img['id']))
                 except Exception as e:
-                    LOG.exception(_("Error {0} occured while setting "
+                    LOG.exception(_("Error {0} occurred while setting "
                                     "image {1} public").format(e, img['id']))
 
             installed_images.append(img)
@@ -602,7 +602,7 @@ class Bundle(FileWrapperMixin):
                 )
 
             except Exception as e:
-                LOG.error("Error {0} occured while obtaining "
+                LOG.error("Error {0} occurred while obtaining "
                           "package {1}".format(e, package['Name']))
                 continue
             yield pkg_obj
