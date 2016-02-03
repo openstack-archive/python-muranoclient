@@ -323,15 +323,15 @@ def do_env_template_show(mc, args):
         utils.print_dict(env_template.to_dict(), formatters=formatters)
 
 
-@utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
-           help="Environment template name.")
+@utils.arg("id", metavar="<ENV_TEMPLATE_ID>",
+           help="Environment template ID.")
 @utils.arg('app_template_file', metavar='<FILE>',
            help='Path to the template.')
 def do_env_template_add_app(mc, args):
     """Add application to the environment template."""
     with open(args.app_template_file, "r") as myfile:
         app_file = myfile.readlines()
-    mc.env_templates.create_app(args.name, app_file)
+    mc.env_templates.create_app(args.id, app_file)
     do_env_template_list(mc)
 
 
