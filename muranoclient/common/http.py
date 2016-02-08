@@ -389,14 +389,17 @@ def _construct_http_client(*args, **kwargs):
         endpoint_type = kwargs.pop('endpoint_type', None)
         region_name = kwargs.pop('region_name', None)
         service_name = kwargs.pop('service_name', None)
-        return SessionClient(endpoint_override=endpoint,
-                             session=session,
-                             auth=auth,
-                             interface=endpoint_type,
-                             service_type=service_type,
-                             region_name=region_name,
-                             service_name=service_name,
-                             user_agent='python-muranoclient',
-                             **kwargs)
+        parameters = {
+            'endpoint_override': endpoint,
+            'session': session,
+            'auth': auth,
+            'interface': endpoint_type,
+            'service_type': service_type,
+            'region_name': region_name,
+            'service_name': service_name,
+            'user_agent': 'python-muranoclient',
+        }
+        parameters.update(kwargs)
+        return SessionClient(**parameters)
     else:
         return HTTPClient(*args, **kwargs)
