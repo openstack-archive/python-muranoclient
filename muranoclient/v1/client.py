@@ -39,6 +39,7 @@ class Client(object):
         """Initialize a new client for the Murano v1 API."""
         self.glance_client = kwargs.pop('glance_client', None)
         tenant = kwargs.pop('tenant', None)
+        artifacts_client = kwargs.pop('artifacts_client', None)
         self.http_client = http._construct_http_client(*args, **kwargs)
         self.environments = environments.EnvironmentManager(self.http_client)
         self.env_templates = templates.EnvTemplateManager(self.http_client)
@@ -49,7 +50,6 @@ class Client(object):
             request_statistics.RequestStatisticsManager(self.http_client)
         self.instance_statistics = \
             instance_statistics.InstanceStatisticsManager(self.http_client)
-        artifacts_client = kwargs.pop('artifacts_client', None)
         pkg_mgr = packages.PackageManager(self.http_client)
         if artifacts_client:
             artifact_repo = artifact_packages.ArtifactRepo(artifacts_client,
