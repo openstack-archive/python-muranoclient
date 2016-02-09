@@ -76,11 +76,13 @@ def _generate_join_existing_net(net, subnet):
            help="Network id to join.",)
 @utils.arg("--join-subnet-id", metavar="<SUBNET_ID>",
            help="Subnetwork id to join.",)
+@utils.arg("--region", metavar="<REGION_NAME>",
+           help="Name of the target OpenStack region.",)
 @utils.arg("name", metavar="<ENVIRONMENT_NAME>",
            help="Environment name.")
 def do_environment_create(mc, args):
     """Create an environment."""
-    body = {"name": args.name}
+    body = {"name": args.name, "region": args.region}
     if args.join_net_id or args.join_subnet_id:
         body.update(_generate_join_existing_net(
             args.join_net_id, args.join_subnet_id))

@@ -338,20 +338,24 @@ class ShellCommandTest(ShellTest):
 
         self.shell('environment-create foo')
         self.client.environments.create.assert_has_calls(
-            [mock.call({'name': 'foo'})])
+            [mock.call({'name': 'foo', 'region': None})])
         self.client.environments.create.reset_mock()
-        self.shell('environment-create --join-net 123 foo')
+        self.shell('environment-create --join-net 123 foo --region RegionOne')
         cc = self.client.environments.create
-        expected_call = mock.call(
-            {'defaultNetworks':
-                {'environment':
-                    {'internalNetworkName': '123',
-                        '?':
-                        {'type': 'io.murano.resources.ExistingNeutronNetwork',
-                            'id': mock.ANY}},
-                    'flat': None},
-             'name': 'foo',
-             })
+        expected_call = mock.call({
+            'defaultNetworks': {
+                'environment': {
+                    'internalNetworkName': '123',
+                    '?': {
+                        'type': 'io.murano.resources.ExistingNeutronNetwork',
+                        'id': mock.ANY
+                    }
+                },
+                'flat': None
+            },
+            'name': 'foo',
+            'region': 'RegionOne'
+        })
         self.assertEqual(expected_call, cc.call_args)
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
