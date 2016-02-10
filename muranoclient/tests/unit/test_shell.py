@@ -235,7 +235,8 @@ class ShellCommandTest(ShellTest):
         self.shell('package-list')
         self.client.packages.filter.assert_called_once_with(
             include_disabled=False,
-            limit=20)
+            limit=20,
+            owned=False)
 
     @mock.patch('muranoclient.v1.packages.PackageManager')
     @requests_mock.mock()
@@ -247,7 +248,36 @@ class ShellCommandTest(ShellTest):
         self.shell('package-list --limit 10')
         self.client.packages.filter.assert_called_once_with(
             include_disabled=False,
-            limit=10)
+            limit=10,
+            owned=False)
+
+    @mock.patch('muranoclient.v1.packages.PackageManager')
+    @requests_mock.mock()
+    def test_package_list_with_name(self, mock_package_manager, m_requests):
+        self.client.packages = mock_package_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('package-list --name mysql')
+        self.client.packages.filter.assert_called_once_with(
+            name='mysql',
+            include_disabled=False,
+            owned=False,
+            limit=20)
+
+    @mock.patch('muranoclient.v1.packages.PackageManager')
+    @requests_mock.mock()
+    def test_package_list_with_fqn(self, mock_package_manager, m_requests):
+        self.client.packages = mock_package_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('package-list --fqn mysql')
+        self.client.packages.filter.assert_called_once_with(
+            fqn='mysql',
+            include_disabled=False,
+            owned=False,
+            limit=20)
 
     @mock.patch('muranoclient.v1.packages.PackageManager')
     @requests_mock.mock()

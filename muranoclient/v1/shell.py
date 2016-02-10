@@ -418,6 +418,29 @@ def do_deployment_list(mc, args):
 
 @utils.arg("--limit", type=int, default=DEFAULT_PAGE_SIZE)
 @utils.arg("--include-disabled", default=False, action="store_true")
+@utils.arg("--owned", default=False, action="store_true")
+@utils.arg('--search', metavar='<SEARCH_KEYS>',
+           dest='search', required=False,
+           help='Show packages, that match search keys fuzzily')
+@utils.arg('--name', metavar='<PACKAGE_NAME>',
+           dest='name', required=False,
+           help='Show packages, whose name match parameter exactly')
+@utils.arg('--fqn', metavar="<PACKAGE_FULLY_QUALIFIED_NAME>",
+           dest='fqn', required=False,
+           help='Show packages, '
+                'whose fully qualified name match parameter exactly')
+@utils.arg('--type', metavar='<PACKAGE_TYPE>',
+           dest='type', required=False,
+           help='Show packages, whose type match parameter exactly')
+@utils.arg('--category', metavar='<PACKAGE_CATEGORY>',
+           dest='category', required=False,
+           help='Show packages, whose categories include parameter')
+@utils.arg('--class_name', metavar='<PACKAGE_CLASS_NAME>',
+           dest='class_name', required=False,
+           help='Show packages, whose class name match parameter exactly')
+@utils.arg('--tag', metavar='<PACKAGE_TAG>',
+           dest='tag', required=False,
+           help='Show packages, whose tags include parameter')
 def do_package_list(mc, args=None):
     """List available packages."""
     if args is None:
@@ -425,7 +448,24 @@ def do_package_list(mc, args=None):
     filter_args = {
         "include_disabled": getattr(args, 'include_disabled', False),
         "limit": getattr(args, 'limit', DEFAULT_PAGE_SIZE),
+        "owned": getattr(args, 'owned', False),
     }
+    if args:
+        if args.search:
+            filter_args['search'] = args.search
+        if args.name:
+            filter_args['name'] = args.name
+        if args.fqn:
+            filter_args['fqn'] = args.fqn
+        if args.type:
+            filter_args['type'] = args.type
+        if args.category:
+            filter_args['category'] = args.category
+        if args.class_name:
+            filter_args['class_name'] = args.class_name
+        if args.tag:
+            filter_args['tag'] = args.tag
+
     packages = mc.packages.filter(**filter_args)
     field_labels = ["ID", "Name", "FQN", "Author", "Active",
                     "Is Public", "Type"]
