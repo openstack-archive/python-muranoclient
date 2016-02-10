@@ -390,7 +390,7 @@ class ShellTest(base.TestCaseShell):
         self.client.actions = mock_manager()
         self.make_env()
         self.shell('environment-action-get-result 12345 --task-id 54321')
-        self.client.actions.call.assert_called_once_with(
+        self.client.actions.get_result.assert_called_once_with(
             '12345', '54321')
 
     @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
