@@ -201,7 +201,7 @@ def do_environment_action_call(mc, args):
            help="ID of action to run.")
 def do_environment_action_get_result(mc, args):
     """Get result of `TASK` in environment `ID`."""
-    result = mc.actions.call(args.id, args.task_id)
+    result = mc.actions.get_result(args.id, args.task_id)
     print("Task id result: {0}".format(result))
 
 
