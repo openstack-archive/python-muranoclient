@@ -12,8 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import re
-import types
 
+import six
 import yaql
 
 
@@ -33,7 +33,7 @@ class YaqlExpression(object):
 
     @staticmethod
     def match(expr):
-        if not isinstance(expr, types.StringTypes):
+        if not isinstance(expr, six.string_types):
             return False
         if re.match('^[\s\w\d.:]*$', expr):
             return False

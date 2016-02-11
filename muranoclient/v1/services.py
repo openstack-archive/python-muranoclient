@@ -14,7 +14,6 @@
 
 import functools
 import posixpath
-import types
 
 from muranoclient.common import base
 
@@ -81,7 +80,7 @@ class ServiceManager(base.Manager):
                               format(environment_id, path), data,
                               headers=headers, return_raw=True)
 
-        if isinstance(result, types.ListType):
+        if isinstance(result, list):
             return [self.resource_class(self, item) for item in result]
         else:
             return self.resource_class(self, result)
