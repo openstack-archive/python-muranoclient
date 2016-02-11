@@ -355,7 +355,7 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
         """
 
         env_template = self.create_murano_object_parameter(
-            'env-template', 'TestMuranoSanityEnvTemp', '--is-public true')
+            'env-template', 'TestMuranoSanityEnvTemp', '--is-public')
         new_template = self.generate_name('TestMuranoSanityEnvTemp')
 
         params = "{0} {1}".format(env_template['ID'], new_template)
