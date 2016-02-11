@@ -277,7 +277,7 @@ def do_env_template_list(mc, args=None):
 
 @utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
            help="Environment template name.")
-@utils.arg("--is-public", type=bool,
+@utils.arg("--is-public", action='store_true', default=False,
            help='Make the template available for users from other tenants.')
 def do_env_template_create(mc, args):
     """Create an environment template."""
