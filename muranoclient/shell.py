@@ -340,15 +340,6 @@ class MuranoShell(object):
                                    " or a token via --os-auth-token or"
                                    " env[OS_AUTH_TOKEN]")
 
-        if not any([args.os_tenant_name, args.os_tenant_id,
-                    args.os_project_id, args.os_project_name]):
-            raise exc.CommandError("You must provide a project name or"
-                                   " project id via --os-project-name,"
-                                   " --os-project-id, env[OS_PROJECT_ID]"
-                                   " or env[OS_PROJECT_NAME]. You may"
-                                   " use os-project and os-tenant"
-                                   " interchangeably.")
-
         if args.os_no_client_auth:
             if not args.murano_url:
                 raise exc.CommandError(
@@ -367,16 +358,14 @@ class MuranoShell(object):
             # Tenant name or ID is needed to make keystoneclient retrieve a
             # service catalog, it's not required if os_no_client_auth is
             # specified, neither is the auth URL.
-            if not (args.os_tenant_id or args.os_tenant_name):
-                raise exc.CommandError(
-                    "You must provide a tenant name "
-                    "or tenant id via --os-tenant-name, "
-                    "--os-tenant-id, env[OS_TENANT_NAME] "
-                    "or env[OS_TENANT_ID] OR a project name "
-                    "or project id via --os-project-name, "
-                    "--os-project-id, env[OS_PROJECT_ID] or "
-                    "env[OS_PROJECT_NAME]")
-
+            if not any([args.os_tenant_name, args.os_tenant_id,
+                        args.os_project_id, args.os_project_name]):
+                raise exc.CommandError("You must provide a project name or"
+                                       " project id via --os-project-name,"
+                                       " --os-project-id, env[OS_PROJECT_ID]"
+                                       " or env[OS_PROJECT_NAME]. You may"
+                                       " use os-project and os-tenant"
+                                       " interchangeably.")
             if not args.os_auth_url:
                 raise exc.CommandError("You must provide an auth url via"
                                        " either --os-auth-url or via"
