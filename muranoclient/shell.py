@@ -246,7 +246,13 @@ class MuranoShell(object):
     def _get_keystone_auth(self, session, auth_url, **kwargs):
         auth_token = kwargs.pop('auth_token', None)
         if auth_token:
-            return token.Token(auth_url, auth_token, **kwargs)
+            return token.Token(
+                auth_url,
+                auth_token,
+                project_id=kwargs.pop('project_id'),
+                project_name=kwargs.pop('project_name'),
+                project_domain_id=kwargs.pop('project_domain_id'),
+                project_domain_name=kwargs.pop('project_domain_name'))
 
         # NOTE(starodubcevna): this is a workaround for the bug:
         # https://bugs.launchpad.net/python-openstackclient/+bug/1447704
