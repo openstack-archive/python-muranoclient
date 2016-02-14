@@ -331,9 +331,9 @@ def do_env_template_show(mc, args):
            help='Path to the template.')
 def do_env_template_add_app(mc, args):
     """Add application to the environment template."""
-    with open(args.app_template_file, "r") as myfile:
-        app_file = myfile.readlines()
-    mc.env_templates.create_app(args.id, app_file)
+    with open(args.app_template_file, "r") as app_file:
+        app_template = json.load(app_file)
+    mc.env_templates.create_app(args.id, app_template)
     do_env_template_list(mc)
 
 
