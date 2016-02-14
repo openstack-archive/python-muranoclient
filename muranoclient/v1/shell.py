@@ -47,6 +47,10 @@ def do_environment_list(mc, args=None):
         args = {}
     all_tenants = getattr(args, 'all_tenants', False)
     environments = mc.environments.list(all_tenants)
+    _print_environment_list(environments)
+
+
+def _print_environment_list(environments):
     field_labels = ['ID', 'Name', 'Status', 'Created', 'Updated']
     fields = ['id', 'name', 'status', 'created', 'updated']
     utils.print_list(environments, fields, field_labels, sortby=0)
@@ -86,8 +90,8 @@ def do_environment_create(mc, args):
     if args.join_net_id or args.join_subnet_id:
         body.update(_generate_join_existing_net(
             args.join_net_id, args.join_subnet_id))
-    mc.environments.create(body)
-    do_environment_list(mc)
+    environment = mc.environments.create(body)
+    _print_environment_list([environment])
 
 
 @utils.arg("id", metavar="<NAME or ID>",
@@ -121,11 +125,11 @@ def do_environment_rename(mc, args):
     """Rename an environment."""
     try:
         environment = utils.find_resource(mc.environments, args.id)
-        mc.environments.update(environment.id, args.name)
+        environment = mc.environments.update(environment.id, args.name)
     except exceptions.NotFound:
         raise exceptions.CommandError("Environment %s not found" % args.id)
     else:
-        do_environment_list(mc)
+        _print_environment_list([environment])
 
 
 @utils.arg("id", metavar="<NAME or ID>",
@@ -270,6 +274,10 @@ def do_env_template_list(mc, args=None):
     if args is None:
         args = {}
     env_templates = mc.env_templates.list()
+    _print_env_template_list(env_templates)
+
+
+def _print_env_template_list(env_templates):
     field_labels = ['ID', 'Name', 'Created', 'Updated', 'Is public']
     fields = ['id', 'name', 'created', 'updated', 'is_public']
     utils.print_list(env_templates, fields, field_labels, sortby=0)
@@ -281,8 +289,9 @@ def do_env_template_list(mc, args=None):
            help='Make the template available for users from other tenants.')
 def do_env_template_create(mc, args):
     """Create an environment template."""
-    mc.env_templates.create({"name": args.name, "is_public": args.is_public})
-    do_env_template_list(mc)
+    env_template = mc.env_templates.create(
+        {"name": args.name, "is_public": args.is_public})
+    _print_env_template_list([env_template])
 
 
 @utils.arg("id", metavar="<ID>",
@@ -334,7 +343,7 @@ def do_env_template_add_app(mc, args):
     with open(args.app_template_file, "r") as app_file:
         app_template = json.load(app_file)
     mc.env_templates.create_app(args.id, app_template)
-    do_env_template_list(mc)
+    do_env_template_show(mc, args)
 
 
 @utils.arg("id", metavar="<ENV_TEMPLATE_ID>",
@@ -343,8 +352,8 @@ def do_env_template_add_app(mc, args):
            help="Application ID.")
 def do_env_template_del_app(mc, args):
     """Delete application from the environment template."""
-    mc.env_templates.delete_app(args.name, args.app_id)
-    do_env_template_list(mc)
+    mc.env_templates.delete_app(args.id, args.app_id)
+    do_env_template_show(mc, args)
 
 
 @utils.arg("id", metavar="<ID>",
@@ -353,8 +362,8 @@ def do_env_template_del_app(mc, args):
            help="Environment template name.")
 def do_env_template_update(mc, args):
     """Update an environment template."""
-    mc.env_templates.update(args.id, args.name)
-    do_env_template_list(mc)
+    env_template = mc.env_templates.update(args.id, args.name)
+    _print_env_template_list([env_template])
 
 
 @utils.arg("id", metavar="<ID>",
@@ -467,6 +476,10 @@ def do_package_list(mc, args=None):
             filter_args['tag'] = args.tag
 
     packages = mc.packages.filter(**filter_args)
+    _print_package_list(packages)
+
+
+def _print_package_list(packages):
     field_labels = ["ID", "Name", "FQN", "Author", "Active",
                     "Is Public", "Type"]
     fields = ["id", "name", "fully_qualified_name", "author",
@@ -542,7 +555,6 @@ def do_package_delete(mc, args):
             mc.packages.delete(package_id)
             print("Deleted package '{0}'".format(package_id))
         except exceptions.NotFound:
-            raise exceptions.CommandError("Package %s not found" % package_id)
             failure_count += 1
             print("Failed to delete '{0}'; package not found".
                   format(package_id))
@@ -574,7 +586,7 @@ def _handle_package_exists(mc, data, package, exists_action):
                         break
             if res == 's':
                 print("Skipping.")
-                return
+                return None
             elif res == 'a':
                 print("Exiting.")
                 sys.exit()
@@ -631,8 +643,6 @@ def do_package_import(mc, args):
     if args.categories:
         data["categories"] = args.categories
 
-    should_do_list = False
-
     total_reqs = {}
     for filename in args.filename:
         if os.path.isfile(filename):
@@ -653,8 +663,9 @@ def do_package_import(mc, args):
             print("Failed to create package for '{0}', reason: {1}".format(
                 filename, e))
             continue
-        should_do_list = True
         total_reqs.update(package.requirements(base_url=args.murano_repo_url))
+
+    imported_list = []
 
     for name, package in six.iteritems(total_reqs):
         image_specs = package.images()
@@ -673,13 +684,16 @@ def do_package_import(mc, args):
                 print("Error {0} occurred while installing "
                       "images for {1}".format(e, name))
         try:
-            _handle_package_exists(mc, data, package, args.exists_action)
+            imported_package = _handle_package_exists(
+                mc, data, package, args.exists_action)
+            if imported_package:
+                imported_list.append(imported_package)
         except Exception as e:
             print("Error {0} occurred while installing package {1}".format(
                 e, name))
 
-    if should_do_list:
-        do_package_list(mc)
+    if imported_list:
+        _print_package_list(imported_list)
 
 
 @utils.arg("id", metavar="<ID>",
@@ -722,7 +736,6 @@ def do_bundle_import(mc, args):
     file names, relative to location of the bundle file. Requirements
     are first searched in the same directory.
     """
-    should_do_list = False
     total_reqs = {}
     for filename in args.filename:
         local_path = None
@@ -746,7 +759,6 @@ def do_bundle_import(mc, args):
                 filename, e))
             continue
 
-        should_do_list = True
         data = {"is_public": args.is_public}
 
         for package in bundle_file.packages(
@@ -757,6 +769,8 @@ def do_bundle_import(mc, args):
                 path=local_path,
             )
             total_reqs.update(requirements)
+
+    imported_list = []
 
     for name, dep_package in six.iteritems(total_reqs):
         image_specs = dep_package.images()
@@ -776,15 +790,17 @@ def do_bundle_import(mc, args):
                 print("Error {0} occurred while installing "
                       "images for {1}".format(e, name))
         try:
-            _handle_package_exists(
+            imported_package = _handle_package_exists(
                 mc, data, dep_package, args.exists_action)
+            if imported_package:
+                imported_list.append(imported_package)
         except exceptions.CommandError:
             raise
         except Exception as e:
             print("Error {0} occurred while "
                   "installing package {1}".format(e, name))
-    if should_do_list:
-        do_package_list(mc)
+    if imported_list:
+        _print_package_list(imported_list)
 
 
 def _handle_save_packages(packages, dst, base_url, no_images):
@@ -1027,6 +1043,10 @@ def do_category_list(mc, args=None):
     if args is None:
         args = {}
     categories = mc.categories.list()
+    _print_category_list(categories)
+
+
+def _print_category_list(categories):
     field_labels = ["ID", "Name"]
     fields = ["id", "name"]
     utils.print_list(categories, fields, field_labels)
@@ -1048,8 +1068,8 @@ def do_category_show(mc, args):
            help="Category name.")
 def do_category_create(mc, args):
     """Create a category."""
-    mc.categories.add({"name": args.name})
-    do_category_list(mc)
+    category = mc.categories.add({"name": args.name})
+    _print_category_list([category])
 
 
 @utils.arg("id", metavar="<ID>",

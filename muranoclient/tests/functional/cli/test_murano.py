@@ -484,7 +484,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
             self.dummy_app_path,
             '--exists-action', 's'
         )
-        skip_package = self.import_package(
+        updated_package = self.import_package(
             self.app_name,
             self.dummy_app_path,
             '--exists-action', 's'
@@ -492,7 +492,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
         package_list = self.listing("package-list")
 
         self.assertIn(package, package_list)
-        self.assertEqual(package, skip_package)
+        self.assertIsNone(updated_package)
 
     def test_package_import_abort(self):
         """Test scenario:
