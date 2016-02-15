@@ -607,7 +607,7 @@ def _handle_package_exists(mc, data, package, exists_action):
            help='Category list to attach.')
 @utils.arg('--is-public', action='store_true', default=False,
            help='Make the package available for users from other tenants.')
-@utils.arg('--version', default='',
+@utils.arg('--package-version', default='',
            help='Version of the package to use from repository '
                 '(ignored when importing with multiple packages).')
 @utils.arg('--exists-action', default='', choices=['a', 's', 'u'],
@@ -622,7 +622,7 @@ def do_package_import(mc, args):
     """
     data = {"is_public": args.is_public}
 
-    version = args.version
+    version = args.package_version
     if version and len(args.filename) >= 2:
         print("Requested to import more than one package, "
               "ignoring version.")
@@ -879,7 +879,7 @@ def do_bundle_save(mc, args):
 @utils.arg('-p', '--path', metavar='<PATH>',
            help='Path to the directory to store package. If not set will use '
                 'current directory.')
-@utils.arg('--version', default='',
+@utils.arg('--package-version', default='',
            help='Version of the package to use from repository '
                 '(ignored when saving with multiple packages).')
 @utils.arg('--no-images', action='store_true', default=False,
@@ -898,7 +898,7 @@ def do_package_save(mc, args):
     else:
         dst = os.getcwd()
 
-    version = args.version
+    version = args.package_version
     if version and len(args.filename) >= 2:
         print("Requested to save more than one package, "
               "ignoring version.")

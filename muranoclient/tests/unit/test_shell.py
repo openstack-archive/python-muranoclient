@@ -69,7 +69,7 @@ def _create_ver_list(versions):
 
 
 class TestArgs(object):
-    version = ''
+    package_version = ''
     murano_repo_url = 'http://127.0.0.1'
     exists_action = ''
     is_public = False

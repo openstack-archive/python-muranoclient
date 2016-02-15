@@ -1,0 +1,5 @@
+---
+fixes:
+  - Fixes use murano package-import with version parameter,
+    It always shows version of client. Rename the parameter
+    'version' to 'package-version'
