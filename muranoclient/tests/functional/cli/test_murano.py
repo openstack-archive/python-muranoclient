@@ -36,7 +36,8 @@ class SimpleReadOnlyMuranoClientTest(utils.CLIUtilsTestBase):
 
     def test_environment_list(self):
         environment = self.get_table_struct('environment-list')
-        self.assertEqual(['ID', 'Name', 'Created', 'Updated'], environment)
+        self.assertEqual(['ID', 'Name', 'Status', 'Created', 'Updated'],
+                         environment)
 
     def test_package_list(self):
         packages = self.get_table_struct('package-list')
@@ -69,7 +70,8 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
         """
         self.create_murano_object('environment', 'MuranoTestTS-env-create')
         table_struct = self.get_table_struct('environment-list')
-        self.assertEqual(['ID', 'Name', 'Created', 'Updated'], table_struct)
+        self.assertEqual(['ID', 'Name', 'Status', 'Created', 'Updated'],
+                         table_struct)
 
     def test_table_struct_of_environment_delete(self):
         """Test scenario:
@@ -81,7 +83,8 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
                                                 'MuranoTestTS-env-del')
         self.delete_murano_object('environment', environment)
         table_struct = self.get_table_struct('environment-list')
-        self.assertEqual(['ID', 'Name', 'Created', 'Updated'], table_struct)
+        self.assertEqual(['ID', 'Name', 'Status', 'Created', 'Updated'],
+                         table_struct)
 
     def test_table_struct_of_category_create(self):
         """Test scenario:
