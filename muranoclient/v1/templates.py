@@ -76,7 +76,7 @@ class EnvTemplateManager(base.Manager):
         :param app_id: the application ID to be deleted.
         """
         return self._delete('/v1/templates/{id}/services/{app_id}'.
-                            format(id=env_template_id, service_id=app_id))
+                            format(id=env_template_id, app_id=app_id))
 
     def create_env(self, env_template_id, name):
         """It creates new environment from template.
