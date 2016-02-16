@@ -396,8 +396,6 @@ class MuranoShell(object):
             project_id = args.os_project_id or args.os_tenant_id
             project_name = args.os_project_name or args.os_tenant_name
 
-            keystone_session = ksession.Session.load_from_cli_options(args)
-
             keystone_auth = self._get_keystone_auth(
                 keystone_session,
                 args.os_auth_url,
