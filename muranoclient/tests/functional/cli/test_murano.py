@@ -277,6 +277,15 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
         self.assertIn("Failed to delete 'non-existing'; category not found",
                       result)
 
+    def test_non_existing_category_show(self):
+        """Test scenario:
+            1) try to call category-show for non existing category
+            2) check that error message contains user friendly substring
+        """
+        result = self.murano('category-show', params='non-existing',
+                             fail_ok=True)
+        self.assertIn("Category id 'non-existing' not found", result)
+
 
 class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
     """Sanity tests for testing actions with Environment template.
