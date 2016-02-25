@@ -728,3 +728,17 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
                       result)
         self.assertIn("reason: Got non-ok status(404) while connecting to",
                       result)
+
+    def test_bundle_import_with_invalid_file_format(self):
+        """Test scenario:
+            1) Execute murano bundle-import command with invalid bundle file
+            format
+            2) check that error message contains user friendly substring
+        """
+        try:
+            self.murano(
+                'bundle-import',
+                params=self.prepare_bundle_with_invalid_format(),
+                fail_ok=False)
+        except utils.exceptions.CommandFailed as exception:
+            self.assertIn("Can't parse bundle contents", exception.stdout)

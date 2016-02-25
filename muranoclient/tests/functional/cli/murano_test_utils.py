@@ -222,6 +222,15 @@ class CLIUtilsTestPackagesBase(TestSuiteRepository):
 
         return temp_file.name
 
+    def prepare_bundle_with_invalid_format(self):
+        temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        self.addCleanup(os.remove, temp_file.name)
+
+        with open(temp_file.name, 'w') as tf:
+            tf.write('Packages: [{Name: first_app}, {Name: second_app}]')
+
+        return temp_file.name
+
     def deploy_environment(self, env_id, obj_model):
         session = self.listing('environment-session-create',
                                params=env_id)
