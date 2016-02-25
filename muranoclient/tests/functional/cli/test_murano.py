@@ -702,3 +702,16 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
             fail_ok=False)
         self.assertIn("Couldn't find file for package", result)
         self.assertIn("Error Got non-ok status(404) while connecting", result)
+
+    def test_bundle_import_with_non_existing_name(self):
+        """Test scenario:
+            1) Execute murano bundle-import command with non-existing bundle
+            name
+            2) check that error message contains user friendly substring
+        """
+        result = self.murano('bundle-import', params=self.app_name,
+                             fail_ok=True)
+        self.assertIn("Bundle file '{}' does not exist".format(self.app_name),
+                      result)
+        self.assertIn("reason: Got non-ok status(404) while connecting to",
+                      result)
