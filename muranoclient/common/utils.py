@@ -576,11 +576,8 @@ class Bundle(FileWrapperMixin):
             except yaml.error.YAMLError:
                 pass
 
-        if bundle is None:
+        if bundle is None or 'Packages' not in bundle:
             raise ValueError("Can't parse bundle contents")
-
-        if 'Packages' not in bundle:
-            return
 
         for package in bundle['Packages']:
             if 'Name' not in package:
