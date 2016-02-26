@@ -35,6 +35,7 @@ def make_client(instance):
               application_catalog_client))
 
     client = application_catalog_client(
+        instance.get_configuration().get('murano_url'),
         region_name=instance._region_name,
         session=instance.session,
         service_type='application-catalog',
@@ -53,4 +54,7 @@ def build_option_parser(parser):
         help=_("Application catalog API version, default={0}"
                "(Env:OS_APPLICATION_CATALOG_API_VERSION)").format(
                    DEFAULT_APPLICATION_CATALOG_API_VERSION))
+    parser.add_argument('--murano-url',
+                        default=utils.env('MURANO_URL'),
+                        help=_('Defaults to env[MURANO_URL].'))
     return parser

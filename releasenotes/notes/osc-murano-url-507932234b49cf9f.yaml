@@ -1,0 +1,3 @@
+---
+features:
+  - OSC plugin now honores ``--murano-url`` and ``MURANO_URL``, to allow using custom murano endpoint

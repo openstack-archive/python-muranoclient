@@ -27,6 +27,8 @@ class TestApplicationCatalogPlugin(base.TestCaseShell):
         instance.session = 'murano_session'
 
         plugin.make_client(instance)
-        p_client.assert_called_with(region_name='murano_region',
-                                    session='murano_session',
-                                    service_type='application-catalog')
+        p_client.assert_called_with(
+            mock.ANY,
+            region_name='murano_region',
+            session='murano_session',
+            service_type='application-catalog')
