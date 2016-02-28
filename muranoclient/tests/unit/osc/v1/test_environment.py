@@ -50,7 +50,8 @@ class TestListEnvironment(TestEnvironment):
         verifylist = []
 
         mock_util.return_value = ('1234', 'Environment of all tenants',
-                                  '2015-12-16T17:31:54', '2015-12-16T17:31:54'
+                                  'fake deployed', '2015-12-16T17:31:54',
+                                  '2015-12-16T17:31:54'
                                   )
 
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -58,12 +59,13 @@ class TestListEnvironment(TestEnvironment):
         columns, data = self.cmd.take_action(parsed_args)
 
         # Check that columns are correct
-        expected_columns = ['Id', 'Name', 'Created', 'Updated']
+        expected_columns = ['Id', 'Name', 'Status', 'Created', 'Updated']
         self.assertEqual(expected_columns, columns)
 
         # Check that data is correct
         expected_data = [('1234', 'Environment of all tenants',
-                          '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
+                          'fake deployed', '2015-12-16T17:31:54',
+                          '2015-12-16T17:31:54')]
         self.assertEqual(expected_data, data)
 
     @mock.patch('openstackclient.common.utils.get_item_properties')
@@ -72,7 +74,8 @@ class TestListEnvironment(TestEnvironment):
         verifylist = [('all_tenants', True)]
 
         mock_util.return_value = ('1234', 'Environment of all tenants',
-                                  '2015-12-16T17:31:54', '2015-12-16T17:31:54'
+                                  'fake deployed', '2015-12-16T17:31:54',
+                                  '2015-12-16T17:31:54'
                                   )
 
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
@@ -80,12 +83,13 @@ class TestListEnvironment(TestEnvironment):
         columns, data = self.cmd.take_action(parsed_args)
 
         # Check that columns are correct
-        expected_columns = ['Id', 'Name', 'Created', 'Updated']
+        expected_columns = ['Id', 'Name', 'Status', 'Created', 'Updated']
         self.assertEqual(expected_columns, columns)
 
         # Check that data is correct
         expected_data = [('1234', 'Environment of all tenants',
-                          '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
+                          'fake deployed', '2015-12-16T17:31:54',
+                          '2015-12-16T17:31:54')]
         self.assertEqual(expected_data, data)
 
 
@@ -175,19 +179,20 @@ class TestRenameEnvironment(TestEnvironment):
         arglist = ['1234', 'fake-1']
         verifylist = [('id', '1234'), ('name', 'fake-1')]
 
-        mock_util.return_value = ('1234', 'fake-1', '2015-12-16T17:31:54',
-                                  '2015-12-16T17:31:54')
+        mock_util.return_value = ('1234', 'fake-1', 'fake deployed',
+                                  '2015-12-16T17:31:54', '2015-12-16T17:31:54'
+                                  )
 
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
 
         columns, data = self.cmd.take_action(parsed_args)
 
         # Check that columns are correct
-        expected_columns = ['Id', 'Name', 'Created', 'Updated']
+        expected_columns = ['Id', 'Name', 'Status', 'Created', 'Updated']
         self.assertEqual(expected_columns, columns)
 
         # Check that data is correct
-        expected_data = [('1234', 'fake-1',
+        expected_data = [('1234', 'fake-1', 'fake deployed',
                           '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
         self.assertEqual(expected_data, data)
 
@@ -216,4 +221,173 @@ class TestEnvironmentSessionCreate(TestEnvironment):
 
         # Check that data is correct
         expected_data = ['1abc2xyz']
+        self.assertEqual(expected_data, data)
+
+
+class TestEnvironmentCreate(TestEnvironment):
+    def setUp(self):
+        super(TestEnvironmentCreate, self).setUp()
+        self.environment_mock.create.return_value = [api_env.Environment(None,
+                                                     ENV_INFO)]
+
+        # Command to test
+        self.cmd = osc_env.EnvironmentCreate(self.app, None)
+
+    @mock.patch('openstackclient.common.utils.get_item_properties')
+    def test_environment_create_with_no_option(self, mock_util):
+        arglist = ['fake']
+        verifylist = [('name', 'fake')]
+
+        mock_util.return_value = ('1234', 'fake', 'ready',
+                                  '2015-12-16T17:31:54', '2015-12-16T17:31:54')
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ['Id', 'Name', 'Status', 'Created', 'Updated']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'fake', 'ready',
+                          '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
+        self.assertEqual(expected_data, data)
+
+    @mock.patch('openstackclient.common.utils.get_item_properties')
+    def test_environment_create_with_region_option(self, mock_util):
+        arglist = ['fake', '--region', 'region_one']
+        verifylist = [('name', 'fake'), ('region', 'region_one')]
+
+        mock_util.return_value = ('1234', 'fake', 'ready',
+                                  '2015-12-16T17:31:54', '2015-12-16T17:31:54')
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that correct arguments are passed
+        self.environment_mock.create.assert_has_calls([mock.call(
+            {'name': 'fake', 'region': 'region_one'})])
+
+        # Check that columns are correct
+        expected_columns = ['Id', 'Name', 'Status', 'Created', 'Updated']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'fake', 'ready',
+                          '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
+        self.assertEqual(expected_data, data)
+
+    @mock.patch('openstackclient.common.utils.get_item_properties')
+    def test_environment_create_with_net_option(self, mock_util):
+        arglist = ['fake', '--join-net-id', 'x1y2z3']
+        verifylist = [('name', 'fake'), ('join_net_id', 'x1y2z3')]
+
+        mock_util.return_value = ('1234', 'fake', 'ready',
+                                  '2015-12-16T17:31:54', '2015-12-16T17:31:54')
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        expected_call = {
+            'defaultNetworks': {
+                'environment': {
+                    'internalNetworkName': 'x1y2z3',
+                    '?': {
+                        'type': 'io.murano.resources.ExistingNeutronNetwork',
+                        'id': mock.ANY
+                    }
+                },
+                'flat': None
+            },
+            'name': 'fake',
+            'region': None
+        }
+
+        # Check that correct arguments are passed
+        self.environment_mock.create.assert_called_with(expected_call)
+
+        # Check that columns are correct
+        expected_columns = ['Id', 'Name', 'Status', 'Created', 'Updated']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'fake', 'ready',
+                          '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
+        self.assertEqual(expected_data, data)
+
+    @mock.patch('openstackclient.common.utils.get_item_properties')
+    def test_environment_create_with_subnet_option(self, mock_util):
+        arglist = ['fake', '--join-subnet-id', 'x1y2z3']
+        verifylist = [('name', 'fake'), ('join_subnet_id', 'x1y2z3')]
+
+        mock_util.return_value = ('1234', 'fake', 'ready',
+                                  '2015-12-16T17:31:54', '2015-12-16T17:31:54')
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        expected_call = {
+            'defaultNetworks': {
+                'environment': {
+                    'internalSubnetworkName': 'x1y2z3',
+                    '?': {
+                        'type': 'io.murano.resources.ExistingNeutronNetwork',
+                        'id': mock.ANY
+                    }
+                },
+                'flat': None
+            },
+            'name': 'fake',
+            'region': None
+        }
+
+        # Check that correct arguments are passed
+        self.environment_mock.create.assert_called_with(expected_call)
+
+        # Check that columns are correct
+        expected_columns = ['Id', 'Name', 'Status', 'Created', 'Updated']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'fake', 'ready',
+                          '2015-12-16T17:31:54', '2015-12-16T17:31:54')]
+        self.assertEqual(expected_data, data)
+
+
+class TestEnvironmentDelete(TestEnvironment):
+    def setUp(self):
+        super(TestEnvironmentDelete, self).setUp()
+        self.environment_mock.delete.return_value = None
+        self.environment_mock.list.return_value = [api_env.Environment(None,
+                                                   ENV_INFO)]
+
+        # Command to test
+        self.cmd = osc_env.EnvironmentDelete(self.app, None)
+
+    @mock.patch('openstackclient.common.utils.get_item_properties')
+    def test_environment_delete(self, mock_util):
+        arglist = ['fake1', 'fake2']
+        verifylist = [('id', ['fake1', 'fake2'])]
+
+        mock_util.return_value = ('1234', 'Environment of all tenants',
+                                  'fake deployed', '2015-12-16T17:31:54',
+                                  '2015-12-16T17:31:54'
+                                  )
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ['Id', 'Name', 'Status', 'Created', 'Updated']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'Environment of all tenants',
+                          'fake deployed', '2015-12-16T17:31:54',
+                          '2015-12-16T17:31:54')]
         self.assertEqual(expected_data, data)

@@ -1,0 +1,6 @@
+---
+features:
+    - New OSC command ``environment create [--join-net-id <NET_ID>]
+      [--join-subnet-id <SUBNET_ID>] [--region <REGION_NAME>] <ENVIRONMENT_NAME>``
+    - New OSC command ``environment delete [--abandon] <NAME or ID>
+      [<NAME or ID> ...]``

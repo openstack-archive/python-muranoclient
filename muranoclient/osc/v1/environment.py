@@ -12,18 +12,21 @@
 
 """Application-catalog v1 stack action implementation"""
 
+import uuid
+
 from cliff import lister
 from cliff import show
 from muranoclient.common import utils as murano_utils
+from muranoclient.openstack.common.apiclient import exceptions
 from openstackclient.common import utils
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 
+LOG = logging.getLogger(__name__)
+
 
 class ListEnvironments(lister.Lister):
     """Lists environments"""
-
-    log = logging.getLogger(__name__ + ".ListEnvironments")
 
     def get_parser(self, prog_name):
         parser = super(ListEnvironments, self).get_parser(prog_name)
@@ -37,13 +40,12 @@ class ListEnvironments(lister.Lister):
         return parser
 
     def take_action(self, parsed_args):
-        self.log.debug("take_action({0})".format(parsed_args))
+        LOG.debug("take_action({0})".format(parsed_args))
         client = self.app.client_manager.application_catalog
         data = client.environments.list(parsed_args.all_tenants)
 
-        columns = ('id', 'name', 'created', 'updated')
+        columns = ('id', 'name', 'status', 'created', 'updated')
         column_headers = [c.capitalize() for c in columns]
-
         return (
             column_headers,
             list(utils.get_item_properties(
@@ -55,8 +57,6 @@ class ListEnvironments(lister.Lister):
 
 class ShowEnvironment(show.ShowOne):
     """Display environment details"""
-
-    log = logging.getLogger(__name__ + ".ShowEnvironment")
 
     def get_parser(self, prog_name):
         parser = super(ShowEnvironment, self).get_parser(prog_name)
@@ -81,7 +81,7 @@ class ShowEnvironment(show.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
-        self.log.debug("take_action({0})".format(parsed_args))
+        LOG.debug("take_action({0})".format(parsed_args))
         client = self.app.client_manager.application_catalog
 
         environment = utils.find_resource(client.environments,
@@ -100,8 +100,6 @@ class ShowEnvironment(show.ShowOne):
 class RenameEnvironment(lister.Lister):
     """Rename an environment."""
 
-    log = logging.getLogger(__name__ + ".RenameEnvironment")
-
     def get_parser(self, prog_name):
         parser = super(RenameEnvironment, self).get_parser(prog_name)
         parser.add_argument(
@@ -118,14 +116,14 @@ class RenameEnvironment(lister.Lister):
         return parser
 
     def take_action(self, parsed_args):
-        self.log.debug("take_action({0})".format(parsed_args))
+        LOG.debug("take_action({0})".format(parsed_args))
         client = self.app.client_manager.application_catalog
         environment = utils.find_resource(client.environments,
                                           parsed_args.id)
         data = client.environments.update(environment.id,
                                           parsed_args.name)
 
-        columns = ('id', 'name', 'created', 'updated')
+        columns = ('id', 'name', 'status', 'created', 'updated')
         column_headers = [c.capitalize() for c in columns]
 
         return (
@@ -140,8 +138,6 @@ class RenameEnvironment(lister.Lister):
 class EnvironmentSessionCreate(show.ShowOne):
     """Creates a new configuration session for environment ID."""
 
-    log = logging.getLogger(__name__ + ".EnvironmentSessionCreate")
-
     def get_parser(self, prog_name):
         parser = super(EnvironmentSessionCreate, self).get_parser(prog_name)
         parser.add_argument(
@@ -153,7 +149,7 @@ class EnvironmentSessionCreate(show.ShowOne):
         return parser
 
     def take_action(self, parsed_args):
-        self.log.debug("take_action({0})".format(parsed_args))
+        LOG.debug("take_action({0})".format(parsed_args))
         client = self.app.client_manager.application_catalog
 
         environment_id = parsed_args.id
@@ -161,3 +157,128 @@ class EnvironmentSessionCreate(show.ShowOne):
         sessionid = murano_utils.text_wrap_formatter(session_id)
 
         return (['id'], [sessionid])
+
+
+class EnvironmentCreate(lister.Lister):
+    """Create an environment."""
+
+    def get_parser(self, prog_name):
+        parser = super(EnvironmentCreate, self).get_parser(prog_name)
+        parser.add_argument(
+            'name',
+            metavar="<ENVIRONMENT_ID>",
+            help="Environment name.",
+        )
+        parser.add_argument(
+            '--region',
+            metavar="<REGION_NAME>",
+            help="Name of the target OpenStack region.",
+        )
+        parser.add_argument(
+            '--join-subnet-id',
+            metavar="<SUBNET_ID>",
+            help="Subnetwork id to join.",
+        )
+        parser.add_argument(
+            '--join-net-id',
+            metavar="<NET_ID>",
+            help="Network id to join.",
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action({0})".format(parsed_args))
+        client = self.app.client_manager.application_catalog
+
+        body = {"name": parsed_args.name, "region": parsed_args.region}
+        if parsed_args.join_net_id or parsed_args.join_subnet_id:
+            res = {
+                'defaultNetworks': {
+                    'environment': {
+                        '?': {
+                            'id': uuid.uuid4().hex,
+                            'type':
+                            'io.murano.resources.ExistingNeutronNetwork'
+                        },
+                    },
+                    'flat': None
+                }
+            }
+            if parsed_args.join_net_id:
+                res['defaultNetworks']['environment']['internalNetworkName'] \
+                    = parsed_args.join_net_id
+            if parsed_args.join_subnet_id:
+                res['defaultNetworks']['environment']['internalSubnetworkName'
+                                                      ] = \
+                    parsed_args.join_subnet_id
+
+            body.update(res)
+
+        data = client.environments.create(body)
+
+        columns = ('id', 'name', 'status', 'created', 'updated')
+        column_headers = [c.capitalize() for c in columns]
+
+        return (
+            column_headers,
+            [utils.get_item_properties(
+                data,
+                columns,
+            )]
+        )
+
+
+class EnvironmentDelete(lister.Lister):
+    """Delete an environment."""
+
+    def get_parser(self, prog_name):
+        parser = super(EnvironmentDelete, self).get_parser(prog_name)
+        parser.add_argument(
+            'id',
+            metavar="<NAME or ID>",
+            nargs="+",
+            help="Id or name of environment(s) to delete.",
+        )
+        parser.add_argument(
+            '--abandon',
+            action='store_true',
+            default=False,
+            help="If set will abandon environment without deleting any of its"
+                 " resources.",
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action({0})".format(parsed_args))
+        client = self.app.client_manager.application_catalog
+
+        abandon = getattr(parsed_args, 'abandon', False)
+        failure_count = 0
+        for environment_id in parsed_args.id:
+            try:
+                environment = murano_utils.find_resource(client.environments,
+                                                         environment_id)
+                client.environments.delete(environment.id, abandon)
+            except exceptions.NotFound:
+                failure_count += 1
+                print("Failed to delete '{0}'; environment not found".
+                      format(environment_id))
+
+        if failure_count == len(parsed_args.id):
+            raise exceptions.CommandError("Unable to find and delete any of "
+                                          "the specified environments.")
+
+        data = client.environments.list()
+
+        columns = ('id', 'name', 'status', 'created', 'updated')
+        column_headers = [c.capitalize() for c in columns]
+
+        return (
+            column_headers,
+            list(utils.get_item_properties(
+                s,
+                columns,
+            ) for s in data)
+        )
