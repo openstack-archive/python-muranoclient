@@ -11,7 +11,6 @@ project = 'python-muranoclient'
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.intersphinx',
               'sphinx.ext.coverage',
-              'sphinx.ext.pngmath',
               'sphinx.ext.ifconfig',
               'sphinx.ext.graphviz']
 
