@@ -22,8 +22,7 @@ import argparse
 import sys
 
 import glanceclient
-from keystoneclient.auth.identity.generic import password
-from keystoneclient.auth.identity.generic import token
+from keystoneclient.auth.identity.generic.cli import DefaultCLI
 from keystoneclient.auth.identity import v3 as identity
 from keystoneclient import discover
 from keystoneclient import exceptions as ks_exc
@@ -43,6 +42,19 @@ from muranoclient.openstack.common.apiclient import exceptions as exc
 logger = logging.getLogger(__name__)
 
 DEFAULT_REPO_URL = "http://apps.openstack.org/api/v1/murano_repo/liberty/"
+
+
+# quick local fix for keystoneclient bug which blocks built-in reauth
+# functionality in case of expired token.
+# bug: https://bugs.launchpad.net/python-keystoneclient/+bug/1551392
+# fix: https://review.openstack.org/#/c/286236/
+class AuthCLI(DefaultCLI):
+    def invalidate(self):
+        retval = super(AuthCLI, self).invalidate()
+        if self._token:
+            self._token = None
+            retval = True
+        return retval
 
 
 class MuranoShell(object):
@@ -243,59 +255,6 @@ class MuranoShell(object):
 
         return (v2_auth_url, v3_auth_url)
 
-    def _get_keystone_auth(self, session, auth_url, **kwargs):
-        auth_token = kwargs.pop('auth_token', None)
-        if auth_token:
-            return token.Token(
-                auth_url,
-                auth_token,
-                project_id=kwargs.pop('project_id'),
-                project_name=kwargs.pop('project_name'),
-                project_domain_id=kwargs.pop('project_domain_id'),
-                project_domain_name=kwargs.pop('project_domain_name'))
-
-        # NOTE(starodubcevna): this is a workaround for the bug:
-        # https://bugs.launchpad.net/python-openstackclient/+bug/1447704
-        # Change that fix this error in keystoneclient was abandoned,
-        # so we should use workaround until we move to keystoneauth.
-        # The idea of the code came from glanceclient.
-
-        (v2_auth_url, v3_auth_url) = self._discover_auth_versions(
-            session=session,
-            auth_url=auth_url)
-
-        if v3_auth_url:
-            # NOTE(starodubcevna): set user_domain_id and project_domain_id
-            # to default as it done in other projects.
-            return password.Password(auth_url,
-                                     username=kwargs.pop('username'),
-                                     user_id=kwargs.pop('user_id'),
-                                     password=kwargs.pop('password'),
-                                     user_domain_id=kwargs.pop(
-                                         'user_domain_id') or 'default',
-                                     user_domain_name=kwargs.pop(
-                                         'user_domain_name'),
-                                     project_id=kwargs.pop('project_id'),
-                                     project_name=kwargs.pop('project_name'),
-                                     project_domain_id=kwargs.pop(
-                                         'project_domain_id') or 'default')
-        elif v2_auth_url:
-            return password.Password(auth_url,
-                                     username=kwargs.pop('username'),
-                                     user_id=kwargs.pop('user_id'),
-                                     password=kwargs.pop('password'),
-                                     project_id=kwargs.pop('project_id'),
-                                     project_name=kwargs.pop('project_name'))
-        else:
-            # if we get here it means domain information is provided
-            # (caller meant to use Keystone V3) but the auth url is
-            # actually Keystone V2. Obviously we can't authenticate a V3
-            # user using V2.
-            exc.CommandError("Credential and auth_url mismatch. The given "
-                             "auth_url is using Keystone V2 endpoint, which "
-                             "may not able to handle Keystone V3 credentials. "
-                             "Please provide a correct Keystone V3 auth_url.")
-
     def _setup_logging(self, debug):
         # Output the logs to command-line interface
         color_handler = handlers.ColorHandler(sys.stdout)
@@ -399,22 +358,24 @@ class MuranoShell(object):
         else:
             # Create a keystone session and keystone auth
             keystone_session = ksession.Session.load_from_cli_options(args)
-            project_id = args.os_project_id or args.os_tenant_id
-            project_name = args.os_project_name or args.os_tenant_name
 
-            keystone_auth = self._get_keystone_auth(
-                keystone_session,
-                args.os_auth_url,
-                username=args.os_username,
-                user_id=args.os_user_id,
-                user_domain_id=args.os_user_domain_id,
-                user_domain_name=args.os_user_domain_name,
-                password=args.os_password,
-                auth_token=args.os_auth_token,
-                project_id=project_id,
-                project_name=project_name,
-                project_domain_id=args.os_project_domain_id,
-                project_domain_name=args.os_project_domain_name)
+            args.os_project_name = args.os_project_name or args.os_tenant_name
+            args.os_project_id = args.os_project_id or args.os_tenant_id
+
+            # make args compatible with DefaultCLI/AuthCLI
+            args.os_token = args.os_auth_token
+            args.os_endpoint = endpoint
+            # avoid password prompt if no password given
+            args.os_password = args.os_password or '<no password>'
+            (v2_auth_url, v3_auth_url) = self._discover_auth_versions(
+                keystone_session, args.os_auth_url)
+            if v3_auth_url:
+                args.os_project_domain_id = (args.os_project_domain_id or
+                                             'default')
+                args.os_user_domain_id = (args.os_user_domain_id or
+                                          'default')
+
+            keystone_auth = AuthCLI.load_from_argparse_arguments(args)
 
             endpoint_type = args.os_endpoint_type or 'publicURL'
             service_type = args.os_service_type or 'application-catalog'
