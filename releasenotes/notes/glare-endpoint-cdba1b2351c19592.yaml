@@ -1,0 +1,6 @@
+---
+features:
+  - Since glare has been moved to a separate service muranoclient CLI now
+    distinguishes between --glance-url and --glare-url. If --glare-url is
+    not supplied muranoclient requests an endpoint of type 'artifact'
+    from keystone.

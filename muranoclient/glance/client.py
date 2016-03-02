@@ -19,7 +19,7 @@ from muranoclient.glance import artifacts
 
 
 class Client(object):
-    """Client for the OpenStack Glance v3 API.
+    """Client for the OpenStack glance-glare API.
 
     :param string endpoint: A user-supplied endpoint URL for the glance
                             service.
@@ -30,7 +30,8 @@ class Client(object):
 
     def __init__(self, endpoint, type_name, type_version, **kwargs):
         endpoint, version = utils.strip_version(endpoint)
-        self.version = version or 3.0
+        # TODO(kzaitsev): start using this variable
+        self.version = version or 0.1
         self.http_client = http.HTTPClient(endpoint, **kwargs)
 
         self.type_name = type_name
