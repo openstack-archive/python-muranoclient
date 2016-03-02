@@ -286,6 +286,17 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
                              fail_ok=True)
         self.assertIn("Category id 'non-existing' not found", result)
 
+    def test_category_create_with_long_name(self):
+        """Test scenario:
+            1) try to create category with long name (>80)
+            2) check that error message contains user friendly substring
+        """
+        result = self.murano('category-create', params='name' * 21,
+                             fail_ok=True)
+        self.assertIn(
+            "Category name should be 80 characters maximum (HTTP 400)",
+            result)
+
 
 class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
     """Sanity tests for testing actions with Environment template.
