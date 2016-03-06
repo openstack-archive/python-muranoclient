@@ -1,0 +1,6 @@
+---
+features:
+  - New OSC command ``category list``
+  - New OSC command ``category show <id>``
+  - New OSC command ``category create <name>``
+  - New OSC command ``category delete <id> [<id> ...]``
