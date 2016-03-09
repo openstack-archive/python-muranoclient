@@ -87,10 +87,10 @@ class FakeHTTPClient(client.HTTPClient):
             args = (None, )
         super(FakeHTTPClient, self).__init__(*args, **kwargs)
 
-    def assert_called(self, method, url, body=None, pos=-1):
+    def assert_called(self, url, method, body=None, pos=-1):
         """Assert than an API method was just called.
         """
-        expected = (method, url)
+        expected = (url, method)
         called = self.callstack[pos][0:2]
         assert self.callstack, \
             "Expected %s %s but no calls were made." % expected
@@ -103,10 +103,10 @@ class FakeHTTPClient(client.HTTPClient):
                 raise AssertionError('%r != %r' %
                                      (self.callstack[pos][3], body))
 
-    def assert_called_anytime(self, method, url, body=None):
+    def assert_called_anytime(self, url, method, body=None):
         """Assert than an API method was called anytime in the test.
         """
-        expected = (method, url)
+        expected = (url, method)
 
         assert self.callstack, \
             "Expected %s %s but no calls were made." % expected
@@ -119,7 +119,7 @@ class FakeHTTPClient(client.HTTPClient):
                 break
 
         assert found, 'Expected %s %s; got %s' % \
-            (method, url, self.callstack)
+            (url, method, self.callstack)
         if body is not None:
             assert entry[3] == body, "%s != %s" % (entry[3], body)
 
@@ -131,15 +131,15 @@ class FakeHTTPClient(client.HTTPClient):
     def authenticate(self):
         pass
 
-    def client_request(self, client, method, url, **kwargs):
+    def client_request(self, client, url, method, **kwargs):
         # Check that certain things are called correctly
         if method in ["GET", "DELETE"]:
             assert "json" not in kwargs
 
         # Note the call
         self.callstack.append(
-            (method,
-             url,
+            (url,
+             method,
              kwargs.get("headers") or {},
              kwargs.get("json") or kwargs.get("data")))
         try:
@@ -162,7 +162,7 @@ class FakeHTTPClient(client.HTTPClient):
         if not hasattr(self, callback):
             raise AssertionError('Called unknown API method: %s %s, '
                                  'expected fakes method name: %s' %
-                                 (method, url, callback))
+                                 (url, method, callback))
 
         resp = getattr(self, callback)(**kwargs)
         if len(resp) == 3:

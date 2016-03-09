@@ -36,9 +36,8 @@ class SessionManager(base.Manager):
 
     def deploy(self, environment_id, session_id):
         path = '/v1/environments/{id}/sessions/{session_id}/deploy'
-        self.api.json_request('POST',
-                              path.format(id=environment_id,
-                                          session_id=session_id))
+        self.api.json_request(path.format(id=environment_id,
+                                          session_id=session_id), 'POST')
 
     def delete(self, environment_id, session_id):
         return self._delete("/v1/environments/{id}/sessions/{session_id}".

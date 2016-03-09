@@ -51,9 +51,9 @@ class PackageManager(base.Manager):
                           response_key='categories', obj_class=Category)
 
     def create(self, data, files):
-        response = self.api.raw_request(
-            'POST',
+        response = self.api.request(
             '/v1/catalog/packages',
+            'POST',
             data={'__metadata__': jsonutils.dumps(data)},
             files=files
         )
@@ -80,7 +80,7 @@ class PackageManager(base.Manager):
 
         def paginate(_url):
             # code from Glance
-            resp, body = self.api.json_request('GET', _url)
+            resp, body = self.api.json_request(_url, 'GET')
             for image in body['packages']:
                 yield image
             try:
@@ -111,11 +111,9 @@ class PackageManager(base.Manager):
 
     def update(self, app_id, body, operation='replace'):
         """Translates dictionary to jsonpatch request
-
         :param app_id: string, id of updating application
         :param body: dictionary, mapping between keys and values for update
         :param operation: string, way of updating: replace, remove, add
-
         :returns: HTTP response
         """
         url = '/v1/catalog/packages/{0}'.format(app_id)
@@ -126,7 +124,7 @@ class PackageManager(base.Manager):
 
     def download(self, app_id):
         url = '/v1/catalog/packages/{0}/download'.format(app_id)
-        response = self.api.raw_request('GET', url, log=False)
+        response = self.api.request(url, 'GET', log=False)
         if response.status_code == 200:
             return response.content
         else:
@@ -150,7 +148,7 @@ class PackageManager(base.Manager):
             loader_cls = yaml.Loader
 
         url = '/v1/catalog/packages/{0}/ui'.format(app_id)
-        response = self.api.raw_request('GET', url)
+        response = self.api.request(url, 'GET')
         if response.status_code == 200:
             return yaml.load(response.content, loader_cls)
         else:
@@ -158,7 +156,7 @@ class PackageManager(base.Manager):
 
     def get_logo(self, app_id):
         url = '/v1/catalog/packages/{0}/logo'.format(app_id)
-        response = self.api.raw_request('GET', url)
+        response = self.api.request(url, 'GET')
         if response.status_code == 200:
             return response.content
         else:
@@ -166,7 +164,7 @@ class PackageManager(base.Manager):
 
     def get_supplier_logo(self, app_id):
         url = '/v1/catalog/packages/{0}/supplier_logo'.format(app_id)
-        response = self.api.raw_request('GET', url)
+        response = self.api.request(url, 'GET')
         if response.status_code == 200:
             return response.content
         else:

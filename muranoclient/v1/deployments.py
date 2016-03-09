@@ -45,7 +45,7 @@ class DeploymentManager(base.Manager):
             for service_id in service_ids:
                 path += '?service_id={0}'.format(service_id)
 
-        resp, body = self.api.json_request('GET', path)
+        resp, body = self.api.json_request(path, 'GET')
 
         data = body.get('reports', [])
         return [Status(self, res, loaded=True) for res in data if res]
