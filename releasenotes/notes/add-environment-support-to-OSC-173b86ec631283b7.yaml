@@ -1,0 +1,6 @@
+---
+features:
+    - New OSC command ``environment list [--all-tenants]``
+    - New OSC command ``environment show <id or name> [--session-id <session id>] [--only-apps]``
+    - New OSC command ``environment rename <id> <name>``
+    - New OSC command ``environment session create <id>``
