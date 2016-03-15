@@ -481,9 +481,9 @@ def do_package_list(mc, args=None):
 
 def _print_package_list(packages):
     field_labels = ["ID", "Name", "FQN", "Author", "Active",
-                    "Is Public", "Type"]
+                    "Is Public", "Type", "Version"]
     fields = ["id", "name", "fully_qualified_name", "author",
-              "enabled", "is_public", "type"]
+              "enabled", "is_public", "type", "version"]
     utils.print_list(packages, fields, field_labels, sortby=0)
 
 
