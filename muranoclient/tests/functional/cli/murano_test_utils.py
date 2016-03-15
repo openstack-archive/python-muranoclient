@@ -209,6 +209,19 @@ class CLIUtilsTestPackagesBase(TestSuiteRepository):
 
         return True
 
+    def prepare_bundle_with_non_existed_package(self):
+        temp_file = tempfile.NamedTemporaryFile(mode='w',
+                                                delete=False)
+        self.addCleanup(os.remove, temp_file.name)
+
+        with open(temp_file.name, 'w') as tf:
+            tf.write(json.dumps({'Packages': [
+                {'Name': 'first_app'},
+                {'Name': 'second_app', 'Version': '1.0'}
+            ]}))
+
+        return temp_file.name
+
     def deploy_environment(self, env_id, obj_model):
         session = self.listing('environment-session-create',
                                params=env_id)
