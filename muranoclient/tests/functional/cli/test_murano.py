@@ -210,6 +210,19 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
         self.assertIn(environment['Name'], map(lambda x: x['Value'], env_show))
         self.assertIn(environment['ID'], map(lambda x: x['Value'], env_show))
 
+    def test_environment_delete_by_id(self):
+        """Test scenario:
+            1) create environment
+            2) delete environment by environment ID
+        """
+        env_name = self.generate_name('TestMuranoSanityEnv')
+        environment = self.create_murano_object('environment', env_name)
+        result = self.murano('environment-delete', params=environment['ID'],
+                             fail_ok=False)
+        self.assertNotIn(environment['Name'], result)
+        env_list = self.listing('environment-list')
+        self.assertNotIn(environment, env_list)
+
 
 class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
     """Sanity tests for testing actions with Category.
