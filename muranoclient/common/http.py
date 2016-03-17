@@ -135,7 +135,7 @@ class HTTPClient(object):
                     dump.extend([content, ''])
         LOG.debug('\n'.join(dump))
 
-    def _http_request(self, url, method, **kwargs):
+    def _http_request(self, url, method, log=True, **kwargs):
         """Send an http request with the specified characteristics.
 
         Wrapper around requests.request to handle tasks such
@@ -195,7 +195,8 @@ class HTTPClient(object):
                        {'endpoint': endpoint, 'e': e})
             raise exc.CommunicationError(message=message)
 
-        self.log_http_response(resp)
+        if log:
+            self.log_http_response(resp)
 
         if 'X-Auth-Key' not in kwargs['headers'] and \
                 (resp.status_code == 401 or
