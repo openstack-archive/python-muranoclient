@@ -126,7 +126,7 @@ class PackageManager(base.Manager):
 
     def download(self, app_id):
         url = '/v1/catalog/packages/{0}/download'.format(app_id)
-        response = self.api.raw_request('GET', url)
+        response = self.api.raw_request('GET', url, log=False)
         if response.status_code == 200:
             return response.content
         else:
