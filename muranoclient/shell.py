@@ -143,6 +143,10 @@ class MuranoShell(object):
                             default=utils.env('GLANCE_URL'),
                             help='Defaults to env[GLANCE_URL].')
 
+        parser.add_argument('--glare-url',
+                            default=utils.env('GLARE_URL'),
+                            help='Defaults to env[GLARE_URL].')
+
         parser.add_argument('--murano-api-version',
                             default=utils.env(
                                 'MURANO_API_VERSION', default='1'),
@@ -311,13 +315,13 @@ class MuranoShell(object):
                     "If you specify --os-no-client-auth"
                     " you must also specify a Murano API URL"
                     " via either --murano-url or env[MURANO_URL]")
-            if (not args.glance_url and
-                    args.murano_packages_service == 'glance'):
+            if (not args.glare_url and
+                    args.murano_packages_service in ['glance', 'glare']):
                 raise exc.CommandError(
                     "If you specify --os-no-client-auth and"
                     " set murano-packages-service to 'glance'"
-                    " you must also specify a Glance API URL"
-                    " via either --glance-url or env[GLANCE_URL]")
+                    " you must also specify a glance glare API URL"
+                    " via either --glare-url or env[GLARE_API]")
 
         else:
             # Tenant name or ID is needed to make keystoneclient retrieve a
@@ -422,8 +426,26 @@ class MuranoShell(object):
                            "Image creation will be unavailable.")
             kwargs['glance_client'] = None
 
-        if args.murano_packages_service == 'glance':
-            artifacts_client = art_client.Client(endpoint=glance_endpoint,
+        if args.murano_packages_service in ['glance', 'glare']:
+            glare_endpoint = args.glare_url
+
+            if not glare_endpoint:
+                # no glare_endpoint and we requested to store packages in glare
+                # let's check keystone
+                try:
+                    glare_endpoint = keystone_auth.get_endpoint(
+                        keystone_session,
+                        service_type='artifact',
+                        region_name=args.os_region_name)
+                except Exception:
+                    raise exc.CommandError(
+                        "You set murano-packages-service to {}"
+                        " but there is not 'artifact' endpoint in keystone"
+                        " Either register one or specify endpoint "
+                        " via either --glare-url or env[GLARE_API]".format(
+                            args.murano_packages_service))
+
+            artifacts_client = art_client.Client(endpoint=glare_endpoint,
                                                  type_name='murano',
                                                  type_version=1,
                                                  username=args.os_username,
