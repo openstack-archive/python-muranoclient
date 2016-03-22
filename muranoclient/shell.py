@@ -445,12 +445,13 @@ class MuranoShell(object):
                         " via either --glare-url or env[GLARE_API]".format(
                             args.murano_packages_service))
 
+            auth_token = \
+                args.os_auth_token or keystone_auth.get_token(keystone_session)
+
             artifacts_client = art_client.Client(endpoint=glare_endpoint,
                                                  type_name='murano',
                                                  type_version=1,
-                                                 username=args.os_username,
-                                                 password=args.os_password,
-                                                 token=args.os_auth_token,
+                                                 token=auth_token,
                                                  insecure=args.insecure)
             kwargs['artifacts_client'] = artifacts_client
 
