@@ -19,6 +19,7 @@ from glanceclient import exc as glance_exc
 
 from muranoclient.common import exceptions as exc
 from muranoclient.common import utils
+from muranoclient.openstack.common.gettextutils import _
 
 
 def rewrap_http_exceptions(func):
@@ -325,7 +326,17 @@ class PackageWrapper(object):
             return getattr(self._item, name)
 
     def to_dict(self):
-        return {'id': self.id, 'name': self.name, 'owner_id': self.owner_id}
+        keys = ('author', 'categories', 'class_definitions', 'created',
+                'description', 'enabled', 'fully_qualified_name', 'id',
+                'is_public', 'name', 'owner_id', 'tags', 'type',
+                'updated')
+        missing_keys = [key for key in keys if not hasattr(self, key)]
+        if missing_keys:
+            raise KeyError(_("Some attributes are missing in "
+                             "%(pkg_name)s: %(attrs)s.") %
+                           {'pkg_name': self.name,
+                            'attrs': ", ".join(missing_keys)})
+        return {key: getattr(self, key) for key in keys}
 
 
 class NamespaceResolver(object):
