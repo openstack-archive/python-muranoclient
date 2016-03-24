@@ -693,10 +693,12 @@ class ShellCommandTest(ShellTest):
             self.assertIn(r, result[0])
         self.client.categories.list.assert_called_once_with()
 
+    @mock.patch('muranoclient.v1.packages.PackageManager')
     @mock.patch('muranoclient.v1.categories.CategoryManager')
     @requests_mock.mock()
-    def test_category_show(self, mock_manager, m_requests):
-        self.client.categories = mock_manager()
+    def test_category_show(self, category_manager, pkg_manager, m_requests):
+        self.client.packages = pkg_manager()
+        self.client.categories = category_manager()
         self.make_env()
         self.register_keystone_discovery_fixture(m_requests)
         self.register_keystone_token_fixture(m_requests)

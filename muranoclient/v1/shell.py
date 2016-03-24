@@ -1060,9 +1060,10 @@ def _print_category_list(categories):
 def do_category_show(mc, args):
     """Display category details."""
     category = mc.categories.get(args.id)
+    packages = mc.packages.filter(category=category.name)
     to_display = dict(id=category.id,
                       name=category.name,
-                      packages=', '.join(p['name'] for p in category.packages))
+                      packages=', '.join(p.name for p in packages))
     formatters = {'packages': utils.text_wrap_formatter}
     utils.print_dict(to_display, formatters)
 

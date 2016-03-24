@@ -65,10 +65,11 @@ class ShowCategory(show.ShowOne):
         client = self.app.client_manager.application_catalog
 
         category = client.categories.get(parsed_args.id)
+        packages = client.packages.filter(category=category.name)
         to_display = dict(id=category.id,
                           name=category.name,
-                          packages=', '.join(p['name']
-                                             for p in category.packages))
+                          packages=', '.join(p.name
+                                             for p in packages))
 
         to_display['packages'] = '\n'.join(textwrap.wrap(to_display['packages']
                                            or '', 55))
