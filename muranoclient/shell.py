@@ -174,11 +174,11 @@ class MuranoShell(object):
                                   'or {0}'.format(DEFAULT_REPO_URL)))
 
         parser.add_argument('--murano-packages-service',
-                            choices=['murano', 'glance'],
+                            choices=['murano', 'glance', 'glare'],
                             default=utils.env('MURANO_PACKAGES_SERVICE',
                                               default='murano'),
                             help='Specifies if murano-api ("murano") or '
-                                 'Glance Artifact Repository ("glance") '
+                                 'Glance Artifact Repository ("glare") '
                                  'should be used to store murano packages. '
                                  'Defaults to env[MURANO_PACKAGES_SERVICE] or '
                                  'to "murano"')
