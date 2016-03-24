@@ -211,7 +211,7 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
             {'packages': [{'name': 'test_package_2'}]}
         ]
 
-        def json_request(method, url, *args, **kwargs):
+        def json_request(url, method, *args, **kwargs):
             self.assertIn('/v1/catalog/packages', url)
 
             return mock.MagicMock(), responses.pop(0)
@@ -231,7 +231,7 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
             {'packages': [{'name': 'test_package_2'}]}
         ]
 
-        def json_request(method, url, *args, **kwargs):
+        def json_request(url, method, *args, **kwargs):
             self.assertIn('category=%D0%BF%D0%B8%D0%B2%D0%BE', url)
             return mock.MagicMock(), responses.pop(0)
 

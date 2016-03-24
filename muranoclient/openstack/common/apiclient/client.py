@@ -100,7 +100,7 @@ class HTTPClient(object):
 
         self.cached_token = None
 
-    def _http_log_req(self, method, url, kwargs):
+    def _http_log_req(self, url, method, kwargs):
         if not self.debug:
             return
 
@@ -145,7 +145,7 @@ class HTTPClient(object):
     def reset_timings(self):
         self.times = []
 
-    def request(self, method, url, **kwargs):
+    def request(self, url, method, **kwargs):
         """Send an http request with the specified characteristics.
 
         Wrapper around `requests.Session.request` to handle tasks such as
@@ -169,12 +169,12 @@ class HTTPClient(object):
             kwargs.setdefault("cert", self.cert)
         self.serialize(kwargs)
 
-        self._http_log_req(method, url, kwargs)
+        self._http_log_req(url, method, kwargs)
         if self.timings:
             start_time = time.time()
-        resp = self.http.request(method, url, **kwargs)
+        resp = self.http.request(url, method, **kwargs)
         if self.timings:
-            self.times.append(("%s %s" % (method, url),
+            self.times.append(("%s %s" % (url, method),
                                start_time, time.time()))
         self._http_log_resp(resp)
 
@@ -182,7 +182,7 @@ class HTTPClient(object):
             _logger.debug(
                 "Request returned failure status: %s",
                 resp.status_code)
-            raise exceptions.from_response(resp, method, url)
+            raise exceptions.from_response(resp, url, method)
 
         return resp
 
@@ -198,7 +198,7 @@ class HTTPClient(object):
         """
         return "%s/%s" % (endpoint.rstrip("/"), url.strip("/"))
 
-    def client_request(self, client, method, url, **kwargs):
+    def client_request(self, client, url, method, **kwargs):
         """Send an http request using `client`'s endpoint and specified `url`.
 
         If request was rejected as unauthorized (possibly because the token is
@@ -320,27 +320,27 @@ class BaseClient(object):
                     setattr(self, extension.name,
                             extension.manager_class(self))
 
-    def client_request(self, method, url, **kwargs):
+    def client_request(self, url, method, **kwargs):
         return self.http_client.client_request(
-            self, method, url, **kwargs)
+            self, url, method, **kwargs)
 
     def head(self, url, **kwargs):
-        return self.client_request("HEAD", url, **kwargs)
+        return self.client_request(url, "HEAD", **kwargs)
 
     def get(self, url, **kwargs):
-        return self.client_request("GET", url, **kwargs)
+        return self.client_request(url, "GET", **kwargs)
 
     def post(self, url, **kwargs):
-        return self.client_request("POST", url, **kwargs)
+        return self.client_request(url, "POST", **kwargs)
 
     def put(self, url, **kwargs):
-        return self.client_request("PUT", url, **kwargs)
+        return self.client_request(url, "PUT", **kwargs)
 
     def delete(self, url, **kwargs):
-        return self.client_request("DELETE", url, **kwargs)
+        return self.client_request(url, "DELETE", **kwargs)
 
     def patch(self, url, **kwargs):
-        return self.client_request("PATCH", url, **kwargs)
+        return self.client_request(url, "PATCH", **kwargs)
 
     @staticmethod
     def get_class(api_name, version, version_map):

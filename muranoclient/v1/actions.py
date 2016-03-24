@@ -26,11 +26,11 @@ class ActionManager(object):
             arguments = {}
         url = '/v1/environments/{environment_id}/actions/{action_id}'.format(
             environment_id=environment_id, action_id=action_id)
-        resp, body = self.api.json_request('POST', url, body=arguments)
+        resp, body = self.api.json_request(url, 'POST', body=arguments)
         return body['task_id']
 
     def get_result(self, environment_id, task_id):
         url = '/v1/environments/{environment_id}/actions/{task_id}'.format(
             environment_id=environment_id, task_id=task_id)
-        resp, body = self.api.json_request('GET', url)
+        resp, body = self.api.json_request(url, 'GET')
         return body or None

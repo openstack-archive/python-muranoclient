@@ -92,7 +92,7 @@ class HTTPClient(object):
             return (encodeutils.safe_decode(name),
                     encodeutils.safe_decode(value))
 
-    def log_curl_request(self, method, url, kwargs):
+    def log_curl_request(self, url, method, kwargs):
         curl = ['curl -i -X %s' % method]
 
         for (key, value) in kwargs['headers'].items():
@@ -135,12 +135,14 @@ class HTTPClient(object):
                     dump.extend([content, ''])
         LOG.debug('\n'.join(dump))
 
-    def _http_request(self, url, method, log=True, **kwargs):
+    def request(self, url, method, log=True, **kwargs):
         """Send an http request with the specified characteristics.
 
         Wrapper around requests.request to handle tasks such
         as setting headers and error handling.
         """
+        _set_data(kwargs)
+
         # Copy the kwargs so we can reuse the original in case of redirects
         kwargs['headers'] = copy.deepcopy(kwargs.get('headers', {}))
         kwargs['headers'].setdefault('User-Agent', USER_AGENT)
@@ -153,7 +155,7 @@ class HTTPClient(object):
         if self.region_name:
             kwargs['headers'].setdefault('X-Region-Name', self.region_name)
 
-        self.log_curl_request(method, url, kwargs)
+        self.log_curl_request(url, method, kwargs)
 
         if self.cert_file and self.key_file:
             kwargs['cert'] = (self.cert_file, self.key_file)
@@ -200,7 +202,8 @@ class HTTPClient(object):
 
         if 'X-Auth-Key' not in kwargs['headers'] and \
                 (resp.status_code == 401 or
-                 (resp.status_code == 500 and "(HTTP 401)" in resp.content)):
+                 (resp.status_code == 500 and
+                  "(HTTP 401)" in resp.content)):
             raise exc.HTTPUnauthorized("Authentication failed. Please try"
                                        " again.\n%s"
                                        % resp.content)
@@ -212,7 +215,7 @@ class HTTPClient(object):
             if follow_redirects:
                 location = resp.headers.get('location')
                 path = self.strip_endpoint(location)
-                resp = self._http_request(path, method, **kwargs)
+                resp = self.request(path, method, **kwargs)
         elif resp.status_code == 300:
             raise exc.from_response(resp)
 
@@ -236,22 +239,18 @@ class HTTPClient(object):
             creds['X-Auth-Key'] = self.password
         return creds
 
-    def json_request(self, method, url, content_type='application/json',
+    def json_request(self, url, method, content_type='application/json',
                      **kwargs):
+
         kwargs.setdefault('headers', {})
         kwargs['headers'].setdefault('Content-Type', content_type)
         # Don't set Accept because we aren't always dealing in JSON
 
-        if 'body' in kwargs:
-            if 'data' in kwargs:
-                raise ValueError("Can't provide both 'data' and "
-                                 "'body' to a request")
-            LOG.warning("Use of 'body' is deprecated; use 'data' instead")
-            kwargs['data'] = kwargs.pop('body')
+        _set_data(kwargs)
         if 'data' in kwargs:
             kwargs['data'] = jsonutils.dumps(kwargs['data'])
 
-        resp = self._http_request(url, method, **kwargs)
+        resp = self.request(url, method, **kwargs)
         body = resp.content
 
         if body and 'application/json' in resp.headers['content-type']:
@@ -267,40 +266,25 @@ class HTTPClient(object):
     def json_patch_request(self, url, method='PATCH', **kwargs):
         content_type = 'application/murano-packages-json-patch'
         return self.json_request(
-            method, url, content_type=content_type, **kwargs)
-
-    def raw_request(self, method, url, **kwargs):
-        if 'body' in kwargs:
-            if 'data' in kwargs:
-                raise ValueError("Can't provide both 'data' and "
-                                 "'body' to a request")
-            LOG.warning("Use of 'body' is deprecated; use 'data' instead")
-            kwargs['data'] = kwargs.pop('body')
-        # Chunking happens automatically if 'body' is a
-        # file-like object
-        return self._http_request(url, method, **kwargs)
-
-    def client_request(self, method, url, **kwargs):
-        resp, body = self.json_request(method, url, **kwargs)
-        return resp
+            url, method, content_type=content_type, **kwargs)
 
     def head(self, url, **kwargs):
-        return self.client_request("HEAD", url, **kwargs)
+        return self.json_request(url, "HEAD", **kwargs)
 
     def get(self, url, **kwargs):
-        return self.client_request("GET", url, **kwargs)
+        return self.json_request(url, "GET", **kwargs)
 
     def post(self, url, **kwargs):
-        return self.client_request("POST", url, **kwargs)
+        return self.json_request(url, "POST", **kwargs)
 
     def put(self, url, **kwargs):
-        return self.client_request("PUT", url, **kwargs)
+        return self.json_request(url, "PUT", **kwargs)
 
     def delete(self, url, **kwargs):
-        return self.raw_request("DELETE", url, **kwargs)
+        return self.request(url, "DELETE", **kwargs)
 
     def patch(self, url, **kwargs):
-        return self.client_request("PATCH", url, **kwargs)
+        return self.json_request(url, "PATCH", **kwargs)
 
 
 class SessionClient(keystone_adapter.Adapter):
@@ -314,6 +298,7 @@ class SessionClient(keystone_adapter.Adapter):
 
     def request(self, url, method, **kwargs):
         raise_exc = kwargs.pop('raise_exc', True)
+        _set_data(kwargs)
         resp = super(SessionClient, self).request(url,
                                                   method,
                                                   raise_exc=False,
@@ -324,60 +309,34 @@ class SessionClient(keystone_adapter.Adapter):
                       .format(url=url, exc=exc.from_response(resp)))
             raise exc.from_response(resp)
 
-        return resp, resp.text
+        return resp
 
-    def json_request(self, method, url, **kwargs):
+    def json_request(self, url, method, **kwargs):
         headers = kwargs.setdefault('headers', {})
         headers['Content-Type'] = kwargs.pop('content_type',
                                              'application/json')
-        if 'body' in kwargs:
-            if 'data' in kwargs:
-                raise ValueError("Can't provide both 'data' and "
-                                 "'body' to a request")
-            LOG.warning("Use of 'body' is deprecated; use 'data' instead")
-            kwargs['data'] = kwargs.pop('body')
+
+        _set_data(kwargs)
         if 'data' in kwargs:
             kwargs['data'] = jsonutils.dumps(kwargs['data'])
             # NOTE(starodubcevna): We need to prove that json field is empty,
             # or it will be modified by keystone adapter.
             kwargs['json'] = None
 
-        resp, body = self.request(url, method, **kwargs)
+        resp = self.request(url, method, **kwargs)
+        body = resp.text
         if body:
             try:
                 body = jsonutils.loads(body)
             except ValueError:
                 pass
+
         return resp, body
 
     def json_patch_request(self, url, method='PATCH', **kwargs):
         content_type = 'application/murano-packages-json-patch'
         return self.json_request(
-            method, url, content_type=content_type, **kwargs)
-
-    def raw_request(self, method, url, **kwargs):
-        # A non-json request; instead of calling
-        # super.request, need to call the grandparent
-        # adapter.request
-        raise_exc = kwargs.pop('raise_exc', True)
-        if 'body' in kwargs:
-            if 'data' in kwargs:
-                raise ValueError("Can't provide both 'data' and "
-                                 "'body' to a request")
-            LOG.warning("Use of 'body' is deprecated; use 'data' instead")
-            kwargs['data'] = kwargs.pop('body')
-        resp = keystone_adapter.Adapter.request(self,
-                                                url,
-                                                method,
-                                                raise_exc=False,
-                                                **kwargs)
-
-        if raise_exc and resp.status_code >= 400:
-            LOG.trace("Error communicating with {url}: {exc}"
-                      .format(url=url, exc=exc.from_response(resp)))
-            raise exc.from_response(resp)
-
-        return resp
+            url, method, content_type=content_type, **kwargs)
 
 
 def _construct_http_client(*args, **kwargs):
@@ -404,3 +363,12 @@ def _construct_http_client(*args, **kwargs):
         return SessionClient(**parameters)
     else:
         return HTTPClient(*args, **kwargs)
+
+
+def _set_data(kwargs):
+    if 'body' in kwargs:
+        if 'data' in kwargs:
+            raise ValueError("Can't provide both 'data' and "
+                             "'body' to a request")
+        LOG.warning("Use of 'body' is deprecated; use 'data' instead")
+        kwargs['data'] = kwargs.pop('body')
