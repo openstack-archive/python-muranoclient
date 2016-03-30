@@ -16,6 +16,7 @@ import unittest
 
 from muranoclient.tests.functional.cli import \
     murano_test_utils as utils
+from oslo_utils.strutils import bool_from_string as str2bool
 
 
 class SimpleReadOnlyMuranoClientTest(utils.CLIUtilsTestBase):
@@ -459,9 +460,16 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
         package = self.import_package(
             self.app_name,
             self.dummy_app_path,
-            '--is-public'
-        )
+            '--is-public')
+
+        package_show = self.listing('package-show', params=package['ID'])
+        package_show = {item['Property']: item['Value']
+                        for item in package_show}
+
         self.assertEqual(package['Is Public'], 'True')
+        self.assertEqual(
+            str2bool(package['Is Public']),
+            str2bool(package_show['is_public']))
 
     def test_package_delete(self):
         """Test scenario:
@@ -490,13 +498,27 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
             self.dummy_app_path
         )
         package_show = self.listing('package-show', params=package['ID'])
+        package_show = {item['Property']: item['Value']
+                        for item in package_show}
 
-        tested_package = map(lambda x: x['Value'], package_show)
-
-        self.assertIn(package['ID'], tested_package)
-        self.assertIn(package['Name'], tested_package)
-        self.assertIn(package['FQN'], tested_package)
-        self.assertIn(package['Is Public'], tested_package)
+        self.assertEqual(
+            str2bool(package['Active']),
+            str2bool(package_show['enabled']))
+        self.assertEqual(
+            package['FQN'],
+            package_show['fully_qualified_name'])
+        self.assertEqual(
+            package['ID'],
+            package_show['id'])
+        self.assertEqual(
+            str2bool(package['Is Public']),
+            str2bool(package_show['is_public']))
+        self.assertEqual(
+            package['Name'],
+            package_show['name'])
+        self.assertEqual(
+            package['Type'],
+            package_show['type'])
 
     def test_package_import_update(self):
         """Test scenario:
