@@ -15,6 +15,7 @@ import mock
 from muranoclient.osc.v1 import category as osc_category
 from muranoclient.tests.unit.osc.v1 import fakes
 from muranoclient.v1 import categories as api_category
+from muranoclient.v1 import packages as api_packages
 
 CATEGORY_INFO = {'id': 'xyz123',
                  'name': 'fake1',
@@ -27,6 +28,8 @@ class TestCategory(fakes.TestApplicationCatalog):
         self.category_mock = self.app.client_manager.application_catalog.\
             categories
         self.category_mock.reset_mock()
+        self.packages_mock = \
+            self.app.client_manager.application_catalog.packages
 
 
 class TestListCategories(TestCategory):
@@ -58,6 +61,11 @@ class TestShowCategory(TestCategory):
         super(TestShowCategory, self).setUp()
         self.category_mock.get.return_value = api_category.\
             Category(None, CATEGORY_INFO)
+
+        self.packages_mock.filter.return_value = [
+            api_packages.Package(None, pkg_info) for pkg_info in CATEGORY_INFO[
+                'packages']
+        ]
 
         # Command to test
         self.cmd = osc_category.ShowCategory(self.app, None)
