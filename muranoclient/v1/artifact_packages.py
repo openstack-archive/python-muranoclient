@@ -63,8 +63,8 @@ class ArtifactRepo(object):
 
         # NOTE(ativelkov): this is very racy, but until we have a chance to
         # enforce uniqueness right in glance this is the only way to do it
-        is_public = package_draft.get('visibility', 'private')
-        if is_public:
+        visibility = package_draft.get('visibility', 'private')
+        if visibility == 'public':
             filters = {}
         else:
             filters = {'owner': self.tenant}
