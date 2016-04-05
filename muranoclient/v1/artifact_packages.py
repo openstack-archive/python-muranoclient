@@ -282,7 +282,7 @@ class PackageManagerAdapter(object):
 
     @rewrap_http_exceptions
     def get_ui(self, app_id, loader_cls=None):
-        return self.glare.get_ui(app_id, loader_cls)
+        return self.legacy.get_ui(app_id, loader_cls)
 
 
 class PackageWrapper(object):
