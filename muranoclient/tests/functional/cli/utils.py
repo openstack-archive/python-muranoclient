@@ -31,7 +31,7 @@ def compose_package(app_name, manifest, package_dir,
     Composes package `app_name` with `manifest` file as a template for the
     manifest and files from `package_dir`.
     Includes `require` section if any in the manifest file.
-    Puts the resulting .zip file into `acrhive_dir` if present or in the
+    Puts the resulting .zip file into `archive_dir` if present or in the
     `package_dir`.
     """
     with open(manifest, 'w') as f:
