@@ -308,7 +308,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
         result = self.murano('category-create', params='name' * 21,
                              fail_ok=True)
         self.assertIn(
-            "Category name should be 80 characters maximum (HTTP 400)",
+            "Category name should be 80 characters maximum",
             result)
 
 
