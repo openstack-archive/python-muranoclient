@@ -90,8 +90,8 @@ class PackageManager(base.Manager):
             except KeyError:
                 return
             else:
-                for image in paginate(next_url):
-                    yield image
+                for package in paginate(next_url):
+                    yield package
 
         if 'page_size' not in kwargs:
             kwargs['limit'] = kwargs.get('limit', DEFAULT_PAGE_SIZE)
