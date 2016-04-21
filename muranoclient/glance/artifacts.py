@@ -21,6 +21,16 @@ from six.moves.urllib import parse
 from muranoclient.glance import ArtifactType
 
 
+glare_urls = {
+    'create': '/v%s/artifacts/%s/v%s/drafts',
+    'update_get_delete': '/v%s/artifacts/%s/v%s/%s',
+    'list_drafts': '/v%s/artifacts/%s/v%s/drafts?',
+    'list_no_drafts': '/v%s/artifacts/%s/v%s?',
+    'publish': '/v%s/artifacts/%s/v%s/%s/publish',
+    'blob': '/v%s/artifacts/%s/v%s/%s/%s',
+}
+
+
 class Controller(object):
     def __init__(self, http_client, type_name=None, type_version=None,
                  version='0.1'):
@@ -72,8 +82,7 @@ class Controller(object):
         type_name, type_version = self._check_type_params(type_name,
                                                           type_version)
         kwargs.update({'name': name, 'version': version})
-        url = '/v%s/artifacts/%s/v%s/drafts' % (self.version, type_name,
-                                                type_version)
+        url = glare_urls['create'] % (self.version, type_name, type_version)
         resp, body = self.http_client.post(url, data=kwargs)
         return ArtifactType(**body)
 
@@ -87,8 +96,8 @@ class Controller(object):
         """
         type_name, type_version = self._check_type_params(type_name,
                                                           type_version)
-        url = '/v%s/artifacts/%s/v%s/%s' % (self.version, type_name,
-                                            type_version, artifact_id)
+        url = glare_urls['update_get_delete'] % (self.version, type_name,
+                                                 type_version, artifact_id)
         hdrs = {
             'Content-Type': 'application/openstack-images-v2.1-json-patch'}
 
@@ -134,8 +143,8 @@ class Controller(object):
         type_name, type_version = self._check_type_params(type_name,
                                                           type_version)
 
-        url = '/v%s/artifacts/%s/v%s/%s' % (self.version, type_name,
-                                            type_version, artifact_id)
+        url = glare_urls['update_get_delete'] % (self.version, type_name,
+                                                 type_version, artifact_id)
         if show_level:
             if show_level not in ArtifactType.supported_show_levels:
                 msg = "Invalid show level: %s" % show_level
@@ -197,11 +206,11 @@ class Controller(object):
                 url_params.append({param: value})
 
         if drafts:
-            url = '/v%s/artifacts/%s/' \
-                  'v%s/drafts?' % (self.version, type_name, type_version)
+            url = glare_urls['list_drafts'] % (self.version, type_name,
+                                               type_version)
         else:
-            url = '/v%s/artifacts/%s/v%s?' % (self.version, type_name,
-                                              type_version)
+            url = glare_urls['list_no_drafts'] % (self.version, type_name,
+                                                  type_version)
 
         for param in url_params:
             url = '%s&%s' % (url, parse.urlencode(param))
@@ -221,8 +230,8 @@ class Controller(object):
         type_name, type_version = self._check_type_params(type_name,
                                                           type_version)
 
-        url = '/v%s/artifacts/%s/v%s/%s/publish' % (self.version, type_name,
-                                                    type_version, artifact_id)
+        url = glare_urls['publish'] % (self.version, type_name,
+                                       type_version, artifact_id)
 
         resp, body = self.http_client.post(url)
         return ArtifactType(**body)
@@ -237,8 +246,8 @@ class Controller(object):
         """
         type_name, type_version = self._check_type_params(type_name,
                                                           type_version)
-        url = '/v%s/artifacts/%s/v%s/%s' % (self.version, type_name,
-                                            type_version, artifact_id)
+        url = glare_urls['update_get_delete'] % (self.version, type_name,
+                                                 type_version, artifact_id)
         self.http_client.delete(url)
 
     def upload_blob(self, artifact_id, blob_property, data, position=None,
@@ -254,9 +263,8 @@ class Controller(object):
                                                           type_version)
         hdrs = {'Content-Type': 'application/octet-stream'}
 
-        url = '/v%s/artifacts/%s/v%s/%s/%s' % (self.version, type_name,
-                                               type_version, artifact_id,
-                                               blob_property)
+        url = glare_urls['blob'] % (self.version, type_name, type_version,
+                                    artifact_id, blob_property)
         if position:
             url += "/%s" % position
 
@@ -274,9 +282,8 @@ class Controller(object):
         """
         type_name, type_version = self._check_type_params(type_name,
                                                           type_version)
-        url = '/v%s/artifacts/%s/v%s/%s/%s' % (self.version, type_name,
-                                               type_version, artifact_id,
-                                               blob_property)
+        url = glare_urls['blob'] % (self.version, type_name, type_version,
+                                    artifact_id, blob_property)
         if position:
             url += '/%s' % position
 
@@ -302,9 +309,8 @@ class Controller(object):
         """
         type_name, type_version = self._check_type_params(type_name,
                                                           type_version)
-        url = '/v%s/artifacts/%s/v%s/%s/%s' % (self.version, type_name,
-                                               type_version, artifact_id,
-                                               blob_property)
+        url = glare_urls['blob'] % (self.version, type_name, type_version,
+                                    artifact_id, blob_property)
         if position:
             url += '/%s' % position
         self.http_client.delete(url)
