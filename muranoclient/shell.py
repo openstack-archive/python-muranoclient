@@ -415,8 +415,10 @@ class MuranoShell(object):
         glance_client = None
         if glance_endpoint:
             try:
+                # TODO(starodubcevna): switch back to glance APIv2 when it will
+                # be ready for use.
                 glance_client = glanceclient.Client(
-                    '2', glance_endpoint, **glance_kwargs)
+                    '1', glance_endpoint, **glance_kwargs)
             except Exception:
                 pass
         if glance_client:
