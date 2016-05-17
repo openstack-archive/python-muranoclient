@@ -1,0 +1,8 @@
+---
+
+features:
+  - Added '--dep-exists-action' option to murano command-line interface.
+    It allows to apply different default actions for existing main
+    package and existing dependencies. In case of specifying just
+    '--exists-action', action for dependencies equals to that like it
+    was previously.
