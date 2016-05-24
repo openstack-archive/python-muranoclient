@@ -15,7 +15,7 @@
 import os
 
 from six.moves import configparser
-from tempest_lib.cli import base
+from tempest.lib.cli import base
 
 
 class ClientTestBase(base.ClientTestBase):
