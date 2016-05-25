@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import collections
+
 from glanceclient import exc as glance_exc
 import six
 import yaml
@@ -53,6 +55,23 @@ class ArtifactRepo(object):
             package_draft[k] = v
 
         inherits = self._get_local_inheritance(package.classes)
+
+        # check for global inheritance
+        ancestor_queue = collections.deque(inherits.keys())
+        while ancestor_queue:
+            ancestor_name = ancestor_queue.popleft()
+            child_classes = inherits[ancestor_name]
+
+            ancestors = self.list(class_definitions=ancestor_name)
+            for ancestor in ancestors:
+                # check if ancestor inherits anything
+                ancestor_inherits = \
+                    ancestor.type_specific_properties.get('inherits', {})
+                for name, value in ancestor_inherits.items():
+                    # check if this is the class we actually inherit
+                    if ancestor_name in value:
+                        ancestor_queue.append(name)
+                        inherits[name] = child_classes
 
         package_draft['inherits'] = inherits
 
