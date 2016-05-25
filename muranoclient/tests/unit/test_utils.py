@@ -177,8 +177,99 @@ class PackageTest(testtools.TestCase):
             {'main_app': app, 'dep_app': mock.ANY, 'dep_of_dep': mock.ANY},
             reqs)
 
-    @requests_mock.mock()
-    def test_cyclic_requirements(self, m):
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_requirements_order(self, from_file):
+        """Test that dependencies are parsed in correct order."""
+
+        pkg5 = make_pkg({'FullName': 'd4', })
+        pkg4 = make_pkg({'FullName': 'd3', 'Require': {'d4': None}, })
+        pkg3 = make_pkg({'FullName': 'd2', 'Require': {'d3': None}, })
+        pkg2 = make_pkg({'FullName': 'd1', 'Require': {'d3': None}, })
+        pkg1 = make_pkg({'FullName': 'M', 'Require': {'d1': None,
+                                                      'd2': None,
+                                                      'd4': None}, })
+
+        def side_effect(name):
+            if 'M' in name:
+                return utils.Package(utils.File(pkg1))
+            if 'd1' in name:
+                return utils.Package(utils.File(pkg2))
+            if 'd2' in name:
+                return utils.Package(utils.File(pkg3))
+            if 'd3' in name:
+                return utils.Package(utils.File(pkg4))
+            if 'd4' in name:
+                return utils.Package(utils.File(pkg5))
+
+        from_file.side_effect = side_effect
+        app = from_file('M')
+        reqs = app.requirements(base_url=self.base_url)
+
+        def key_position(key):
+            keys = list(six.iterkeys(reqs))
+            return keys.index(key)
+
+        self.assertTrue(
+            key_position('d4') < key_position('d3') and
+            key_position('d4') < key_position('M') and
+            key_position('d3') < key_position('d1') and
+            key_position('d3') < key_position('d2') < key_position('M')
+        )
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_requirements_order2(self, from_file):
+        """Test that dependencies are parsed in correct order."""
+
+        pkg5 = make_pkg({'FullName': 'd4', 'Require': {'d6': None}, })
+        pkg4 = make_pkg({'FullName': 'd3', 'Require': {'d4': None}, })
+        pkg3 = make_pkg({'FullName': 'd1', 'Require': {'d3': None,
+                                                       'd7': None}, })
+        pkg2 = make_pkg({'FullName': 'd2', 'Require': {'d3': None}, })
+        pkg6 = make_pkg({'FullName': 'd6', })
+        pkg7 = make_pkg({'FullName': 'd7', 'Require': {'d8': None}, })
+        pkg8 = make_pkg({'FullName': 'd8', })
+
+        pkg1 = make_pkg({'FullName': 'M', 'Require': {'d1': None,
+                                                      'd2': None,
+                                                      'd4': None, }, })
+
+        def side_effect(name):
+            if 'M' in name:
+                return utils.Package(utils.File(pkg1))
+            if 'd1' in name:
+                return utils.Package(utils.File(pkg2))
+            if 'd2' in name:
+                return utils.Package(utils.File(pkg3))
+            if 'd3' in name:
+                return utils.Package(utils.File(pkg4))
+            if 'd4' in name:
+                return utils.Package(utils.File(pkg5))
+            if 'd6' in name:
+                return utils.Package(utils.File(pkg6))
+            if 'd7' in name:
+                return utils.Package(utils.File(pkg7))
+            if 'd8' in name:
+                return utils.Package(utils.File(pkg8))
+
+        from_file.side_effect = side_effect
+        app = from_file('M')
+        reqs = app.requirements(base_url=self.base_url)
+
+        def key_position(key):
+            keys = list(six.iterkeys(reqs))
+            return keys.index(key)
+
+        self.assertTrue(
+            key_position('d6') < key_position('d4') <
+            key_position('d3') < key_position('d1') and
+            key_position('d3') < key_position('d2') and
+            key_position('d1') < key_position('M') and
+            key_position('d2') < key_position('M') and
+            key_position('d8') < key_position('d7') < key_position('d1')
+        )
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_cyclic_requirements(self, from_file):
         """Test that a cyclic dependency would be handled correctly."""
         pkg3 = make_pkg({'FullName': 'dep_of_dep', 'Require': {
             'main_app': None, 'dep_app': None}, })
@@ -187,15 +278,106 @@ class PackageTest(testtools.TestCase):
         pkg1 = make_pkg({'FullName': 'main_app', 'Require': {
             'dep_app': None, 'dep_of_dep': None}, })
 
-        m.get(self.base_url + '/apps/main_app.zip', body=pkg1)
-        m.get(self.base_url + '/apps/dep_app.zip', body=pkg2)
-        m.get(self.base_url + '/apps/dep_of_dep.zip', body=pkg3)
-        app = utils.Package.fromFile(pkg1)
+        def side_effect(name):
+            if 'main_app' in name:
+                return utils.Package(utils.File(pkg1))
+            if 'dep_app' in name:
+                return utils.Package(utils.File(pkg2))
+            if 'dep_of_dep' in name:
+                return utils.Package(utils.File(pkg3))
+
+        from_file.side_effect = side_effect
+        app = from_file('main_app')
         reqs = app.requirements(base_url=self.base_url)
 
         self.assertEqual(
             {'main_app': app, 'dep_app': mock.ANY, 'dep_of_dep': mock.ANY},
             reqs)
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_order_with_cyclic_requirements2(self, from_file):
+        """Test that dependencies are parsed in correct order."""
+
+        pkg6 = make_pkg({'FullName': 'd5', 'Require': {'d6': None}, })
+        pkg7 = make_pkg({'FullName': 'd6', })
+        pkg5 = make_pkg({'FullName': 'd4', 'Require': {'d3': None,
+                                                       'd5': None}})
+        pkg4 = make_pkg({'FullName': 'd3', 'Require': {'d4': None}, })
+        pkg3 = make_pkg({'FullName': 'd2', 'Require': {'d1': None,
+                                                       'd5': None,
+                                                       'd6': None}, })
+        pkg2 = make_pkg({'FullName': 'd1', 'Require': {'d2': None}, })
+        pkg1 = make_pkg({'FullName': 'M', 'Require': {'d1': None,
+                                                      'd3': None}, })
+
+        def side_effect(name):
+            if 'M' in name:
+                return utils.Package(utils.File(pkg1))
+            if 'd1' in name:
+                return utils.Package(utils.File(pkg2))
+            if 'd2' in name:
+                return utils.Package(utils.File(pkg3))
+            if 'd3' in name:
+                return utils.Package(utils.File(pkg4))
+            if 'd4' in name:
+                return utils.Package(utils.File(pkg5))
+            if 'd5' in name:
+                return utils.Package(utils.File(pkg6))
+            if 'd6' in name:
+                return utils.Package(utils.File(pkg7))
+
+        from_file.side_effect = side_effect
+        app = from_file('M')
+        reqs = app.requirements(base_url=self.base_url)
+
+        def key_position(key):
+            keys = list(six.iterkeys(reqs))
+            return keys.index(key)
+
+        self.assertTrue(
+            key_position('d5') < key_position('d4') and
+            key_position('d5') < key_position('d2') and
+            key_position('d5') < key_position('d3') < key_position('M') and
+            key_position('d5') < key_position('d1') < key_position('M')
+        )
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_order_with_cyclic_requirements3(self, from_file):
+        """Test that dependencies are parsed in correct order."""
+
+        pkg5 = make_pkg({'FullName': 'd4', })
+        pkg4 = make_pkg({'FullName': 'd3', 'Require': {'M': None}, })
+        pkg3 = make_pkg({'FullName': 'd2', 'Require': {'d3': None,
+                                                       'd4': None}, })
+        pkg2 = make_pkg({'FullName': 'd1', 'Require': {'d2': None}, })
+        pkg1 = make_pkg({'FullName': 'M', 'Require': {'d1': None}, })
+
+        def side_effect(name):
+            if 'M' in name:
+                return utils.Package(utils.File(pkg1))
+            if 'd1' in name:
+                return utils.Package(utils.File(pkg2))
+            if 'd2' in name:
+                return utils.Package(utils.File(pkg3))
+            if 'd3' in name:
+                return utils.Package(utils.File(pkg4))
+            if 'd4' in name:
+                return utils.Package(utils.File(pkg5))
+
+        from_file.side_effect = side_effect
+        app = from_file('M')
+        reqs = app.requirements(base_url=self.base_url)
+
+        def key_position(key):
+            keys = list(six.iterkeys(reqs))
+            return keys.index(key)
+
+        self.assertTrue(
+            key_position('d4') < key_position('M') and
+            key_position('d4') < key_position('d1') and
+            key_position('d4') < key_position('d2') and
+            key_position('d4') < key_position('d3')
+        )
 
     def test_images(self):
         pkg = make_pkg({})
