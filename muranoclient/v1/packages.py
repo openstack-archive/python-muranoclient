@@ -147,7 +147,7 @@ class PackageManager(base.Manager):
 
     def get_ui(self, app_id, loader_cls=None):
         if loader_cls is None:
-            loader_cls = yaml.Loader
+            loader_cls = yaml.SafeLoader
 
         url = '/v1/catalog/packages/{0}/ui'.format(app_id)
         response = self.api.raw_request('GET', url)

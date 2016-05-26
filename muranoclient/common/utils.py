@@ -605,12 +605,12 @@ class Bundle(FileWrapperMixin):
             yield pkg_obj
 
 
-class YaqlYamlLoader(yaml.Loader):
+class YaqlYamlLoader(yaml.SafeLoader):
     pass
 
 # workaround for PyYAML bug: http://pyyaml.org/ticket/221
 resolvers = {}
-for k, v in yaml.Loader.yaml_implicit_resolvers.items():
+for k, v in yaml.SafeLoader.yaml_implicit_resolvers.items():
     resolvers[k] = v[:]
 YaqlYamlLoader.yaml_implicit_resolvers = resolvers
 

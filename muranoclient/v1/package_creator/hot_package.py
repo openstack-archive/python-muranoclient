@@ -43,7 +43,7 @@ def generate_manifest(args):
         args.full_name = '{0}.{1}'.format(prefix, normalized_name)
     try:
         with open(args.template, 'rb') as heat_file:
-            yaml_content = yaml.load(heat_file)
+            yaml_content = yaml.safe_load(heat_file)
             if not args.description:
                 args.description = yaml_content.get(
                     'description',
