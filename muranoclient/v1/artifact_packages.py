@@ -191,7 +191,7 @@ class ArtifactRepo(object):
         ui_stream = "".join(
             self.client.artifacts.download_blob(app_id, 'ui_definition'))
         if loader_cls is None:
-            loader_cls = yaml.Loader
+            loader_cls = yaml.SafeLoader
         return yaml.load(ui_stream, loader_cls)
 
     def get_logo(self, app_id):
