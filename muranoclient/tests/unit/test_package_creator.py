@@ -101,10 +101,12 @@ class PackageCreatorTest(base.TestAdditionalAsserts):
         args.full_name = 'test.full.name.TestName'
         args.tags = 'test, tag, Heat'
         args.description = 'Test description'
+        args.resources_dir = RESOURCES_DIR
         args.logo = LOGO
         package_dir = hot_package.prepare_package(args)
 
-        prepared_files = ['manifest.yaml', 'logo.png', 'template.yaml']
+        prepared_files = ['manifest.yaml', 'logo.png',
+                          'template.yaml', 'Resources']
         self.assertEqual(sorted(prepared_files),
                          sorted(os.listdir(package_dir)))
         shutil.rmtree(package_dir)
