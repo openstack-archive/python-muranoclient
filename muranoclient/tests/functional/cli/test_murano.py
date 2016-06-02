@@ -719,9 +719,11 @@ class DeployMuranoEnvironmentTest(utils.CLIUtilsTestPackagesBase):
         self.assertEqual('success', deployments[1]['State'])
         self.assertEqual(2, len(deployments))
 
-    # TODO(akuznetsova):  need to upskip this test when
-    # https://bugs.launchpad.net/python-muranoclient/+bug/1511645 is fixed
-    @unittest.expectedFailure
+    # TODO(mstolyarenko):  need to unskip this test when
+    # https://bugs.launchpad.net/python-muranoclient/+bug/1625039 is fixed
+    @unittest.skipIf(backend_name == 'glare',
+                     "This test fails when GLARE is used as packages "
+                     "service. To be fixed as part of #1625039")
     def test_delete_component_from_deployed_env(self):
         """Test scenario:
 
