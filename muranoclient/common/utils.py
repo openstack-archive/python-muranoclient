@@ -354,7 +354,8 @@ class Package(FileWrapperMixin):
                 filename = "Classes/%s" % class_file
                 if filename not in self.contents.namelist():
                     continue
-                klass = yaml.safe_load(self.contents.open(filename))
+                klass = yaml.load(self.contents.open(filename),
+                                  DummyYaqlYamlLoader)
                 self._classes[class_name] = klass
         return self._classes
 
@@ -585,6 +586,14 @@ class Bundle(FileWrapperMixin):
                           "package {1}".format(e, package['Name']))
                 continue
             yield pkg_obj
+
+
+class DummyYaqlYamlLoader(yaml.SafeLoader):
+    """Constructor that treats !yaql as string."""
+    pass
+
+DummyYaqlYamlLoader.add_constructor(
+    u'!yaql', DummyYaqlYamlLoader.yaml_constructors[u'tag:yaml.org,2002:str'])
 
 
 class YaqlYamlLoader(yaml.SafeLoader):

@@ -1,0 +1,5 @@
+---
+fixes:
+  - It is now possible to import packages with '!yaql' tag, when glare
+    is used as backend. Before this fix, importing such package caused
+    a parsing error.
