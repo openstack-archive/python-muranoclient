@@ -202,9 +202,8 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         self.assertEqual('1234', result)
 
     def test_package_filter_pagination_next_marker(self):
-        """``PackageManager.filter`` handles `next_marker` parameter related
-        to pagination in API correctly.
-        """
+        # ``PackageManager.filter`` handles `next_marker` parameter related
+        # to pagination in API correctly.
         responses = [
             {'next_marker': 'test_marker',
              'packages': [{'name': 'test_package_1'}]},
@@ -253,8 +252,7 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         self.assertEqual({'a': 'b'}, result)
 
     def test_env_template_manager_list(self):
-        """It tests the list of environment templates.
-        """
+        """Tests the list of environment templates."""
         manager = templates.EnvTemplateManager(api)
         result = manager.list()
 

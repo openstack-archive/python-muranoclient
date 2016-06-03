@@ -629,6 +629,7 @@ def _handle_package_exists(mc, data, package, exists_action):
            help='Default action when a package already exists.')
 def do_package_import(mc, args):
     """Import a package.
+
     `FILE` can be either a path to a zip file, url or a FQPN.
     You can use `--` to separate `FILE`s from other arguments.
 
@@ -734,6 +735,7 @@ def do_package_update(mc, args):
            help='Default action when a package already exists.')
 def do_bundle_import(mc, args):
     """Import a bundle.
+
     `FILE` can be either a path to a zip file, URL, or name from repo.
     If `FILE` is a local file, treat names of packages in a bundle as
     file names, relative to location of the bundle file. Requirements
@@ -844,6 +846,7 @@ def _handle_save_packages(packages, dst, base_url, no_images):
            help='If set will skip images downloading.')
 def do_bundle_save(mc, args):
     """Save a bundle.
+
     This will download a bundle of packages with all dependencies
     to specified path. If path doesn't exist it will be created.
     """
@@ -905,6 +908,7 @@ def do_bundle_save(mc, args):
            help='If set will skip images downloading.')
 def do_package_save(mc, args):
     """Save a package.
+
     This will download package(s) with all dependencies
     to specified path. If path doesn't exist it will be created.
     """
@@ -952,8 +956,7 @@ def do_package_save(mc, args):
                 'Leave empty to browse all applications in the environment.',
            default='/')
 def do_app_show(mc, args):
-    """List applications, added to specified environment.
-    """
+    """List applications, added to specified environment."""
     if args.path == '/':
         apps = mc.services.list(args.id)
         formatters = {'id': lambda x: getattr(x, '?')['id'],

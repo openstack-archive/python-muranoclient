@@ -24,11 +24,12 @@ from muranoclient.openstack.common.apiclient import exceptions
 
 
 def prepare_package(args):
-    """Prepare all files and directories for that application package.
+    """Prepare for application package
+
+    Prepare all files and directories for that application package.
     Generates manifest file and all required parameters for that.
 
     :param args: list of command line arguments
-
     :returns: absolute path to directory with prepared files
     """
     if args.type and args.type not in ['Application', 'Library']:
@@ -72,9 +73,9 @@ def prepare_package(args):
 
 def generate_manifest(args):
     """Generates application manifest file.
+
     If some parameters are missed - they we be generated automatically.
     :param args:
-
     :returns: dictionary, contains manifest file data
     """
     if not os.path.isdir(args.classes_dir):
@@ -111,6 +112,7 @@ def generate_manifest(args):
 
 def update_args(args):
     """Add and update arguments if possible.
+
     Some parameters are not required and would be guessed
     from muranoPL classes: thus, if class extends system application class
     fully qualified and require names could be calculated.
@@ -166,10 +168,10 @@ def update_args(args):
 
 def get_fqn_for_name(namespaces, name):
     """Analyze name for namespace reference.
+
     If namespaces are used - return a full name
     :param namespaces: content of 'Namespaces' section of muranoPL class
     :param name: name that should be checked
-
     :returns: generated name according to namespaces
     """
     values = name.split(':')
@@ -198,9 +200,7 @@ def get_fqn_for_name(namespaces, name):
 
 
 def check_derived_from_application(content, extends_from_application):
-    """Look up for system 'io.murano.Application'
-        class in extends section.
-    """
+    """Look up for system 'io.murano.Application' class in extends section"""
     if content.get('Extends'):
         extends = content['Extends']
         if not isinstance(extends, list):

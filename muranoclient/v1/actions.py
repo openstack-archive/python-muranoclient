@@ -14,10 +14,9 @@
 # limitations under the License.
 
 
+# Not a true manager yet; should be changed to be one if CRUD
+# functionality becomes available for actions.
 class ActionManager(object):
-    """Not a true manager yet; should be changed to be one if CRUD
-    functionality becomes available for actions.
-    """
     def __init__(self, api):
         self.api = api
 

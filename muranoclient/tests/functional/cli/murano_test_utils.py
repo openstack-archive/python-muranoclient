@@ -33,8 +33,10 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
     """Basic methods for Murano CLI client."""
 
     def delete_murano_object(self, murano_object, obj_to_del):
-        """Delete Murano object like environment, category
-        or environment-template.
+        """Delete Murano object
+
+        Delete Murano object like environment, category or
+        environment-template.
         """
         if obj_to_del not in self.listing('{0}-list'.format(murano_object)):
             return
@@ -48,8 +50,10 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
         return object_list
 
     def create_murano_object(self, murano_object, prefix_object_name):
-        """Create Murano object like environment, category
-        or environment-template.
+        """Create Murano object
+
+        Create Murano object like environment, category or
+        environment-template.
         """
         object_name = self.generate_name(prefix_object_name)
         mrn_objects = self.listing('{0}-create'.format(murano_object),
@@ -67,8 +71,10 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
 
     def create_murano_object_parameter(self, murano_object, prefix_object_name,
                                        param):
-        """Create Murano object like environment, category
-        or environment-template.
+        """Create Murano object
+
+        Create Murano object like environment, category or
+        environment-template.
         """
         object_name = self.generate_name(prefix_object_name)
         params = '{0} {1}'.format(param, object_name)

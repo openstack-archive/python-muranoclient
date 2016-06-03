@@ -163,7 +163,9 @@ def exit(msg=''):
 
 
 def getsockopt(self, *args, **kwargs):
-    """A function which allows us to monkey patch eventlet's
+    """Allows us to monkey patch eventlet's GreenSocket
+
+    A function which allows us to monkey patch eventlet's
     GreenSocket, adding a required 'getsockopt' method.
     TODO: (mclaren) we can remove this once the eventlet fix
     (https://bitbucket.org/eventlet/eventlet/commits/609f230)
@@ -292,7 +294,9 @@ class Package(FileWrapperMixin):
 
     @staticmethod
     def from_location(name, base_url='', version='', url='', path=None):
-        """If path is supplied search for name file in the path, otherwise
+        """Open file using one of three possible options
+
+        If path is supplied search for name file in the path, otherwise
         if url is supplied - open that url and finally search murano
         repository for the package.
         """
@@ -385,7 +389,9 @@ class Package(FileWrapperMixin):
         return self._logo
 
     def requirements(self, base_url, path=None, dep_dict=None):
-        """Recursively scan Require section of manifests of all the
+        """Get dict of all requirements
+
+        Recursively scan Require section of manifests of all the
         dependencies. Returns a dict with FQPNs as keys and respective
         Package objects as values
         """
@@ -449,7 +455,9 @@ def save_image_local(image_spec, base_url, dst):
 def ensure_images(glance_client, image_specs, base_url,
                   local_path=None,
                   is_package_public=False):
-    """Ensure that images from image_specs are available in glance. If not
+    """Ensure that images are available
+
+    Ensure that images from image_specs are available in glance. If not
     attempts: instructs glance to download the images and sets murano-specific
     metadata for it.
     """
@@ -559,7 +567,9 @@ class Bundle(FileWrapperMixin):
         return Bundle.from_file(file_obj)
 
     def package_specs(self):
-        """Returns a generator yielding package specifications i.e.
+        """Get a generator yielding package specifications
+
+        Returns a generator yielding package specifications i.e.
         dicts with 'Name' and 'Version' fields
         """
         self._file.seek(0)
@@ -585,7 +595,9 @@ class Bundle(FileWrapperMixin):
             yield package
 
     def packages(self, base_url='', path=None):
-        """Returns a generator, yielding Package objects for each package
+        """Get a generator yielding Package objects
+
+        Returns a generator, yielding Package objects for each package
         found in the bundle.
         """
         for package in self.package_specs():

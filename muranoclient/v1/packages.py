@@ -111,6 +111,7 @@ class PackageManager(base.Manager):
 
     def update(self, app_id, body, operation='replace'):
         """Translates dictionary to jsonpatch request
+
         :param app_id: string, id of updating application
         :param body: dictionary, mapping between keys and values for update
         :param operation: string, way of updating: replace, remove, add

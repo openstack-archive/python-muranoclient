@@ -34,7 +34,9 @@ except NameError:
 
 
 def getid(obj):
-    """Abstracts the common pattern of allowing both an object or
+    """Get obj's id or object itself if no id
+
+    Abstracts the common pattern of allowing both an object or
     an object's ID (UUID) as a parameter when dealing with relationships.
     """
     try:
@@ -44,7 +46,9 @@ def getid(obj):
 
 
 class Manager(object):
-    """Managers interact with a particular type of API (servers, flavors,
+    """Interacts with type of API
+
+    Managers interact with a particular type of API (servers, flavors,
     images, etc.) and provide CRUD operations for them.
     """
     resource_class = None
@@ -162,7 +166,9 @@ class ManagerWithFind(Manager):
 
 
 class Resource(object):
-    """A resource represents a particular instance of an object (tenant, user,
+    """Represents an instance of an object
+
+    A resource represents a particular instance of an object (tenant, user,
     etc). This is pretty much just a bag for attributes.
 
     :param manager: Manager object

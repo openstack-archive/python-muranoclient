@@ -24,11 +24,10 @@ from muranoclient.openstack.common.apiclient import exceptions
 
 def generate_manifest(args):
     """Generates application manifest file.
+
     If some parameters are missed - they we be generated automatically.
     :param args:
-
     :returns: dictionary, contains manifest file data
-
     """
     if not os.path.isfile(args.template):
         raise exceptions.CommandError(
@@ -72,8 +71,8 @@ def generate_manifest(args):
 
 def prepare_package(args):
     """Compose required files for murano application package.
-    :param args: list of command line arguments
 
+    :param args: list of command line arguments
     :returns: absolute path to directory with prepared files
     """
     manifest = generate_manifest(args)

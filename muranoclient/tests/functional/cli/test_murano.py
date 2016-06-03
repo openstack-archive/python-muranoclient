@@ -47,13 +47,16 @@ class SimpleReadOnlyMuranoClientTest(utils.CLIUtilsTestBase):
 
 
 class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
-    """Smoke test for the Murano CLI commands which checks table
+    """Smoke test for the Murano CLI commands
+
+    Smoke test for the Murano CLI commands which checks table
     structure after create or delete category, env-template
     environment and package.
     """
 
     def test_table_struct_deployment_list(self):
         """Test scenario:
+
             1) create environment
             2) check table structure
         """
@@ -66,6 +69,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
 
     def test_table_struct_of_environment_create(self):
         """Test scenario:
+
             1) create environment
             2) check table structure
         """
@@ -76,6 +80,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
 
     def test_table_struct_of_environment_delete(self):
         """Test scenario:
+
             1) create environment
             2) delete environment
             3) check table structure
@@ -89,6 +94,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
 
     def test_table_struct_of_category_create(self):
         """Test scenario:
+
             1) create category
             2) check table structure
         """
@@ -98,6 +104,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
 
     def test_table_struct_of_category_delete(self):
         """Test scenario:
+
             1) create category
             2) delete category
             3) check table structure
@@ -110,6 +117,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
 
     def test_table_struct_of_env_template_create(self):
         """Test scenario:
+
             1) create env_template
             2) check table structure
         """
@@ -121,6 +129,7 @@ class TableStructureMuranoClientTest(utils.CLIUtilsTestBase):
 
     def test_table_struct_of_env_template_delete(self):
         """Test scenario:
+
             1) create env_template
             2) delete env_template
             3) check table structure
@@ -142,6 +151,7 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_environment_create(self):
         """Test scenario:
+
             1) create environment
             2) check that created environment exist
         """
@@ -153,6 +163,7 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_environment_delete(self):
         """Test scenario:
+
             1) create environment
             2) delete environment
         """
@@ -165,6 +176,7 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_environment_rename(self):
         """Test scenario:
+
             1) create environment
             2) rename environment
         """
@@ -183,6 +195,7 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_table_struct_env_show(self):
         """Test scenario:
+
             1) create environment
             2) check structure of env_show object
         """
@@ -196,6 +209,7 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_environment_show(self):
         """Test scenario:
+
             1) create environment
             2) check that env_name, ID, updated and created values
                exist in env_show object
@@ -213,6 +227,7 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_environment_delete_by_id(self):
         """Test scenario:
+
             1) create environment
             2) delete environment by environment ID
         """
@@ -234,6 +249,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_category_create(self):
         """Test scenario:
+
             1) create category
             2) check that created category exist
         """
@@ -245,6 +261,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_category_delete(self):
         """Test scenario:
+
             1) create category
             2) delete category
             3) check that category has been deleted successfully
@@ -258,6 +275,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_table_struct_category_show(self):
         """Test scenario:
+
             1) create category
             2) check table structure of category-show object
         """
@@ -270,6 +288,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_category_show(self):
         """Test scenario:
+
             1) create category
             2) check that category values exist in category_show object
         """
@@ -283,6 +302,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_non_existing_category_delete(self):
         """Test scenario:
+
             1) try to call category-delete for non existing category
             2) check that error message contains user friendly substring
         """
@@ -293,6 +313,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_non_existing_category_show(self):
         """Test scenario:
+
             1) try to call category-show for non existing category
             2) check that error message contains user friendly substring
         """
@@ -302,6 +323,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_category_create_with_long_name(self):
         """Test scenario:
+
             1) try to create category with long name (>80)
             2) check that error message contains user friendly substring
         """
@@ -320,6 +342,7 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
     """
     def test_environment_template_create(self):
         """Test scenario:
+
             1) create environment template
             2) check that created environment template exist
         """
@@ -331,6 +354,7 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_environment_template_delete(self):
         """Test scenario:
+
             1) create environment template
             2) delete environment template
             3) check that deleted environment template doesn't exist
@@ -344,6 +368,7 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_table_struct_env_template_show(self):
         """Test scenario:
+
             1) create environment template
             2) check table structure of env-template-show object
         """
@@ -363,6 +388,7 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_env_template_show(self):
         """Test scenario:
+
             1) create environment template
             2) check that environment template values exist in
             env-template-show object
@@ -380,6 +406,7 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_env_template_create_environment(self):
         """Test scenario:
+
             1) create environment template
             2) create environment from template
         """
@@ -395,6 +422,7 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
     def test_env_template_clone(self):
         """Test scenario:
+
             1) create environment template
             2) clone template
             3) check that create environment template has the new name
@@ -424,6 +452,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_package_import_by_url(self):
         """Test scenario:
+
             1) import package by url
             2) check that package exists
         """
@@ -441,6 +470,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_package_import_by_path(self):
         """Test scenario:
+
             1) import package by path
             2) check that package exists
         """
@@ -454,6 +484,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_package_is_public(self):
         """Test scenario:
+
             1) import package
             2) check that package is public
         """
@@ -473,6 +504,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_package_delete(self):
         """Test scenario:
+
             1) import package
             2) delete package
             3) check that package has been deleted
@@ -488,6 +520,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_package_show(self):
         """Test scenario:
+
             1) import package
             2) check that package values exist in
             return by package-show object
@@ -522,6 +555,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_package_import_update(self):
         """Test scenario:
+
             1) import package
             2) import new_package using option 'u' - update
             3) check that package has been updated
@@ -540,6 +574,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_package_import_skip(self):
         """Test scenario:
+
             1) import package using option 's' - skip for existing package
             2) try to import the same package using option 's' - skip
             3) check that package hasn't been updated
@@ -561,6 +596,7 @@ class PackageMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_package_import_abort(self):
         """Test scenario:
+
             1) import package
             2) import new_package using option 'a' - skip
             3) check that package hasn't been updated
@@ -592,6 +628,7 @@ class DeployMuranoEnvironmentTest(utils.CLIUtilsTestPackagesBase):
 
     def test_environment_deployment(self):
         """Test scenario:
+
             1) import package
             2) create environment
             3) create session for created environment
@@ -624,6 +661,7 @@ class DeployMuranoEnvironmentTest(utils.CLIUtilsTestPackagesBase):
 
     def test_add_component_to_deployed_env(self):
         """Test scenario:
+
             1) import package
             2) create environment
             3) create session for created environment
@@ -669,6 +707,7 @@ class DeployMuranoEnvironmentTest(utils.CLIUtilsTestPackagesBase):
     @unittest.expectedFailure
     def test_delete_component_from_deployed_env(self):
         """Test scenario:
+
             1) import package
             2) create environment
             3) create session for created environment
@@ -718,6 +757,7 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_bundle_import_without_bundle_name(self):
         """Test scenario:
+
             1) Execute murano bundle-import command without bundle name
             2) check that error message contains user friendly substring
         """
@@ -727,6 +767,7 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_bundle_import_with_non_existing_package_name(self):
         """Test scenario:
+
             1) Execute murano bundle-import command with non-existing packages
             name inside
             2) check that error message contains user friendly substring
@@ -740,6 +781,7 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_bundle_import_with_non_existing_name(self):
         """Test scenario:
+
             1) Execute murano bundle-import command with non-existing bundle
             name
             2) check that error message contains user friendly substring
@@ -753,6 +795,7 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
 
     def test_bundle_import_with_invalid_file_format(self):
         """Test scenario:
+
             1) Execute murano bundle-import command with invalid bundle file
             format
             2) check that error message contains user friendly substring

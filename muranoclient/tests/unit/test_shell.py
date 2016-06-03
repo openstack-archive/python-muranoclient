@@ -1055,7 +1055,9 @@ class ShellPackagesOperations(ShellCommandTest):
 
     @requests_mock.mock()
     def test_import_bundle_dependencies(self, m):
-        """Asserts bundle import calls packages create once for each pkg,
+        """Test bundle import calls
+
+        Asserts bundle import calls packages create once for each pkg,
         including dependencies.
         """
         pkg1 = make_pkg(

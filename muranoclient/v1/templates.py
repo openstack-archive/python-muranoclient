@@ -16,8 +16,7 @@ from muranoclient.common import base
 
 
 class Template(base.Resource):
-    """It involves the template resource.
-    """
+    """Involves the template resource."""
     def __repr__(self):
         return "<Template %s>" % self._info
 
@@ -26,23 +25,23 @@ class Template(base.Resource):
 
 
 class EnvTemplateManager(base.Manager):
-    """It involves the template manager.
-    """
+    """Involves the template manager."""
     resource_class = Template
 
     def list(self):
-        """It lists the environment templates.
-        """
+        """Lists the environment templates."""
         return self._list('/v1/templates', 'templates')
 
     def create(self, data):
-        """It creates a environment template
+        """Creates a environment template
+
         :param data: The environment template information.
         """
         return self._create('/v1/templates', data)
 
     def update(self, env_template_id, name):
-        """It updates the environment template name.
+        """Updates the environment template name.
+
         :param env_template_id: The environment template ID.
         :param name: The name to be updated.
         """
@@ -50,19 +49,22 @@ class EnvTemplateManager(base.Manager):
                             data={'name': name})
 
     def delete(self, env_template_id):
-        """It deletes an environment template name.
+        """Deletes an environment template name.
+
         :param env_template_id: The environment template ID.
         """
         return self._delete('/v1/templates/{id}'.format(id=env_template_id))
 
     def get(self, env_template_id):
-        """It gets information about an environment template name.
+        """Gets information about an environment template name.
+
         :param env_template_id: The environment template ID.
         """
         return self._get("/v1/templates/{id}".format(id=env_template_id))
 
     def create_app(self, env_template_id, data):
-        """It creates an application in an environment template.
+        """Creates an application in an environment template.
+
         :param env_template_id: The environment template ID.
         :param data: the application information.
         """
@@ -71,7 +73,8 @@ class EnvTemplateManager(base.Manager):
                     format(id=env_template_id), data)
 
     def delete_app(self, env_template_id, app_id):
-        """It deletes an application in an environment template.
+        """Deletes an application in an environment template.
+
         :param env_template_id: The environment template ID.
         :param app_id: the application ID to be deleted.
         """
@@ -79,7 +82,8 @@ class EnvTemplateManager(base.Manager):
                             format(id=env_template_id, app_id=app_id))
 
     def create_env(self, env_template_id, name):
-        """It creates new environment from template.
+        """Creates new environment from template.
+
         :param env_template_id: The environment template ID.
         :param name: The name for the environment.
         """
@@ -87,7 +91,8 @@ class EnvTemplateManager(base.Manager):
                             format(id=env_template_id), data={'name': name})
 
     def clone(self, env_template_id, name):
-        """It clones a public template from one tenant to another
+        """Clones a public template from one tenant to another.
+
         :param env_template_id: The environment template ID to be cloned.
         :param name: The name for the new template.
         """
