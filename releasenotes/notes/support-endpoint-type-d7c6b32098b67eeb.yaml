@@ -1,0 +1,5 @@
+fixes:
+  - cli now makes use of type of the endpoint (defined either as a
+    --os-endpoint-type command line parameter or OS_ENDPOINT_TYPE environment
+    variable). This type defines which interface will be used when connecting to
+    murano, glance and glare APIs.
