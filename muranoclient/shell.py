@@ -340,6 +340,7 @@ class MuranoShell(object):
                                        " either --os-auth-url or via"
                                        " env[OS_AUTH_URL]")
 
+        endpoint_type = args.os_endpoint_type or 'publicURL'
         endpoint = args.murano_url
         glance_endpoint = args.glance_url
 
@@ -381,13 +382,13 @@ class MuranoShell(object):
 
             keystone_auth = AuthCLI.load_from_argparse_arguments(args)
 
-            endpoint_type = args.os_endpoint_type or 'publicURL'
             service_type = args.os_service_type or 'application-catalog'
 
             if not endpoint:
                 endpoint = keystone_auth.get_endpoint(
                     keystone_session,
                     service_type=service_type,
+                    interface=endpoint_type,
                     region_name=args.os_region_name)
 
             kwargs = {
@@ -398,7 +399,6 @@ class MuranoShell(object):
                 'region_name': args.os_region_name,
             }
             glance_kwargs = kwargs.copy()
-            del glance_kwargs['endpoint_type']
 
         if args.api_timeout:
             kwargs['timeout'] = args.api_timeout
@@ -408,6 +408,7 @@ class MuranoShell(object):
                 glance_endpoint = keystone_auth.get_endpoint(
                     keystone_session,
                     service_type='image',
+                    interface=endpoint_type,
                     region_name=args.os_region_name)
             except Exception:
                 pass
@@ -438,6 +439,7 @@ class MuranoShell(object):
                     glare_endpoint = keystone_auth.get_endpoint(
                         keystone_session,
                         service_type='artifact',
+                        interface=endpoint_type,
                         region_name=args.os_region_name)
                 except Exception:
                     raise exc.CommandError(
