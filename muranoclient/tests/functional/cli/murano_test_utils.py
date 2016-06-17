@@ -22,8 +22,8 @@ import time
 import uuid
 
 from six.moves import SimpleHTTPServer
-from tempest_lib.cli import output_parser
-from tempest_lib import exceptions
+from tempest.lib.cli import output_parser
+from tempest.lib import exceptions
 
 from muranoclient.tests.functional.cli import utils
 from muranoclient.tests.functional import muranoclient
