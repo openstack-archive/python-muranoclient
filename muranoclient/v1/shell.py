@@ -296,7 +296,7 @@ def do_env_template_create(mc, args):
 
 @utils.arg("id", metavar="<ID>",
            help="Environment template ID.")
-@utils.arg("name", metavar="<ENV_TEMPLATE_NAME>",
+@utils.arg("name", metavar="<ENV_NAME>",
            help="New environment name.")
 def do_env_template_create_env(mc, args):
     """Create a new environment from template."""
