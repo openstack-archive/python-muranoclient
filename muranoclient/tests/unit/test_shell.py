@@ -72,6 +72,7 @@ class TestArgs(object):
     package_version = ''
     murano_repo_url = 'http://127.0.0.1'
     exists_action = ''
+    dep_exists_action = ''
     is_public = False
     categories = []
 
@@ -929,6 +930,85 @@ class ShellPackagesOperations(ShellCommandTest):
         )
         self.assertEqual(2, self.client.packages.create.call_count)
         self.assertFalse(raw_input_mock.called)
+
+    def _test_conflict_dep(self,
+                           packages, from_file,
+                           dep_exists_action=''):
+        packages.create = mock.MagicMock(
+            side_effect=[common_exceptions.HTTPConflict("Conflict"),
+                         common_exceptions.HTTPConflict("Conflict"),
+                         None])
+
+        packages.filter.return_value = [mock.Mock(id='test_id')]
+
+        args = TestArgs()
+        args.exists_action = 's'
+        args.dep_exists_action = dep_exists_action
+        args.filename = ['first_app']
+
+        pkg1 = make_pkg(
+            {'FullName': 'first_app', 'Require': {'second_app': '1.0'}, })
+        pkg2 = make_pkg({'FullName': 'second_app', })
+
+        def side_effect(name):
+            if 'first_app' in name:
+                return utils.Package(utils.File(pkg1))
+            if 'second_app' in name:
+                return utils.Package(utils.File(pkg2))
+
+        from_file.side_effect = side_effect
+
+        v1_shell.do_package_import(self.client, args)
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_dep_skip_ea(self, from_file):
+        self._test_conflict_dep(
+            self.client.packages,
+            from_file,
+            dep_exists_action='s',
+        )
+
+        self.client.packages.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )
+
+        self.assertEqual(2, self.client.packages.create.call_count)
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_dep_abort_ea(self, from_file):
+        self.assertRaises(SystemExit, self._test_conflict_dep,
+                          self.client.packages,
+                          from_file,
+                          dep_exists_action='a',
+                          )
+
+        self.client.packages.create.assert_called_with({
+            'is_public': False,
+        }, {'second_app': mock.ANY},)
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_dep_update_ea(self, from_file):
+        self._test_conflict_dep(
+            self.client.packages,
+            from_file,
+            dep_exists_action='u',
+        )
+
+        self.assertEqual(True, self.client.packages.delete.called)
+
+        self.client.packages.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )
+
+        self.assertEqual(True, self.client.packages.create.call_count > 2)
+        self.assertEqual(True, self.client.packages.create.call_count < 5)
 
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_no_categories(self, from_file):

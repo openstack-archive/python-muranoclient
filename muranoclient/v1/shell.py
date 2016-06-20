@@ -626,7 +626,11 @@ def _handle_package_exists(mc, data, package, exists_action):
            help='Version of the package to use from repository '
                 '(ignored when importing with multiple packages).')
 @utils.arg('--exists-action', default='', choices=['a', 's', 'u'],
-           help='Default action when a package already exists.')
+           help='Default action when a package already exists: '
+                '(s)kip, (u)pdate, (a)bort.')
+@utils.arg('--dep-exists-action', default='', choices=['a', 's', 'u'],
+           help='Default action when a dependency package already exists: '
+                '(s)kip, (u)pdate, (a)bort.')
 def do_package_import(mc, args):
     """Import a package.
 
@@ -648,6 +652,7 @@ def do_package_import(mc, args):
         data["categories"] = args.categories
 
     total_reqs = {}
+    main_packages_names = []
     for filename in args.filename:
         if os.path.isfile(filename):
             _file = filename
@@ -668,8 +673,13 @@ def do_package_import(mc, args):
                 filename, e))
             continue
         total_reqs.update(package.requirements(base_url=args.murano_repo_url))
+        main_packages_names.append(package.manifest['FullName'])
 
     imported_list = []
+
+    dep_exists_action = args.dep_exists_action
+    if dep_exists_action == '':
+        dep_exists_action = args.exists_action
 
     for name, package in six.iteritems(total_reqs):
         image_specs = package.images()
@@ -687,9 +697,13 @@ def do_package_import(mc, args):
             except Exception as e:
                 print("Error {0} occurred while installing "
                       "images for {1}".format(e, name))
+        if name in main_packages_names:
+            exists_action = args.exists_action
+        else:
+            exists_action = dep_exists_action
         try:
             imported_package = _handle_package_exists(
-                mc, data, package, args.exists_action)
+                mc, data, package, exists_action)
             if imported_package:
                 imported_list.append(imported_package)
         except Exception as e:
