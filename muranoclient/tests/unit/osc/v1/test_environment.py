@@ -32,6 +32,8 @@ class TestEnvironment(fakes.TestApplicationCatalog):
         super(TestEnvironment, self).setUp()
         self.environment_mock = self.app.client_manager.application_catalog.\
             environments
+        self.session_mock = self.app.client_manager.application_catalog.\
+            sessions
         self.environment_mock.reset_mock()
 
 
@@ -390,4 +392,36 @@ class TestEnvironmentDelete(TestEnvironment):
         expected_data = [('1234', 'Environment of all tenants',
                           'fake deployed', '2015-12-16T17:31:54',
                           '2015-12-16T17:31:54')]
+        self.assertEqual(expected_data, data)
+
+
+class TestEnvironmentDeploy(TestEnvironment):
+    def setUp(self):
+        super(TestEnvironmentDeploy, self).setUp()
+        mock_to_dict = self.environment_mock.get.return_value.to_dict
+        mock_to_dict.return_value = ENV_INFO
+
+        # Command to test
+        self.cmd = osc_env.EnvironmentDeploy(self.app, None)
+
+    @mock.patch('oslo_serialization.jsonutils.dumps')
+    def test_environment_deploy(self, mock_json):
+        arglist = ['fake', '--session-id', 'abc123']
+        verifylist = [('id', 'fake'), ('session_id', 'abc123')]
+
+        mock_json.return_value = ['fake services']
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ('created', 'id', 'name', 'networking', 'services',
+                            'status', 'tenant_id', 'updated', 'version')
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = ('2015-12-16T17:31:54', '1234', 'Fake Environment',
+                         {}, ['fake services'], 'fake deployed', 'xyz123',
+                         '2015-12-16T17:31:54', '1')
         self.assertEqual(expected_data, data)

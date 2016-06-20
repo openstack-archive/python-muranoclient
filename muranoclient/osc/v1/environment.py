@@ -282,3 +282,40 @@ class EnvironmentDelete(lister.Lister):
                 columns,
             ) for s in data)
         )
+
+
+class EnvironmentDeploy(show.ShowOne):
+    """Start deployment of a murano environment session."""
+
+    def get_parser(self, prog_name):
+        parser = super(EnvironmentDeploy, self).get_parser(prog_name)
+        parser.add_argument(
+            'id',
+            metavar="<ENVIRONMENT_ID>",
+            help="ID of Environment to deploy.",
+        )
+        parser.add_argument(
+            '--session-id',
+            metavar="<SESSION>",
+            help="ID of configuration session to deploy.",
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action({0})".format(parsed_args))
+        client = self.app.client_manager.application_catalog
+
+        client.sessions.deploy(parsed_args.id, parsed_args.session_id)
+
+        environment = utils.find_resource(client.environments,
+                                          parsed_args.id)
+        data = client.environments.get(environment.id,
+                                       parsed_args.session_id).to_dict()
+
+        data['services'] = jsonutils.dumps(data['services'], indent=2)
+
+        if getattr(parsed_args, 'only_apps', False):
+            return(['services'], [data['services']])
+        else:
+            return self.dict2columns(data)
