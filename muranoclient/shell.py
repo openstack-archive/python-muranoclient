@@ -369,7 +369,7 @@ class MuranoShell(object):
 
             # make args compatible with DefaultCLI/AuthCLI
             args.os_token = args.os_auth_token
-            args.os_endpoint = endpoint
+            args.os_endpoint = ''
             # avoid password prompt if no password given
             args.os_password = args.os_password or '<no password>'
             (v2_auth_url, v3_auth_url) = self._discover_auth_versions(
@@ -399,6 +399,7 @@ class MuranoShell(object):
                 'region_name': args.os_region_name,
             }
             glance_kwargs = kwargs.copy()
+            del glance_kwargs['endpoint_type']
 
         if args.api_timeout:
             kwargs['timeout'] = args.api_timeout
