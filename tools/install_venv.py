@@ -21,6 +21,8 @@
 Installation script for python-muranoclient's development virtualenv
 """
 
+from __future__ import print_function
+
 import os
 import sys
 
@@ -46,7 +48,7 @@ def print_help(project, venv, root):
 
  $ %(root)s/tools/with_venv.sh <your command>
     """
-    print help % dict(project=project, venv=venv, root=root)
+    print(help % dict(project=project, venv=venv, root=root))
 
 
 def main(argv):
