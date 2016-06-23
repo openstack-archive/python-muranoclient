@@ -1,0 +1,5 @@
+---
+fixes:
+  - Fixed order of packages import - main package can not be imported before
+    all its dependencies are imported. Cyclic requirements are imported in
+    random order.

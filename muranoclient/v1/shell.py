@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import functools
 import json
 import os
@@ -651,7 +652,7 @@ def do_package_import(mc, args):
     if args.categories:
         data["categories"] = args.categories
 
-    total_reqs = {}
+    total_reqs = collections.OrderedDict()
     main_packages_names = []
     for filename in args.filename:
         if os.path.isfile(filename):
@@ -755,7 +756,7 @@ def do_bundle_import(mc, args):
     file names, relative to location of the bundle file. Requirements
     are first searched in the same directory.
     """
-    total_reqs = {}
+    total_reqs = collections.OrderedDict()
     for filename in args.filename:
         local_path = None
         if os.path.isfile(filename):
@@ -875,7 +876,7 @@ def do_bundle_save(mc, args):
     else:
         dst = os.getcwd()
 
-    total_reqs = {}
+    total_reqs = collections.OrderedDict()
 
     if os.path.isfile(bundle):
         _file = bundle
@@ -941,7 +942,7 @@ def do_package_save(mc, args):
               "ignoring version.")
         version = ''
 
-    total_reqs = {}
+    total_reqs = collections.OrderedDict()
     for package in args.package:
         _file = utils.to_url(
             package,

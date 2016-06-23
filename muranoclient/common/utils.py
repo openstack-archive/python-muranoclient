@@ -388,20 +388,92 @@ class Package(FileWrapperMixin):
                 self._logo = None
         return self._logo
 
-    def requirements(self, base_url, path=None, dep_dict=None):
-        """Get dict of all requirements
+    def _get_package_order(self, packages_graph):
+        """Sorts packages according to dependencies between them
 
-        Recursively scan Require section of manifests of all the
-        dependencies. Returns a dict with FQPNs as keys and respective
-        Package objects as values
+        Murano allows cyclic dependencies. It is impossible
+        to do topological sort for graph with cycles, so at first
+        graph condensation should be built.
+        For condensation building Kosaraju's algorithm is used.
+        Packages in strongly connected components can be situated
+        in random order to each other.
         """
-        if not dep_dict:
-            dep_dict = {}
-        dep_dict[self.manifest['FullName']] = self
-        if 'Require' in self.manifest:
-            for dep_name, ver in six.iteritems(self.manifest['Require']):
-                if dep_name in dep_dict:
-                    continue
+        def topological_sort(graph, start_node):
+            order = []
+            not_seen = set(graph)
+
+            def dfs(node):
+                not_seen.discard(node)
+                for dep_node in graph[node]:
+                    if dep_node in not_seen:
+                        dfs(dep_node)
+                order.append(node)
+
+            dfs(start_node)
+            return order
+
+        def transpose_graph(graph):
+            transposed = collections.defaultdict(list)
+            for node, deps in six.viewitems(graph):
+                for dep in deps:
+                    transposed[dep].append(node)
+            return transposed
+
+        order = topological_sort(packages_graph, self.manifest['FullName'])
+        order.reverse()
+        transposed = transpose_graph(packages_graph)
+
+        def top_sort_by_components(graph, component_order):
+            result = []
+            seen = set()
+
+            def dfs(node):
+                seen.add(node)
+                result.append(node)
+                for dep_node in graph[node]:
+                    if dep_node not in seen:
+                        dfs(dep_node)
+            for item in component_order:
+                if item not in seen:
+                    dfs(item)
+            return reversed(result)
+        return top_sort_by_components(transposed, order)
+
+    def requirements(self, base_url, path=None, dep_dict=None):
+        """Scans Require section of manifests of all the dependencies.
+
+        Returns a dict with FQPNs as keys and respective Package objects
+        as values, ordered by topological sort.
+
+        :param base_url: url of packages location
+        :param path: local path of packages location
+        :param dep_dict: unused. Left for backward compatibility
+        """
+
+        unordered_requirements = {}
+        requirements_graph = collections.defaultdict(list)
+        dep_queue = collections.deque([(self.manifest['FullName'], self)])
+        while dep_queue:
+            dep_name, dep_file = dep_queue.popleft()
+            unordered_requirements[dep_name] = dep_file
+            direct_deps = Package._get_direct_deps(dep_file, base_url, path)
+            for name, file in direct_deps:
+                if name not in unordered_requirements:
+                    dep_queue.append((name, file))
+            requirements_graph[dep_name] = [dep[0] for dep in direct_deps]
+
+        ordered_reqs_names = self._get_package_order(requirements_graph)
+        ordered_reqs_dict = collections.OrderedDict()
+        for name in ordered_reqs_names:
+            ordered_reqs_dict[name] = unordered_requirements[name]
+
+        return ordered_reqs_dict
+
+    @staticmethod
+    def _get_direct_deps(package, base_url, path):
+        result = []
+        if 'Require' in package.manifest:
+            for dep_name, ver in six.iteritems(package.manifest['Require']):
                 try:
                     req_file = Package.from_location(
                         dep_name,
@@ -413,14 +485,10 @@ class Package(FileWrapperMixin):
                     LOG.error("Error {0} occurred while parsing package {1}, "
                               "required by {2} package".format(
                                   e, dep_name,
-                                  self.manifest['FullName']))
+                                  package.manifest['FullName']))
                     continue
-                dep_dict.update(req_file.requirements(
-                    base_url=base_url,
-                    path=path,
-                    dep_dict=dep_dict,
-                ))
-        return dep_dict
+                result.append((req_file.manifest['FullName'], req_file))
+        return result
 
 
 def save_image_local(image_spec, base_url, dst):
