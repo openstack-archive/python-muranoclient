@@ -41,7 +41,7 @@ class TestListCategories(TestCategory):
         # Command to test
         self.cmd = osc_category.ListCategories(self.app, None)
 
-    @mock.patch('openstackclient.common.utils.get_item_properties')
+    @mock.patch('osc_lib.utils.get_item_properties')
     def test_category_list(self, mock_util):
         mock_util.return_value = ('xyz123', 'fake1')
 
@@ -99,7 +99,7 @@ class TestCreateCategory(TestCategory):
         # Command to test
         self.cmd = osc_category.CreateCategory(self.app, None)
 
-    @mock.patch('openstackclient.common.utils.get_item_properties')
+    @mock.patch('osc_lib.utils.get_item_properties')
     def test_category_list(self, mock_util):
         arglist = ['fake1']
         verifylist = [('name', 'fake1')]
@@ -129,7 +129,7 @@ class TestDeleteCategory(TestCategory):
         # Command to test
         self.cmd = osc_category.DeleteCategory(self.app, None)
 
-    @mock.patch('openstackclient.common.utils.get_item_properties')
+    @mock.patch('osc_lib.utils.get_item_properties')
     def test_category_list(self, mock_util):
         arglist = ['abc123', '123abc']
         verifylist = [('id', ['abc123', '123abc'])]

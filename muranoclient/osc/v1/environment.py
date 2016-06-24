@@ -18,7 +18,7 @@ from cliff import lister
 from cliff import show
 from muranoclient.common import utils as murano_utils
 from muranoclient.openstack.common.apiclient import exceptions
-from openstackclient.common import utils
+from osc_lib import utils
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 
