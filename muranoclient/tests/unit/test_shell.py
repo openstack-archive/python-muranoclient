@@ -611,6 +611,49 @@ class ShellCommandTest(ShellTest):
             }
         })
 
+    @mock.patch('muranoclient.v1.schemas.SchemaManager')
+    @requests_mock.mock()
+    def test_class_schema(self, mock_manager, m_requests):
+        self.client.schemas = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('class-schema class.name')
+        self.client.schemas.get.assert_called_once_with(
+            'class.name', [],
+            package_name=None,
+            class_version='=0'
+        )
+
+    @mock.patch('muranoclient.v1.schemas.SchemaManager')
+    @requests_mock.mock()
+    def test_class_schema_with_methods(self, mock_manager, m_requests):
+        self.client.schemas = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('class-schema class.name method1 method2')
+        self.client.schemas.get.assert_called_once_with(
+            'class.name', ['method1', 'method2'],
+            package_name=None,
+            class_version='=0'
+        )
+
+    @mock.patch('muranoclient.v1.schemas.SchemaManager')
+    @requests_mock.mock()
+    def test_class_schema_full(self, mock_manager, m_requests):
+        self.client.schemas = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('class-schema class.name method1 method2 '
+                   '--class-version >1.2.3 --package-name foo.bar')
+        self.client.schemas.get.assert_called_once_with(
+            'class.name', ['method1', 'method2'],
+            package_name='foo.bar',
+            class_version='>1.2.3'
+        )
+
     @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
     @requests_mock.mock()
     def test_env_template_delete(self, mock_manager, m_requests):
