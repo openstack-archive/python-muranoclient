@@ -14,16 +14,15 @@
 
 import textwrap
 
-from cliff import lister
-from cliff import show
 from muranoclient.openstack.common.apiclient import exceptions
+from osc_lib.command import command
 from osc_lib import utils
 from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
 
 
-class ListCategories(lister.Lister):
+class ListCategories(command.Lister):
     """List all available categories."""
 
     def take_action(self, parsed_args=None):
@@ -47,7 +46,7 @@ class ListCategories(lister.Lister):
         )
 
 
-class ShowCategory(show.ShowOne):
+class ShowCategory(command.ShowOne):
     """Display category details."""
 
     def get_parser(self, prog_name):
@@ -77,7 +76,7 @@ class ShowCategory(show.ShowOne):
         return self.dict2columns(to_display)
 
 
-class CreateCategory(lister.Lister):
+class CreateCategory(command.Lister):
     """Create a category."""
 
     def get_parser(self, prog_name):
@@ -108,7 +107,7 @@ class CreateCategory(lister.Lister):
         )
 
 
-class DeleteCategory(lister.Lister):
+class DeleteCategory(command.Lister):
     """Delete a category."""
 
     def get_parser(self, prog_name):

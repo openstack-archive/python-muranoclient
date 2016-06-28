@@ -14,10 +14,9 @@
 
 import uuid
 
-from cliff import lister
-from cliff import show
 from muranoclient.common import utils as murano_utils
 from muranoclient.openstack.common.apiclient import exceptions
+from osc_lib.command import command
 from osc_lib import utils
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
@@ -25,7 +24,7 @@ from oslo_serialization import jsonutils
 LOG = logging.getLogger(__name__)
 
 
-class ListEnvironments(lister.Lister):
+class ListEnvironments(command.Lister):
     """Lists environments"""
 
     def get_parser(self, prog_name):
@@ -55,7 +54,7 @@ class ListEnvironments(lister.Lister):
         )
 
 
-class ShowEnvironment(show.ShowOne):
+class ShowEnvironment(command.ShowOne):
     """Display environment details"""
 
     def get_parser(self, prog_name):
@@ -97,7 +96,7 @@ class ShowEnvironment(show.ShowOne):
             return self.dict2columns(data)
 
 
-class RenameEnvironment(lister.Lister):
+class RenameEnvironment(command.Lister):
     """Rename an environment."""
 
     def get_parser(self, prog_name):
@@ -135,7 +134,7 @@ class RenameEnvironment(lister.Lister):
         )
 
 
-class EnvironmentSessionCreate(show.ShowOne):
+class EnvironmentSessionCreate(command.ShowOne):
     """Creates a new configuration session for environment ID."""
 
     def get_parser(self, prog_name):
@@ -159,7 +158,7 @@ class EnvironmentSessionCreate(show.ShowOne):
         return (['id'], [sessionid])
 
 
-class EnvironmentCreate(lister.Lister):
+class EnvironmentCreate(command.Lister):
     """Create an environment."""
 
     def get_parser(self, prog_name):
@@ -229,7 +228,7 @@ class EnvironmentCreate(lister.Lister):
         )
 
 
-class EnvironmentDelete(lister.Lister):
+class EnvironmentDelete(command.Lister):
     """Delete an environment."""
 
     def get_parser(self, prog_name):
@@ -284,7 +283,7 @@ class EnvironmentDelete(lister.Lister):
         )
 
 
-class EnvironmentDeploy(show.ShowOne):
+class EnvironmentDeploy(command.ShowOne):
     """Start deployment of a murano environment session."""
 
     def get_parser(self, prog_name):
