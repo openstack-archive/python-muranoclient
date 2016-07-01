@@ -808,3 +808,30 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
                 fail_ok=False)
         except utils.exceptions.CommandFailed as exception:
             self.assertIn("Can't parse bundle contents", exception.stdout)
+
+
+class StaticActionMuranoClientTest(utils.CLIUtilsTestPackagesBase):
+    """Tests for testing static actions execution.
+
+    Tests for the Murano CLI commands which check the result of sample
+    static action execution.
+    """
+
+    def test_static_action_call(self):
+        """Test scenario:
+
+                1) import package
+                2) call static action of the class in that package
+                3) check the result of action
+        """
+        package = self.import_package(
+            self.app_name,
+            self.dummy_app_path
+        )
+        result = self.murano(
+            'static-action-call', params='{0} staticAction --package-name {1} '
+            '--arguments myName=John myAge=28'.format(package['FQN'],
+                                                      package['FQN']))
+        expected = "Waiting for result...\nStatic action result: Hello, " \
+                   "John. In 5 years you will be 33 years old.\n"
+        self.assertEqual(expected, result)
