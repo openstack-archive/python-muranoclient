@@ -81,6 +81,13 @@ def prepare_package(args):
     manifest_file = os.path.join(temp_dir, 'manifest.yaml')
     template_file = os.path.join(temp_dir, 'template.yaml')
 
+    if args.resources_dir:
+        if not os.path.isdir(args.resources_dir):
+            raise exceptions.CommandError(
+                "'--resources-dir' parameter should be a directory")
+        resource_directory = os.path.join(temp_dir, 'Resources')
+        shutil.copytree(args.resources_dir, resource_directory)
+
     logo_file = os.path.join(temp_dir, 'logo.png')
     if not args.logo:
         shutil.copyfile(muranoclient.get_resource('heat_logo.png'), logo_file)
