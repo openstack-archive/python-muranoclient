@@ -12,7 +12,11 @@
 
 """Application-catalog v1 stack action implementation"""
 
+import json
+import sys
 import uuid
+
+import jsonpatch
 
 from muranoclient.common import utils as murano_utils
 from muranoclient.openstack.common.apiclient import exceptions
@@ -318,3 +322,69 @@ class EnvironmentDeploy(command.ShowOne):
             return(['services'], [data['services']])
         else:
             return self.dict2columns(data)
+
+
+class EnvironmentAppsEdit(command.Command):
+    """Edit environment's object model.
+
+    `FILE` is path to a file, that contains jsonpatch, that describes changes
+    to be made to environment's object-model.
+
+    [
+        { "op": "add", "path": "/-",
+           "value": { ... your-app object model here ... }
+        },
+        { "op": "replace", "path": "/0/?/name",
+          "value": "new_name"
+        },
+    ]
+
+    NOTE: Values '===id1===', '===id2===', etc. in the resulting object-model
+    will be substituted with uuids.
+
+    For more info on jsonpatch see RFC 6902
+    """
+
+    def get_parser(self, prog_name):
+        parser = super(EnvironmentAppsEdit, self).get_parser(prog_name)
+        parser.add_argument(
+            'id',
+            metavar="<ENVIRONMENT_ID>",
+            help="ID of Environment to edit.",
+        )
+        parser.add_argument(
+            'filename',
+            metavar="<FILE>",
+            help="File to read jsonpatch from (defaults to stdin).",
+        )
+        parser.add_argument(
+            '--session-id',
+            metavar="<SESSION>",
+            help="ID of configuration session to edit.",
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action(%s)", parsed_args)
+        client = self.app.client_manager.application_catalog
+        jp_obj = None
+        if not parsed_args.filename:
+            jp_obj = json.load(sys.stdin)
+        else:
+            with open(parsed_args.filename) as fpatch:
+                jp_obj = json.load(fpatch)
+
+        jpatch = jsonpatch.JsonPatch(jp_obj)
+        environment_id = parsed_args.id
+        session_id = parsed_args.session_id
+        environment = client.environments.get(environment_id, session_id)
+
+        object_model = jpatch.apply(environment.services)
+        murano_utils.traverse_and_replace(object_model)
+
+        client.services.put(
+            environment_id,
+            path='/',
+            data=jpatch.apply(environment.services),
+            session_id=session_id)

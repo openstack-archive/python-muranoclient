@@ -10,6 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
+import json
+import tempfile
+
 import mock
 
 from muranoclient.osc.v1 import environment as osc_env
@@ -34,6 +38,8 @@ class TestEnvironment(fakes.TestApplicationCatalog):
             environments
         self.session_mock = self.app.client_manager.application_catalog.\
             sessions
+        self.services_mock = self.app.client_manager.application_catalog.\
+            services
         self.environment_mock.reset_mock()
 
 
@@ -425,3 +431,40 @@ class TestEnvironmentDeploy(TestEnvironment):
                          {}, ['fake services'], 'fake deployed', 'xyz123',
                          '2015-12-16T17:31:54', '1')
         self.assertEqual(expected_data, data)
+
+
+class TestEnvironmentAppsEdit(TestEnvironment):
+    def setUp(self):
+        super(TestEnvironmentAppsEdit, self).setUp()
+
+        # Command to test
+        self.cmd = osc_env.EnvironmentAppsEdit(self.app, None)
+
+    def test_environment_deploy(self):
+        fake = collections.namedtuple('fakeEnv', 'services')
+        self.environment_mock.get.side_effect = [
+            fake(services=[
+                {'?': {'name': "foo"}}
+            ]),
+        ]
+
+        temp_file = tempfile.NamedTemporaryFile(prefix="murano-test", mode='w')
+        json.dump([
+            {'op': 'replace', 'path': '/0/?/name',
+                'value': "dummy"
+             }
+        ], temp_file)
+        temp_file.file.flush()
+
+        arglist = ['fake', '--session-id', 'abc123', temp_file.name]
+
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+
+        self.cmd.take_action(parsed_args)
+
+        self.services_mock.put.assert_called_once_with(
+            'fake',
+            session_id='abc123',
+            path='/',
+            data=[{'?': {'name': 'dummy'}}]
+        )
