@@ -501,10 +501,24 @@ class ShellCommandTest(ShellTest):
         self.make_env()
         self.register_keystone_discovery_fixture(m_requests)
         self.register_keystone_token_fixture(m_requests)
-        self.shell('environment-action-call 12345 --action-id 54321 '
-                   '--arguments foo=bar')
+        self.shell("""environment-action-call 12345 --action-id 54321
+                   --arguments foo=bar
+                   dictArg={"key1":"value1","key2":"value2"}
+                   listArg=["item1","item2","item3"]
+                   nullArg=null
+                   stringArg="null"
+                   intArg=5
+                   compoundArg=["foo",14,{"key1":null,"key2":8}]""")
         self.client.actions.call.assert_called_once_with(
-            '12345', '54321', arguments={'foo': 'bar'})
+            '12345', '54321', arguments={
+                'foo': 'bar',
+                'dictArg': {u'key1': u'value1', u'key2': u'value2'},
+                'listArg': [u'item1', u'item2', u'item3'],
+                'nullArg': None,
+                'stringArg': u'null',
+                'intArg': 5,
+                'compoundArg': [u'foo', 14, {u'key1': None, u'key2': 8}]
+            })
 
     @mock.patch('muranoclient.v1.actions.ActionManager')
     @requests_mock.mock()
