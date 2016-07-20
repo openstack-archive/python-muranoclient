@@ -21,6 +21,7 @@ from muranoclient.v1 import actions
 import muranoclient.v1.environments as environments
 from muranoclient.v1 import packages
 import muranoclient.v1.sessions as sessions
+from muranoclient.v1 import static_actions
 import muranoclient.v1.templates as templates
 
 
@@ -250,6 +251,14 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         manager = actions.ActionManager(api_mock)
         result = manager.get_result('testEnvId', '1234')
         self.assertEqual({'a': 'b'}, result)
+
+    def test_static_action_manager_call(self):
+        api_mock = mock.MagicMock(
+            json_request=lambda *args, **kwargs: (None, 'result'))
+        manager = static_actions.StaticActionManager(api_mock)
+        args = {'className': 'cls', 'methodName': 'method'}
+        result = manager.call(args).get_result()
+        self.assertEqual('result', result)
 
     def test_env_template_manager_list(self):
         """Tests the list of environment templates."""

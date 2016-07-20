@@ -517,6 +517,86 @@ class ShellCommandTest(ShellTest):
         self.client.actions.get_result.assert_called_once_with(
             '12345', '54321')
 
+    @mock.patch('muranoclient.v1.static_actions.StaticActionManager')
+    @requests_mock.mock()
+    def test_static_action_call_basic(self, mock_manager, m_requests):
+        self.client.static_actions = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('static-action-call class.name method.name')
+        self.client.static_actions.call.assert_called_once_with({
+            "className": 'class.name',
+            "methodName": 'method.name',
+            "packageName": None,
+            "classVersion": '0.0.0',
+            "parameters": {}
+        })
+
+    @mock.patch('muranoclient.v1.static_actions.StaticActionManager')
+    @requests_mock.mock()
+    def test_static_action_call_full(self, mock_manager, m_requests):
+        self.client.static_actions = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('static-action-call class.name method.name '
+                   '--package-name package.name --class-version ">1"')
+        self.client.static_actions.call.assert_called_once_with({
+            "className": 'class.name',
+            "methodName": 'method.name',
+            "packageName": 'package.name',
+            "classVersion": '">1"',
+            "parameters": {}
+        })
+
+    @mock.patch('muranoclient.v1.static_actions.StaticActionManager')
+    @requests_mock.mock()
+    def test_static_action_call_string_args(self, mock_manager, m_requests):
+        self.client.static_actions = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('static-action-call class.name method.name '
+                   '--arguments food=spam parrot=dead')
+        self.client.static_actions.call.assert_called_once_with({
+            "className": 'class.name',
+            "methodName": 'method.name',
+            "packageName": None,
+            "classVersion": '0.0.0',
+            "parameters": {'food': 'spam', 'parrot': 'dead'}
+        })
+
+    @mock.patch('muranoclient.v1.static_actions.StaticActionManager')
+    @requests_mock.mock()
+    def test_static_action_call_json_args(self, mock_manager, m_requests):
+        self.client.static_actions = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell("""static-action-call class.name method.name
+                   --arguments
+                   dictArg={"key1":"value1","key2":"value2"}
+                   listArg=["item1","item2","item3"]
+                   nullArg=null
+                   stringArg="null"
+                   intArg=5
+                   compoundArg=["foo",14,{"key1":null,"key2":8}]""")
+        self.client.static_actions.call.assert_called_once_with({
+            "className": 'class.name',
+            "methodName": 'method.name',
+            "packageName": None,
+            "classVersion": '0.0.0',
+            "parameters": {
+                'dictArg': {u'key1': u'value1', u'key2': u'value2'},
+                'listArg': [u'item1', u'item2', u'item3'],
+                'nullArg': None,
+                'stringArg': u'null',
+                'intArg': 5,
+                'compoundArg': [u'foo', 14, {u'key1': None, u'key2': 8}]
+            }
+        })
+
     @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
     @requests_mock.mock()
     def test_env_template_delete(self, mock_manager, m_requests):

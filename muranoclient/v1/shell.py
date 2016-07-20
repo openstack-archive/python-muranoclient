@@ -210,6 +210,54 @@ def do_environment_action_get_result(mc, args):
     print("Task id result: {0}".format(result))
 
 
+@utils.arg("class_name", metavar='<CLASS>',
+           help="FQN of the class with static method")
+@utils.arg("method_name", metavar='<METHOD>', help="Static method to run")
+@utils.arg("--arguments", metavar='<KEY=VALUE>', nargs='*',
+           help="Method arguments. No arguments by default")
+@utils.arg("--package-name", metavar='<PACKAGE>', default='',
+           help='Optional FQN of the package to look for the class in')
+@utils.arg("--class-version", default='',
+           help='Optional version of the class, otherwise version 0.0.0 is '
+                'used ')
+def do_static_action_call(mc, args):
+    """Call static method `METHOD` of the class `CLASS` with `ARGUMENTS`.
+
+    Returns the result of the method execution.
+    `PACKAGE` and `CLASS_VERSION` can be specified optionally to find class in
+    a particular package and to look for the specific version of a class
+    respectively.
+    """
+    arguments = {}
+    for argument in args.arguments or []:
+        if '=' not in argument:
+            raise exceptions.CommandError(
+                "Argument should be in form of KEY=VALUE. Found: {0}".format(
+                    argument))
+        key, value = argument.split('=', 1)
+        try:
+            value = json.loads(value)
+        except ValueError:
+            # treat value as a string if it doesn't load as json
+            pass
+        arguments[key] = value
+
+    request_body = {
+        "className": args.class_name,
+        "methodName": args.method_name,
+        "packageName": args.package_name or None,
+        "classVersion": args.class_version or '0.0.0',
+        "parameters": arguments
+    }
+
+    print("Waiting for result...")
+    try:
+        result = mc.static_actions.call(request_body).get_result()
+        print("Static action result: {0}".format(result))
+    except Exception as e:
+        print(str(e))
+
+
 @utils.arg("id", metavar="<ID>", help="ID of Environment to add session to.")
 def do_environment_session_create(mc, args):
     """Creates a new configuration session for environment ID."""
