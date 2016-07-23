@@ -193,6 +193,11 @@ def do_environment_action_call(mc, args):
                 "Argument should be in form of KEY=VALUE. Found: {0}".format(
                     argument))
         k, v = argument.split('=', 1)
+        try:
+            v = json.loads(v)
+        except ValueError:
+            # treat value as a string if it doesn't load as json
+            pass
         arguments[k] = v
     task_id = mc.actions.call(
         args.id, args.action_id, arguments=arguments)

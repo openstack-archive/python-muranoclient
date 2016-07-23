@@ -1,0 +1,7 @@
+---
+upgrade:
+  - environment-action-call command now accepts action argument values of any
+    type in JSON format, for example
+    environment-action-call $ENV_ID --action-id $ACT_ID --arguments
+    foo=bar listArg='["item1", "item2", "item3"]' nullArg=null
+    stringArg='"null"' intArg=5
