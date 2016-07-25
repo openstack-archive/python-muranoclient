@@ -81,8 +81,8 @@ class PackageManager(base.Manager):
         def paginate(_url):
             # code from Glance
             resp, body = self.api.json_request(_url, 'GET')
-            for image in body['packages']:
-                yield image
+            for package in body['packages']:
+                yield package
             try:
                 m_kwargs = kwargs.copy()
                 m_kwargs['marker'] = body['next_marker']
