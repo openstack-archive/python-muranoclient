@@ -52,7 +52,8 @@ class ArtifactRepo(object):
         for k, v in six.iteritems(kwargs):
             package_draft[k] = v
 
-        inherits = self._get_local_inheritance(package.classes)
+        inherits = self._get_local_inheritance(package.classes,
+                                               package.resolvers)
 
         package_draft['inherits'] = inherits
 
@@ -90,16 +91,16 @@ class ArtifactRepo(object):
         return self.client.artifacts.get(app_id)
 
     @staticmethod
-    def _get_local_inheritance(classes):
+    def _get_local_inheritance(classes, resolvers):
         result = {}
         for class_name, klass in six.iteritems(classes):
             if 'Extends' not in klass:
                 continue
             ns = klass.get('Namespaces')
             if ns:
-                resolver = NamespaceResolver(ns)
+                resolver = utils.NamespaceResolver(ns)
             else:
-                resolver = None
+                resolver = resolvers.get(class_name)
 
             if isinstance(klass['Extends'], list):
                 bases = klass['Extends']
@@ -337,32 +338,3 @@ class PackageWrapper(object):
                            {'pkg_name': self.name,
                             'attrs': ", ".join(missing_keys)})
         return {key: getattr(self, key) for key in keys}
-
-
-class NamespaceResolver(object):
-    """Copied from main murano repo
-
-    original at murano/dsl/namespace_resolver.py
-    """
-
-    def __init__(self, namespaces):
-        self._namespaces = namespaces
-        self._namespaces[''] = ''
-
-    def resolve_name(self, name, relative=None):
-        if name is None:
-            raise ValueError()
-        if name and name.startswith(':'):
-            return name[1:]
-        if ':' in name:
-            parts = name.split(':')
-            if len(parts) != 2 or not parts[1]:
-                raise NameError('Incorrectly formatted name ' + name)
-            if parts[0] not in self._namespaces:
-                raise KeyError('Unknown namespace prefix ' + parts[0])
-            return '.'.join((self._namespaces[parts[0]], parts[1]))
-        if not relative and '=' in self._namespaces and '.' not in name:
-            return '.'.join((self._namespaces['='], name))
-        if relative and '.' not in name:
-            return '.'.join((relative, name))
-        return name
