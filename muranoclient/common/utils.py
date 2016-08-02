@@ -358,17 +358,37 @@ class Package(FileWrapperMixin):
             return []
 
     @property
+    def resolvers(self):
+        if not hasattr(self, '_resolvers'):
+            self.classes
+        return self._resolvers
+
+    @property
     def classes(self):
         if not hasattr(self, '_classes'):
             self._classes = {}
+            self._resolvers = {}
             for class_name, class_file in six.iteritems(
                     self.manifest.get('Classes', {})):
                 filename = "Classes/%s" % class_file
                 if filename not in self.contents.namelist():
                     continue
-                klass = yaml.load(self.contents.open(filename),
-                                  DummyYaqlYamlLoader)
-                self._classes[class_name] = klass
+                klass_list = yaml.load_all(self.contents.open(filename),
+                                           DummyYaqlYamlLoader)
+                if not klass_list:
+                    raise ValueError('No classes defined in file')
+                resolver = None
+                for klass in klass_list:
+                    ns = klass.get('Namespaces')
+                    if ns:
+                        resolver = NamespaceResolver(ns)
+                    name = klass.get('Name')
+                    if name and resolver:
+                        name = resolver.resolve_name(name)
+                    if name == class_name:
+                        self._classes[class_name] = klass
+                        self._resolvers[class_name] = resolver
+                        break
         return self._classes
 
     @property
@@ -749,3 +769,32 @@ def traverse_and_replace(obj,
                 _maybe_replace(obj, key, value)
     else:
         _maybe_replace(obj, key, value)
+
+
+class NamespaceResolver(object):
+    """Copied from main murano repo
+
+    original at murano/dsl/namespace_resolver.py
+    """
+
+    def __init__(self, namespaces):
+        self._namespaces = namespaces
+        self._namespaces[''] = ''
+
+    def resolve_name(self, name, relative=None):
+        if name is None:
+            raise ValueError()
+        if name and name.startswith(':'):
+            return name[1:]
+        if ':' in name:
+            parts = name.split(':')
+            if len(parts) != 2 or not parts[1]:
+                raise NameError('Incorrectly formatted name ' + name)
+            if parts[0] not in self._namespaces:
+                raise KeyError('Unknown namespace prefix ' + parts[0])
+            return '.'.join((self._namespaces[parts[0]], parts[1]))
+        if not relative and '=' in self._namespaces and '.' not in name:
+            return '.'.join((self._namespaces['='], name))
+        if relative and '.' not in name:
+            return '.'.join((relative, name))
+        return name
