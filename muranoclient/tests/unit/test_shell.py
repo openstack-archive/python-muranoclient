@@ -543,7 +543,7 @@ class ShellCommandTest(ShellTest):
             "className": 'class.name',
             "methodName": 'method.name',
             "packageName": None,
-            "classVersion": '0.0.0',
+            "classVersion": '=0',
             "parameters": {}
         })
 
@@ -577,7 +577,7 @@ class ShellCommandTest(ShellTest):
             "className": 'class.name',
             "methodName": 'method.name',
             "packageName": None,
-            "classVersion": '0.0.0',
+            "classVersion": '=0',
             "parameters": {'food': 'spam', 'parrot': 'dead'}
         })
 
@@ -600,7 +600,7 @@ class ShellCommandTest(ShellTest):
             "className": 'class.name',
             "methodName": 'method.name',
             "packageName": None,
-            "classVersion": '0.0.0',
+            "classVersion": '=0',
             "parameters": {
                 'dictArg': {u'key1': u'value1', u'key2': u'value2'},
                 'listArg': [u'item1', u'item2', u'item3'],
