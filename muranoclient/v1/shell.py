@@ -223,7 +223,7 @@ def do_environment_action_get_result(mc, args):
 @utils.arg("--package-name", metavar='<PACKAGE>', default='',
            help='Optional FQN of the package to look for the class in')
 @utils.arg("--class-version", default='',
-           help='Optional version of the class, otherwise version 0.0.0 is '
+           help='Optional version of the class, otherwise version =0 is '
                 'used ')
 def do_static_action_call(mc, args):
     """Call static method `METHOD` of the class `CLASS` with `ARGUMENTS`.
@@ -251,7 +251,7 @@ def do_static_action_call(mc, args):
         "className": args.class_name,
         "methodName": args.method_name,
         "packageName": args.package_name or None,
-        "classVersion": args.class_version or '0.0.0',
+        "classVersion": args.class_version or '=0',
         "parameters": arguments
     }
 

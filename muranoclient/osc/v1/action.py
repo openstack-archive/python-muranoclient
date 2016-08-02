@@ -51,7 +51,7 @@ class StaticActionCall(command.ShowOne):
         parser.add_argument(
             "--class-version",
             default='',
-            help='Optional version of the class, otherwise version 0.0.0 is '
+            help='Optional version of the class, otherwise version =0 is '
                  'used ',
         )
 
@@ -80,7 +80,7 @@ class StaticActionCall(command.ShowOne):
             "className": parsed_args.class_name,
             "methodName": parsed_args.method_name,
             "packageName": parsed_args.package_name or None,
-            "classVersion": parsed_args.class_version or '0.0.0',
+            "classVersion": parsed_args.class_version or '=0',
             "parameters": arguments
         }
 
