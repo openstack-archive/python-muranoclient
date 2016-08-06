@@ -1163,3 +1163,17 @@ def do_category_delete(mc, args):
         raise exceptions.CommandError("Unable to find and delete any of the "
                                       "specified categories.")
     do_category_list(mc)
+
+
+@utils.arg("class_name", metavar="<CLASS>", help="Class FQN")
+@utils.arg("method_names", metavar="<METHOD>", help="Method name", nargs='*')
+@utils.arg("--package-name", default=None,
+           help="FQN of the package where the class is located")
+@utils.arg("--class-version", default='=0',
+           help="Class version or version range (version spec)")
+def do_class_schema(mc, args):
+    """Display class schema"""
+    schema = mc.schemas.get(args.class_name, args.method_names,
+                            class_version=args.class_version,
+                            package_name=args.package_name)
+    print(utils.json_formatter(schema.data))

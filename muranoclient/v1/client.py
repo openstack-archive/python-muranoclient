@@ -21,6 +21,7 @@ from muranoclient.v1 import environments
 from muranoclient.v1 import instance_statistics
 from muranoclient.v1 import packages
 from muranoclient.v1 import request_statistics
+from muranoclient.v1 import schemas
 from muranoclient.v1 import services
 from muranoclient.v1 import sessions
 from muranoclient.v1 import static_actions
@@ -47,6 +48,7 @@ class Client(object):
         self.sessions = sessions.SessionManager(self.http_client)
         self.services = services.ServiceManager(self.http_client)
         self.deployments = deployments.DeploymentManager(self.http_client)
+        self.schemas = schemas.SchemaManager(self.http_client)
         self.request_statistics = \
             request_statistics.RequestStatisticsManager(self.http_client)
         self.instance_statistics = \
