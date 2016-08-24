@@ -90,7 +90,13 @@ def print_list(objs, fields, field_labels, formatters=None, sortby=0):
                 data = getattr(o, field, None) or ''
                 row.append(data)
         pt.add_row(row)
-    print(encodeutils.safe_encode(pt.get_string()))
+
+    result = encodeutils.safe_encode(pt.get_string())
+
+    if six.PY3:
+        result = result.decode()
+
+    print(result)
 
 
 def print_dict(d, formatters=None):
@@ -104,7 +110,13 @@ def print_dict(d, formatters=None):
             pt.add_row([field, formatters[field](d[field])])
         else:
             pt.add_row([field, d[field]])
-    print(encodeutils.safe_encode(pt.get_string(sortby='Property')))
+
+    result = encodeutils.safe_encode(pt.get_string(sortby='Property'))
+
+    if six.PY3:
+        result = result.decode()
+
+    print(result)
 
 
 def find_resource(manager, name_or_id, *args, **kwargs):
