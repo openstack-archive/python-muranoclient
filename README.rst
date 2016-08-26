@@ -52,7 +52,7 @@ Project status, bugs, and blueprints are tracked on Launchpad:
 
 Developer documentation can be found here:
 
-  https://murano.readthedocs.org
+  http://docs.openstack.org/developer/murano/
 
 Additional resources are linked from the project wiki page:
 
