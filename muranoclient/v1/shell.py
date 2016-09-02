@@ -14,6 +14,7 @@
 
 import collections
 import functools
+import itertools
 import json
 import os
 import shutil
@@ -35,8 +36,6 @@ from muranoclient.v1.package_creator import mpl_package
 
 _bool_from_str_strict = functools.partial(
     strutils.bool_from_string, strict=True)
-
-DEFAULT_PAGE_SIZE = 20
 
 
 @utils.arg('--all-tenants', action='store_true', default=False,
@@ -482,7 +481,10 @@ def do_deployment_list(mc, args):
         utils.print_list(deployments, fields, field_labels, sortby=0)
 
 
-@utils.arg("--limit", type=int, default=DEFAULT_PAGE_SIZE)
+@utils.arg("--limit", type=int, default=0,
+           help='Show limited number of packages')
+@utils.arg("--marker", default='',
+           help='Show packages starting from package with id excluding it')
 @utils.arg("--include-disabled", default=False, action="store_true")
 @utils.arg("--owned", default=False, action="store_true")
 @utils.arg('--search', metavar='<SEARCH_KEYS>',
@@ -509,14 +511,18 @@ def do_deployment_list(mc, args):
            help='Show packages, whose tags include parameter')
 def do_package_list(mc, args=None):
     """List available packages."""
-    if args is None:
-        args = {}
     filter_args = {
         "include_disabled": getattr(args, 'include_disabled', False),
-        "limit": getattr(args, 'limit', DEFAULT_PAGE_SIZE),
         "owned": getattr(args, 'owned', False),
     }
     if args:
+        if args.limit < 0:
+            raise exceptions.CommandError(
+                '--limit parameter must be non-negative')
+        if args.limit != 0:
+            filter_args['limit'] = args.limit
+        if args.marker:
+            filter_args['marker'] = args.marker
         if args.search:
             filter_args['search'] = args.search
         if args.name:
@@ -533,7 +539,10 @@ def do_package_list(mc, args=None):
             filter_args['tag'] = args.tag
 
     packages = mc.packages.filter(**filter_args)
-    _print_package_list(packages)
+    if not args or args.limit == 0:
+        _print_package_list(packages)
+    else:
+        _print_package_list(itertools.islice(packages, args.limit))
 
 
 def _print_package_list(packages):
