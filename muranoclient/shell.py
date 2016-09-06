@@ -29,6 +29,7 @@ from keystoneclient import exceptions as ks_exc
 from keystoneclient import session as ksession
 from oslo_log import handlers
 from oslo_log import log as logging
+from oslo_log import versionutils
 from oslo_utils import encodeutils
 import six
 import six.moves.urllib.parse as urlparse
@@ -309,6 +310,14 @@ class MuranoShell(object):
                                    " or a token via --os-auth-token or"
                                    " env[OS_AUTH_TOKEN]")
 
+        if args.murano_packages_service == 'glance':
+            args.murano_packages_service = 'glare'
+            # TODO(kzaitsev): remove in P cycle
+            versionutils.report_deprecated_feature(
+                logger, "'glance' is no longer a valid option for "
+                        "--murano-packages-service, please use 'glare' "
+                        "instead.")
+
         if args.os_no_client_auth:
             if not args.murano_url:
                 raise exc.CommandError(
@@ -316,11 +325,11 @@ class MuranoShell(object):
                     " you must also specify a Murano API URL"
                     " via either --murano-url or env[MURANO_URL]")
             if (not args.glare_url and
-                    args.murano_packages_service in ['glance', 'glare']):
+                    args.murano_packages_service == 'glare'):
                 raise exc.CommandError(
                     "If you specify --os-no-client-auth and"
-                    " set murano-packages-service to 'glance'"
-                    " you must also specify a glance glare API URL"
+                    " set murano-packages-service to 'glare'"
+                    " you must also specify a glare API URL"
                     " via either --glare-url or env[GLARE_API]")
 
         else:
@@ -430,7 +439,7 @@ class MuranoShell(object):
                            "Image creation will be unavailable.")
             kwargs['glance_client'] = None
 
-        if args.murano_packages_service in ['glance', 'glare']:
+        if args.murano_packages_service == 'glare':
             glare_endpoint = args.glare_url
 
             if not glare_endpoint:

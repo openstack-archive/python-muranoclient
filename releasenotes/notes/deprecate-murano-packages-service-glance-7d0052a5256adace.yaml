@@ -1,0 +1,5 @@
+---
+deprecations:
+  - Since glare is a separate project now usage of 'glance' value for
+    --murano-packages-service has been deprecated and is scheduled to
+    be removed in P cycle
