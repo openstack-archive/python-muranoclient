@@ -1,0 +1,4 @@
+---
+fixes:
+  - It was impossible to use `--owned` flag when Glare was used
+    to filter packages. This issue is fixed now.
