@@ -322,6 +322,17 @@ class MuranoShell(object):
                     " set murano-packages-service to 'glance'"
                     " you must also specify a glance glare API URL"
                     " via either --glare-url or env[GLARE_API]")
+            if (not any([args.os_tenant_id, args.os_project_id]) and
+                    args.murano_packages_service == 'glare'):
+                # TODO(kzaitsev): see if we can use project's name here
+                # NOTE(kzaitsev): glare v0.1 needs project_id to operate
+                # correctly
+                raise exc.CommandError(
+                    "If you specify --os-no-client-auth and"
+                    " set murano-packages-service to 'glare'"
+                    " you must also specify your project's id"
+                    " via either --os-project-id or env[OS_PROJECT_ID] or"
+                    " --os-tenant-id or env[OS_TENANT_ID]")
 
         else:
             # Tenant name or ID is needed to make keystoneclient retrieve a
@@ -353,7 +364,8 @@ class MuranoShell(object):
                 'auth_url': args.os_auth_url,
                 'token': args.os_auth_token,
                 'insecure': args.insecure,
-                'timeout': args.api_timeout
+                'timeout': args.api_timeout,
+                'tenant': args.os_project_id or args.os_tenant_id,
             }
             glance_kwargs = kwargs.copy()
 
@@ -395,11 +407,13 @@ class MuranoShell(object):
                 'session': keystone_session,
                 'auth': keystone_auth,
                 'service_type': service_type,
-                'endpoint_type': endpoint_type,
                 'region_name': args.os_region_name,
             }
             glance_kwargs = kwargs.copy()
-            del glance_kwargs['endpoint_type']
+
+            # glance doesn't need endpoint_type
+            kwargs['endpoint_type'] = endpoint_type
+            kwargs['tenant'] = keystone_auth.get_project_id(keystone_session)
 
         if args.api_timeout:
             kwargs['timeout'] = args.api_timeout

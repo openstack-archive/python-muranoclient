@@ -1,0 +1,5 @@
+---
+fixes:
+  - It was possible to import the same murano package from the CLI into the same
+    project multiple times if glare was used and the package was imported as a
+    private one. The issue is now fixed.
