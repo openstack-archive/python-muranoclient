@@ -22,6 +22,7 @@ class ClientTestBase(base.ClientTestBase):
 
     def murano(self, action, flags='', params='',
                fail_ok=False, endpoint_type='publicURL', merge_stderr=True):
+        flags += self.get_backend_flag()
         return self.clients.cmd_with_auth(
             'murano', action, flags, params, fail_ok, merge_stderr)
 
@@ -60,3 +61,9 @@ class ClientTestBase(base.ClientTestBase):
         for element in somelist:
             if element[known_field] == known_value:
                 return element[need_field]
+
+    @staticmethod
+    def get_backend_flag():
+        backend = os.environ.get('MURANO_PACKAGES_SERVICE', 'murano')
+        backend_flag = " --murano-packages-service {0} ".format(backend)
+        return backend_flag
