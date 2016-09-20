@@ -671,7 +671,8 @@ def _handle_package_exists(mc, data, package, exists_action):
 
 @utils.arg('filename', metavar='<FILE>',
            nargs='+',
-           help='URL of the murano zip package, FQPN, or path to zip package.')
+           help='URL of the murano zip package, FQPN, path to zip package'
+                ' or path to directory with package.')
 @utils.arg('-c', '--categories', metavar='<CATEGORY>', nargs='*',
            help='Category list to attach.')
 @utils.arg('--is-public', action='store_true', default=False,
@@ -708,7 +709,7 @@ def do_package_import(mc, args):
     total_reqs = collections.OrderedDict()
     main_packages_names = []
     for filename in args.filename:
-        if os.path.isfile(filename):
+        if os.path.isfile(filename) or os.path.isdir(filename):
             _file = filename
         else:
             print("Package file '{0}' does not exist, attempting to download"

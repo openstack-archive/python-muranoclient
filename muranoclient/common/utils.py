@@ -227,6 +227,16 @@ class File(object):
         else:
             if os.path.isfile(self.name):
                 return open(self.name, mode)
+            if os.path.isdir(self.name):
+                tmp = tempfile.NamedTemporaryFile()
+                archive = zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED)
+                for root, dirs, files in os.walk(self.name):
+                    for _file in files:
+                        destination = os.path.relpath(
+                            os.path.join(root, _file), os.path.join(self.name))
+                        archive.write(os.path.join(root, _file), destination)
+                tmp.flush()
+                return open(tmp.name, mode)
             url = urllib.parse.urlparse(self.name)
             if url.scheme in ('http', 'https'):
                 resp = requests.get(self.name, stream=True)

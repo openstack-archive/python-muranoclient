@@ -1,0 +1,5 @@
+---
+features:
+  - Ability to load package from directory was added. If specified
+    directory contains all the needed files then package will be
+    imported as usual.
