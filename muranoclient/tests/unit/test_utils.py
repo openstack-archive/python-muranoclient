@@ -115,6 +115,14 @@ class PackageTest(testtools.TestCase):
             path=path,
         ).manifest['FullName'])
 
+    def test_package_from_directory(self):
+        path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            "fixture_data/empty-app")
+        pkg = utils.Package(utils.File(path))
+        self.assertEqual('empty', pkg.manifest['FullName'])
+        pkg = utils.Package.from_location('', path=path)
+        self.assertEqual('empty', pkg.manifest['FullName'])
+
     @requests_mock.mock()
     def test_from_location_url(self, m):
         """Test that url overrides name specification."""
