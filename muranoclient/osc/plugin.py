@@ -13,7 +13,9 @@
 from osc_lib import utils
 from oslo_log import log as logging
 
+from muranoclient.glance import client as art_client
 from muranoclient.i18n import _
+from muranoclient.openstack.common.apiclient import exceptions as exc
 
 LOG = logging.getLogger(__name__)
 
@@ -34,12 +36,40 @@ def make_client(instance):
     LOG.debug("Instantiating application-catalog client: {0}".format(
               application_catalog_client))
 
+    kwargs = {
+        'session': instance.session,
+        'service_type': 'application-catalog',
+        'region_name': instance._region_name
+    }
+
+    murano_packages_service = \
+        instance.get_configuration().get('murano_packages_service')
+
+    if murano_packages_service == 'glare':
+        glare_endpoint = instance.get_configuration().get('glare_url')
+        if not glare_endpoint:
+            try:
+                # no glare_endpoint and we requested to store packages in glare
+                # check keystone catalog
+                glare_endpoint = \
+                    instance.get_endpoint_for_service_type('artifact')
+            except Exception:
+                raise exc.CommandError(
+                    "You set murano-packages-service to {}"
+                    " but there is not 'artifact' endpoint in keystone"
+                    " Either register one or specify endpoint "
+                    " via either --glare-url or env[GLARE_API]".format(
+                        murano_packages_service))
+
+        artifacts_client = art_client.Client(
+            endpoint=glare_endpoint,
+            type_name='murano',
+            type_version=1,
+            token=instance.auth_ref['token']['id'])
+        kwargs['artifacts_client'] = artifacts_client
+
     client = application_catalog_client(
-        instance.get_configuration().get('murano_url'),
-        region_name=instance._region_name,
-        session=instance.session,
-        service_type='application-catalog',
-    )
+        instance.get_configuration().get('murano_url'), **kwargs)
     return client
 
 
@@ -57,4 +87,16 @@ def build_option_parser(parser):
     parser.add_argument('--murano-url',
                         default=utils.env('MURANO_URL'),
                         help=_('Defaults to env[MURANO_URL].'))
+    parser.add_argument('--glare-url',
+                        default=utils.env('GLARE_URL'),
+                        help='Defaults to env[GLARE_URL].')
+    parser.add_argument('--murano-packages-service',
+                        choices=['murano', 'glare'],
+                        default=utils.env('MURANO_PACKAGES_SERVICE',
+                                          default='murano'),
+                        help='Specifies if murano-api ("murano") or '
+                             'Glance Artifact Repository ("glare") '
+                             'should be used to store murano packages. '
+                             'Defaults to env[MURANO_PACKAGES_SERVICE] or '
+                             'to "murano"')
     return parser
