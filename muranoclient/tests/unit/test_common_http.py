@@ -25,10 +25,6 @@ from muranoclient.tests.unit import fakes
 @mock.patch('muranoclient.common.http.requests.request')
 class HttpClientTest(testtools.TestCase):
 
-    # Patch os.environ to avoid required auth info.
-    def setUp(self):
-        super(HttpClientTest, self).setUp()
-
     def test_http_raw_request(self, mock_request):
         headers = {'User-Agent': 'python-muranoclient'}
         mock_request.return_value = \
