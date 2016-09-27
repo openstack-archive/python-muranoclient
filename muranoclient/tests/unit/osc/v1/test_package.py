@@ -19,8 +19,11 @@ from testtools import matchers
 
 from muranoclient.osc.v1 import package as osc_pkg
 from muranoclient.tests.unit.osc.v1 import fakes
+from muranoclient.v1 import packages
 
+import mock
 from osc_lib import exceptions as exc
+from osc_lib import utils
 
 FIXTURE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'fixture_data'))
@@ -101,3 +104,88 @@ class TestCreatePackage(TestPackage):
             matchers.MatchesRegex(stdout,
                                   "Application package "
                                   "is available at {0}".format(RESULT_PACKAGE))
+
+
+class TestPackageList(TestPackage):
+
+    columns = ['Id', 'Name', 'Fully_qualified_name', 'Author', 'Active',
+               'Is public', 'Type', 'Version']
+
+    data = {
+        'class_definitions': ['com.example.apache.ApacheHttpServer'],
+        'updated': '2016-09-20T06:23:45.000000',
+        'description': 'Test description.\n',
+        'created': '2016-09-20T06:23:15.000000',
+        'author': 'Mirantis, Inc',
+        'enabled': True,
+        'owner_id': 'a203405ea871484a940850d6c0b8dfd9',
+        'tags': ['Server', 'WebServer', 'Apache', 'HTTP', 'HTML'],
+        'is_public': False,
+        'fully_qualified_name': 'com.example.apache.ApacheHttpServer',
+        'type': 'Application',
+        'id': '46860070-5f8a-4936-96e8-d7b89e5187d7',
+        'categories': [],
+        'name': 'Apache HTTP Server'
+    }
+
+    def setUp(self):
+        super(TestPackageList, self).setUp()
+        self.cmd = osc_pkg.ListPackages(self.app, None)
+        self.package_mock.filter.return_value = \
+            [packages.Package(None, self.data)]
+        utils.get_dict_properties = mock.MagicMock(return_value='')
+
+    def test_stack_list_defaults(self):
+        arglist = []
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        self.package_mock.filter.assert_called_with(
+            include_disabled=False,
+            owned=False)
+        self.assertEqual(self.columns, columns)
+
+    def test_stack_list_with_limit(self):
+        arglist = ['--limit', '10']
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        self.package_mock.filter.assert_called_with(
+            include_disabled=False,
+            limit=10,
+            owned=False)
+
+    def test_stack_list_with_marker(self):
+        arglist = ['--marker', '12345']
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        self.package_mock.filter.assert_called_with(
+            include_disabled=False,
+            marker='12345',
+            owned=False)
+
+    def test_stack_list_with_name(self):
+        arglist = ['--name', 'mysql']
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        self.package_mock.filter.assert_called_with(
+            include_disabled=False,
+            name='mysql',
+            owned=False)
+
+    def test_stack_list_with_fqn(self):
+        arglist = ['--fqn', 'mysql']
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        self.package_mock.filter.assert_called_with(
+            include_disabled=False,
+            fqn='mysql',
+            owned=False)
