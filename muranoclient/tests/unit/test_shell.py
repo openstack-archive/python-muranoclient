@@ -1144,7 +1144,7 @@ class ShellPackagesOperations(ShellCommandTest):
             dep_exists_action='u',
         )
 
-        self.assertEqual(True, self.client.packages.delete.called)
+        self.assertTrue(self.client.packages.delete.called)
 
         self.client.packages.create.assert_has_calls(
             [
@@ -1154,8 +1154,8 @@ class ShellPackagesOperations(ShellCommandTest):
             ], any_order=True,
         )
 
-        self.assertEqual(True, self.client.packages.create.call_count > 2)
-        self.assertEqual(True, self.client.packages.create.call_count < 5)
+        self.assertTrue(self.client.packages.create.call_count > 2)
+        self.assertTrue(self.client.packages.create.call_count < 5)
 
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_no_categories(self, from_file):
