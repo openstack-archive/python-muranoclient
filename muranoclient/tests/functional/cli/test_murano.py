@@ -22,7 +22,8 @@ from oslo_utils.strutils import bool_from_string as str2bool
 
 # TODO(mstolyarenko):  need to remove this raw when
 # https://bugs.launchpad.net/python-muranoclient/+bug/1625039 is fixed
-flag = murano_client.ClientTestBase.get_backend_flag()
+backend_name =\
+    murano_client.ClientTestBase.get_backend_flag().rstrip().split()[-1]
 
 
 class SimpleReadOnlyMuranoClientTest(utils.CLIUtilsTestBase):
@@ -634,9 +635,9 @@ class DeployMuranoEnvironmentTest(utils.CLIUtilsTestPackagesBase):
     """
     # TODO(mstolyarenko):  need to unskip this test when
     # https://bugs.launchpad.net/python-muranoclient/+bug/1625039 is fixed
-    @unittest.skipUnless(flag == 'glare',
-                         "This test fails when GLARE is used as packages "
-                         "service. To be fixed as part of #1625039")
+    @unittest.skipIf(backend_name == 'glare',
+                     "This test fails when GLARE is used as packages "
+                     "service. To be fixed as part of #1625039")
     def test_environment_deployment(self):
         """Test scenario:
 
@@ -672,9 +673,9 @@ class DeployMuranoEnvironmentTest(utils.CLIUtilsTestPackagesBase):
 
     # TODO(mstolyarenko):  need to unskip this test when
     # https://bugs.launchpad.net/python-muranoclient/+bug/1625039 is fixed
-    @unittest.skipUnless(flag == 'glare',
-                         "This test fails when GLARE is used as packages "
-                         "service. To be fixed as part of #1625039")
+    @unittest.skipIf(backend_name == 'glare',
+                     "This test fails when GLARE is used as packages "
+                     "service. To be fixed as part of #1625039")
     def test_add_component_to_deployed_env(self):
         """Test scenario:
 
