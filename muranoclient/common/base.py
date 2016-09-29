@@ -79,13 +79,19 @@ class Manager(object):
             headers = {}
         self.api.request(url, 'DELETE', headers=headers)
 
-    def _update(self, url, data, response_key=None, headers=None):
+    def _update(self, url, data, response_key=None, return_raw=False,
+                headers=None, method='PUT', content_type='application/json'):
         if headers is None:
             headers = {}
-        resp, body = self.api.json_request(url, 'PUT', data=data,
-                                           headers=headers)
-        # PUT requests may not return a body
+        resp, body = self.api.json_request(url, method,
+                                           content_type=content_type,
+                                           data=data, headers=headers)
+        # PUT or PATCH requests may not return a body
         if body:
+            if return_raw:
+                if response_key:
+                    return body[response_key]
+                return body
             if response_key:
                 return self.resource_class(self, body[response_key])
             return self.resource_class(self, body)

@@ -30,6 +30,26 @@ ENV_INFO = {'id': '1234',
             'tenant_id': 'xyz123',
             'version': '1'}
 
+ENV_MODEL = {
+    "defaultNetworks": {
+        "environment": {
+            "name": "env-network",
+            "?": {
+                "type": "io.murano.resources.NeutronNetwork",
+                "id": "5678"
+            }
+        },
+        "flat": None
+    },
+    "region": "RegionOne",
+    "name": "env",
+    "?": {
+        "updated": "2016-10-03 09:33:41.039789",
+        "type": "io.murano.Environment",
+        "id": "1234"
+    }
+}
+
 
 class TestEnvironment(fakes.TestApplicationCatalog):
     def setUp(self):
@@ -468,3 +488,71 @@ class TestEnvironmentAppsEdit(TestEnvironment):
             path='/',
             data=[{'?': {'name': 'dummy'}}]
         )
+
+
+class TestEnvironmentModelShow(TestEnvironment):
+    def setUp(self):
+        super(TestEnvironmentModelShow, self).setUp()
+        self.env_mock = \
+            self.app.client_manager.application_catalog.environments
+        self.env_mock.get_model.return_value = ENV_MODEL
+
+        # Command to test
+        self.cmd = osc_env.EnvironmentModelShow(self.app, None)
+
+    def test_environment_model_show_basic(self):
+        arglist = ['env-id']
+        verifylist = [('id', 'env-id')]
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ('?', 'defaultNetworks', 'name', 'region')
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        self.assertItemsEqual(ENV_MODEL.values(), data)
+
+    def test_environment_model_show_full(self):
+        arglist = ['env-id', '--path', '/path', '--session-id', 'sess-id']
+        verifylist = [('id', 'env-id'), ('path', '/path'),
+                      ('session_id', 'sess-id')]
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ('?', 'defaultNetworks', 'name', 'region')
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        self.assertItemsEqual(ENV_MODEL.values(), data)
+
+
+class TestEnvironmentModelEdit(TestEnvironment):
+    def setUp(self):
+        super(TestEnvironmentModelEdit, self).setUp()
+        self.env_mock = \
+            self.app.client_manager.application_catalog.environments
+        self.env_mock.update_model.return_value = ENV_MODEL
+
+        # Command to test
+        self.cmd = osc_env.EnvironmentModelEdit(self.app, None)
+
+    def test_environment_model_edit(self):
+        temp_file = tempfile.NamedTemporaryFile(prefix="murano-test", mode='w')
+        patch = [{'op': 'replace', 'path': '/name', 'value': 'dummy'}]
+        json.dump(patch, temp_file)
+        temp_file.file.flush()
+
+        arglist = ['env-id', temp_file.name, '--session-id', 'sess-id']
+        verifylist = [('id', 'env-id'), ('filename', temp_file.name),
+                      ('session_id', 'sess-id')]
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ('?', 'defaultNetworks', 'name', 'region')
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        self.assertItemsEqual(ENV_MODEL.values(), data)

@@ -1,0 +1,11 @@
+---
+features:
+  - Support for environment model edit API was added
+  - New Murano CLI command ``murano environment-model-show <ID> [--path <PATH>]
+    [--session-id <SESSION_ID>]``
+  - New Murano CLI command ``murano environment-model-edit <ID> <FILE>
+    --session-id <SESSION_ID>``
+  - New OSC command ``openstack environment model show <ID> [--path <PATH>]
+    [--session-id <SESSION_ID>]``
+  - New OSC command ``openstack environment model edit <ID> <FILE>
+    --session-id <SESSION_ID>``

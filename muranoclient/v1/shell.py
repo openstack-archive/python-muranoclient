@@ -322,6 +322,51 @@ def do_environment_apps_edit(mc, args):
         session_id=session_id)
 
 
+@utils.arg("id", metavar="<ID>", help="ID of Environment to show.")
+@utils.arg("--path", metavar="<PATH>", default='/',
+           help="Path to Environment model section. Defaults to '/'.")
+@utils.arg("--session-id", metavar="<SESSION_ID>",
+           help="Id of a config session.")
+def do_environment_model_show(mc, args):
+    session_id = args.session_id or None
+    path = six.moves.urllib.parse.quote(args.path)
+    env_model = mc.environments.get_model(args.id, path, session_id)
+    print(utils.json_formatter(env_model))
+
+
+@utils.arg("id", metavar="<ID>", help="ID of Environment to edit.")
+@utils.arg("filename", metavar="<FILE>", nargs="?",
+           help="File to read JSON-patch from (defaults to stdin).")
+@utils.arg("--session-id", metavar="<SESSION_ID>", required=True,
+           help="Id of a config session.")
+def do_environment_model_edit(mc, args):
+    jp_obj = None
+    if not args.filename:
+        jp_obj = json.load(sys.stdin)
+    else:
+        with open(args.filename) as fpatch:
+            jp_obj = json.load(fpatch)
+
+    if not isinstance(jp_obj, list):
+        raise exceptions.CommandError('JSON-patch must be a list of changes')
+    for change in jp_obj:
+        if 'op' not in change or 'path' not in change:
+            raise exceptions.CommandError('Every change in JSON-patch must '
+                                          'contain "op" and "path" keys')
+        op = change['op']
+        if op not in ['add', 'replace', 'remove']:
+            raise exceptions.CommandError('The value of "op" item must be '
+                                          '"add", "replace" or "remove", '
+                                          'got {0}'.format(op))
+        if op != 'remove' and 'value' not in change:
+            raise exceptions.CommandError('"add" or "replace" change in '
+                                          'JSON-patch must contain "value" '
+                                          'key')
+    session_id = args.session_id
+    new_model = mc.environments.update_model(args.id, jp_obj, session_id)
+    print(utils.json_formatter(new_model))
+
+
 def do_env_template_list(mc, args=None):
     """List the environments templates."""
     if args is None:

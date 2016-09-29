@@ -13,6 +13,7 @@
 """Application-catalog v1 stack action implementation"""
 
 import json
+import six
 import sys
 import uuid
 
@@ -325,7 +326,7 @@ class EnvironmentDeploy(command.ShowOne):
 
 
 class EnvironmentAppsEdit(command.Command):
-    """Edit environment's object model.
+    """Edit environment's services list.
 
     `FILE` is path to a file, that contains jsonpatch, that describes changes
     to be made to environment's object-model.
@@ -388,3 +389,98 @@ class EnvironmentAppsEdit(command.Command):
             path='/',
             data=jpatch.apply(environment.services),
             session_id=session_id)
+
+
+class EnvironmentModelShow(command.ShowOne):
+    """Show environment's object model."""
+
+    def get_parser(self, prog_name):
+        parser = super(EnvironmentModelShow, self).get_parser(prog_name)
+        parser.add_argument(
+            'id',
+            metavar="<ENVIRONMENT_ID>",
+            help="ID of Environment to show.",
+        )
+        parser.add_argument(
+            "--path",
+            metavar="<PATH>",
+            default='/',
+            help="Path to Environment model section. Defaults to '/'."
+        )
+        parser.add_argument(
+            '--session-id',
+            metavar="<SESSION_ID>",
+            help="Id of a config session.",
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action(%s)", parsed_args)
+        client = self.app.client_manager.application_catalog
+
+        session_id = parsed_args.session_id or None
+        path = six.moves.urllib.parse.quote(parsed_args.path)
+        env_model = client.environments.get_model(parsed_args.id, path,
+                                                  session_id)
+
+        return self.dict2columns(env_model)
+
+
+class EnvironmentModelEdit(command.ShowOne):
+    """Edit environment's object model."""
+
+    def get_parser(self, prog_name):
+        parser = super(EnvironmentModelEdit, self).get_parser(prog_name)
+        parser.add_argument(
+            'id',
+            metavar="<ENVIRONMENT_ID>",
+            help="ID of Environment to edit.",
+        )
+        parser.add_argument(
+            "filename",
+            metavar="<FILE>",
+            nargs="?",
+            help="File to read JSON-patch from (defaults to stdin)."
+        )
+        parser.add_argument(
+            '--session-id',
+            metavar="<SESSION_ID>",
+            help="Id of a config session.",
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action(%s)", parsed_args)
+        client = self.app.client_manager.application_catalog
+
+        jp_obj = None
+        if not parsed_args.filename:
+            jp_obj = json.load(sys.stdin)
+        else:
+            with open(parsed_args.filename) as fpatch:
+                jp_obj = json.load(fpatch)
+
+        if not isinstance(jp_obj, list):
+            raise exceptions.CommandError(
+                'JSON-patch must be a list of changes')
+        for change in jp_obj:
+            if 'op' not in change or 'path' not in change:
+                raise exceptions.CommandError(
+                    'Every change in JSON-patch must contain "op" and "path" '
+                    'keys')
+            op = change['op']
+            if op not in ['add', 'replace', 'remove']:
+                raise exceptions.CommandError('The value of "op" item must be '
+                                              '"add", "replace" or "remove", '
+                                              'got {0}'.format(op))
+            if op != 'remove' and 'value' not in change:
+                raise exceptions.CommandError('"add" or "replace" change in '
+                                              'JSON-patch must contain "value"'
+                                              ' key')
+        session_id = parsed_args.session_id
+        new_model = client.environments.update_model(parsed_args.id, jp_obj,
+                                                     session_id)
+
+        return self.dict2columns(new_model)

@@ -470,6 +470,61 @@ class ShellCommandTest(ShellTest):
             name='env-id-or-name')
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    @requests_mock.mock()
+    def test_environment_model_show_basic(self, mock_manager, m_requests):
+        self.client.environments = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('environment-model-show env-id')
+        self.client.environments.get_model.assert_called_once_with(
+            'env-id', '/', None)
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    @requests_mock.mock()
+    def test_environment_model_show_full(self, mock_manager, m_requests):
+        self.client.environments = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('environment-model-show env-id '
+                   '--path /path '
+                   '--session-id sess-id')
+        self.client.environments.get_model.assert_called_once_with(
+            'env-id', '/path', 'sess-id')
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    @requests_mock.mock()
+    def test_environment_model_show_path_with_q(self, mock_manager,
+                                                m_requests):
+        self.client.environments = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('environment-model-show env-id '
+                   '--path /?/path')
+        self.client.environments.get_model.assert_called_once_with(
+            'env-id', '/%3F/path', None)
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
+    @requests_mock.mock()
+    def test_environment_model_edit(self, mock_manager, m_requests):
+        self.client.environments = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.client.environments.get_model.return_value = {'name': "foo"}
+        temp_file = tempfile.NamedTemporaryFile(prefix="murano-test", mode='w')
+        patch = [{'op': 'replace', 'path': '/name', 'value': 'dummy'}]
+        json.dump(patch, temp_file)
+        temp_file.file.flush()
+
+        self.shell('environment-model-edit env-id {0} '
+                   '--session-id sess-id'.format(temp_file.name))
+        self.client.environments.update_model.assert_called_once_with(
+            'env-id', patch, 'sess-id')
+
+    @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     @mock.patch('muranoclient.v1.sessions.SessionManager')
     @requests_mock.mock()
     def test_environment_deploy(self, mock_manager, env_manager, m_requests):

@@ -74,3 +74,17 @@ class EnvironmentManager(base.ManagerWithFind):
             if v:
                 result[k] = Status(self, v, loaded=True)
         return result
+
+    def get_model(self, environment_id, path, session_id=None):
+        headers = {'X-Configuration-Session': session_id}
+        url = '/v1/environments/{id}/model/{path}'
+        url = url.format(id=environment_id, path=path)
+        return self._get(url, return_raw=True, headers=headers)
+
+    def update_model(self, environment_id, data, session_id):
+        headers = {'X-Configuration-Session': session_id}
+        url = '/v1/environments/{id}/model/'
+        url = url.format(id=environment_id)
+        return self._update(url, data, return_raw=True, headers=headers,
+                            method='PATCH',
+                            content_type='application/env-model-json-patch')
