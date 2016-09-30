@@ -1,0 +1,4 @@
+---
+
+features:
+  - CLI command :command:``env-templat-create-env`` now supports ``--region`` flag

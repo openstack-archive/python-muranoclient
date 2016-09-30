@@ -351,10 +351,16 @@ def do_env_template_create(mc, args):
            help="Environment template ID.")
 @utils.arg("name", metavar="<ENV_NAME>",
            help="New environment name.")
+@utils.arg("--region", metavar="<REGION_NAME>",
+           help="Name of the target OpenStack region.",)
 def do_env_template_create_env(mc, args):
     """Create a new environment from template."""
     try:
-        template = mc.env_templates.create_env(args.id, args.name)
+        data = {}
+        data["name"] = args.name
+        if args.region:
+            data["region"] = args.region
+        template = mc.env_templates.create_env(args.id, data)
     except common_exceptions.HTTPNotFound:
         raise exceptions.CommandError("Environment template %s not found"
                                       % args.id)

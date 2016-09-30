@@ -81,14 +81,14 @@ class EnvTemplateManager(base.Manager):
         return self._delete('/v1/templates/{id}/services/{app_id}'.
                             format(id=env_template_id, app_id=app_id))
 
-    def create_env(self, env_template_id, name):
+    def create_env(self, env_template_id, data):
         """Creates new environment from template.
 
         :param env_template_id: The environment template ID.
-        :param name: The name for the environment.
+        :param data: The environment information.
         """
         return self._create('/v1/templates/{id}/create-environment'.
-                            format(id=env_template_id), data={'name': name})
+                            format(id=env_template_id), data=data)
 
     def clone(self, env_template_id, name):
         """Clones a public template from one tenant to another.

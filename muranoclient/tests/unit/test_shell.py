@@ -716,7 +716,20 @@ class ShellCommandTest(ShellTest):
         self.register_keystone_token_fixture(m_requests)
         self.shell('env-template-create-env env-id env-name')
         self.client.env_templates.create_env.\
-            assert_called_once_with('env-id', 'env-name')
+            assert_called_once_with('env-id', {"name": 'env-name'})
+
+    @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
+    @requests_mock.mock()
+    def test_env_template_create_env_with_region(self, mock_manager,
+                                                 m_requests):
+        self.client.env_templates = mock_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('env-template-create-env env-id env-name --region Region')
+        self.client.env_templates.create_env.\
+            assert_called_once_with('env-id', {"name": 'env-name',
+                                               "region": 'Region'})
 
     @mock.patch('muranoclient.v1.templates.EnvTemplateManager')
     @requests_mock.mock()
