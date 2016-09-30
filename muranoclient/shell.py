@@ -449,7 +449,7 @@ class MuranoShell(object):
         if glance_client:
             kwargs['glance_client'] = glance_client
         else:
-            logger.warning("Could not initialise glance client. "
+            logger.warning("Could not initialize glance client. "
                            "Image creation will be unavailable.")
             kwargs['glance_client'] = None
 
