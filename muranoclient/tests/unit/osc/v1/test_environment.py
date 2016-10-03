@@ -440,7 +440,7 @@ class TestEnvironmentAppsEdit(TestEnvironment):
         # Command to test
         self.cmd = osc_env.EnvironmentAppsEdit(self.app, None)
 
-    def test_environment_deploy(self):
+    def test_environment_apps_edit(self):
         fake = collections.namedtuple('fakeEnv', 'services')
         self.environment_mock.get.side_effect = [
             fake(services=[
