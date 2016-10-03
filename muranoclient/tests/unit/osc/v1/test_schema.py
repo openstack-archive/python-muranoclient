@@ -10,8 +10,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
-
 from muranoclient.osc.v1 import schema as osc_schema
 from muranoclient.tests.unit.osc.v1 import fakes
 from muranoclient.v1 import schemas as api_schemas
@@ -39,10 +37,7 @@ class TestSchema(fakes.TestApplicationCatalog):
             None, SAMPLE_CLASS_SCHEMA)
         self.cmd = osc_schema.ShowSchema(self.app, None)
 
-    @mock.patch('osc_lib.utils.get_item_properties')
-    def test_query_class_schema(self, mock_util):
-        mock_util.return_value = 'result'
-
+    def test_query_class_schema(self):
         arglist = ['class.name', 'methodName1',
                    '--package-name', 'package.name',
                    '--class-version', '>1']
