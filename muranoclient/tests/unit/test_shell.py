@@ -408,11 +408,15 @@ class ShellCommandTest(ShellTest):
         self.register_keystone_token_fixture(m_requests)
 
         self.shell('environment-list')
-        self.client.environments.list.assert_called_once_with(False)
+        self.client.environments.list.assert_called_once_with(False, None)
 
         self.client.environments.list.reset_mock()
         self.shell('environment-list --all-tenants')
-        self.client.environments.list.assert_called_once_with(True)
+        self.client.environments.list.assert_called_once_with(True, None)
+
+        self.client.environments.list.reset_mock()
+        self.shell('environment-list --tenant ABC')
+        self.client.environments.list.assert_called_once_with(False, 'ABC')
 
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     @requests_mock.mock()
