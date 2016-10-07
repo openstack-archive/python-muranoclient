@@ -68,7 +68,7 @@ def make_client(instance):
             endpoint=glare_endpoint,
             type_name='murano',
             type_version=1,
-            token=instance.auth_ref['token']['id'])
+            token=instance.auth_ref.auth_token)
         kwargs['artifacts_client'] = artifacts_client
 
     murano_endpoint = instance.get_configuration().get('murano_url')
