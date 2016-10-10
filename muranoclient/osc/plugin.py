@@ -51,8 +51,11 @@ def make_client(instance):
             try:
                 # no glare_endpoint and we requested to store packages in glare
                 # check keystone catalog
-                glare_endpoint = \
-                    instance.get_endpoint_for_service_type('artifact')
+                glare_endpoint = instance.get_endpoint_for_service_type(
+                    'artifact',
+                    region_name=instance._region_name,
+                    interface=instance._interface
+                )
             except Exception:
                 raise exc.CommandError(
                     "You set murano-packages-service to {}"
@@ -68,8 +71,15 @@ def make_client(instance):
             token=instance.auth_ref['token']['id'])
         kwargs['artifacts_client'] = artifacts_client
 
-    client = application_catalog_client(
-        instance.get_configuration().get('murano_url'), **kwargs)
+    murano_endpoint = instance.get_configuration().get('murano_url')
+    if not murano_endpoint:
+        murano_endpoint = instance.get_endpoint_for_service_type(
+            'application-catalog',
+            region_name=instance._region_name,
+            interface=instance._interface
+        )
+
+    client = application_catalog_client(murano_endpoint, **kwargs)
     return client
 
 
