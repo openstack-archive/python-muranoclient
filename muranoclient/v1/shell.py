@@ -328,6 +328,7 @@ def do_environment_apps_edit(mc, args):
 @utils.arg("--session-id", metavar="<SESSION_ID>",
            help="Id of a config session.")
 def do_environment_model_show(mc, args):
+    """Display an environment's object model."""
     session_id = args.session_id or None
     path = six.moves.urllib.parse.quote(args.path)
     env_model = mc.environments.get_model(args.id, path, session_id)
@@ -340,6 +341,7 @@ def do_environment_model_show(mc, args):
 @utils.arg("--session-id", metavar="<SESSION_ID>", required=True,
            help="Id of a config session.")
 def do_environment_model_edit(mc, args):
+    """Edit an environment's object model."""
     jp_obj = None
     if not args.filename:
         jp_obj = json.load(sys.stdin)
