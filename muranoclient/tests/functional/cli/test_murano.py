@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import json
 import unittest
 
 from muranoclient.tests.functional.cli import \
@@ -246,6 +247,19 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
         self.assertNotIn(environment['Name'], result)
         env_list = self.listing('environment-list')
         self.assertNotIn(environment, env_list)
+
+    def test_environment_model_show(self):
+        """Test scenario:
+
+            1) create environment
+            2) check that the result of environment-model-show is a valid
+               non-empty json
+        """
+        env_name = self.generate_name('TestMuranoSanityEnv')
+        environment = self.create_murano_object('environment', env_name)
+        model = self.murano('environment-model-show', params=environment['ID'])
+        result = json.loads(model)
+        self.assertEqual(4, len(result))
 
 
 class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
