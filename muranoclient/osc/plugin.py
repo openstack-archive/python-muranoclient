@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""OpenStackClient plugin for Application Catalog service."""
+
 from osc_lib import utils
 from oslo_log import log as logging
 
