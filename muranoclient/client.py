@@ -11,10 +11,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from muranoclient.common import utils
+from oslo_utils import importutils
 
 
 def Client(version, *args, **kwargs):
-    module = utils.import_versioned_module(version, 'client')
+    module = importutils.import_versioned_module('muranoclient',
+                                                 version, 'client')
     client_class = getattr(module, 'Client')
     return client_class(*args, **kwargs)

@@ -31,6 +31,7 @@ from oslo_log import handlers
 from oslo_log import log as logging
 from oslo_log import versionutils
 from oslo_utils import encodeutils
+from oslo_utils import importutils
 import six
 import six.moves.urllib.parse as urlparse
 
@@ -194,7 +195,8 @@ class MuranoShell(object):
 
         self.subcommands = {}
         subparsers = parser.add_subparsers(metavar='<subcommand>')
-        submodule = utils.import_versioned_module(version, 'shell')
+        submodule = importutils.import_versioned_module('muranoclient',
+                                                        version, 'shell')
         self._find_actions(subparsers, submodule)
         self._find_actions(subparsers, self)
 

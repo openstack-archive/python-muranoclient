@@ -33,7 +33,7 @@ import zipfile
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
-from oslo_utils import importutils
+
 import prettytable
 import requests
 import six
@@ -163,13 +163,6 @@ def env(*vars, **kwargs):
         if value:
             return value
     return kwargs.get('default', '')
-
-
-def import_versioned_module(version, submodule=None):
-    module = 'muranoclient.v%s' % version
-    if submodule:
-        module = '.'.join((module, submodule))
-    return importutils.import_module(module)
 
 
 def exit(msg=''):
