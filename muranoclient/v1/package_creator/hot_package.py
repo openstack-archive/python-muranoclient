@@ -19,7 +19,7 @@ import tempfile
 import yaml
 
 import muranoclient
-from muranoclient.openstack.common.apiclient import exceptions
+from muranoclient.apiclient import exceptions
 
 
 def generate_manifest(args):

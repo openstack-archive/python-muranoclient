@@ -28,9 +28,9 @@ from oslo_utils import strutils
 import six
 import six.moves
 
+from muranoclient.apiclient import exceptions
 from muranoclient.common import exceptions as common_exceptions
 from muranoclient.common import utils
-from muranoclient.openstack.common.apiclient import exceptions
 from muranoclient.v1.package_creator import hot_package
 from muranoclient.v1.package_creator import mpl_package
 

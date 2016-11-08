@@ -31,8 +31,8 @@ from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse
 
+from muranoclient.apiclient import exceptions
 from muranoclient.i18n import _
-from muranoclient.openstack.common.apiclient import exceptions
 
 
 def getid(obj):
@@ -462,8 +462,7 @@ class Resource(object):
 
     @property
     def human_id(self):
-        """Human-readable ID which can be used for bash completion.
-        """
+        """Human-readable ID which can be used for bash completion."""
         if self.HUMAN_ID:
             name = getattr(self, self.NAME_ATTR, None)
             if name is not None:
@@ -481,7 +480,7 @@ class Resource(object):
 
     def __getattr__(self, k):
         if k not in self.__dict__:
-            #NOTE(bcwaldon): disallow lazy-loading if already loaded once
+            # NOTE(bcwaldon): disallow lazy-loading if already loaded once
             if not self.is_loaded():
                 self.get()
                 return self.__getattr__(k)

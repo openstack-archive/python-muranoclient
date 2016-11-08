@@ -14,9 +14,10 @@
 
 import json
 
-from muranoclient.openstack.common.apiclient import exceptions
 from osc_lib.command import command
 from oslo_log import log as logging
+
+from muranoclient.apiclient import exceptions
 
 LOG = logging.getLogger(__name__)
 

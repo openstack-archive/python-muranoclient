@@ -18,13 +18,15 @@ import shutil
 import tempfile
 import zipfile
 
-from muranoclient.openstack.common.apiclient import exceptions
-from muranoclient.v1.package_creator import hot_package
-from muranoclient.v1.package_creator import mpl_package
 from osc_lib.command import command
 from osc_lib import exceptions as exc
 from osc_lib import utils
 from oslo_log import log as logging
+
+from muranoclient.apiclient import exceptions
+from muranoclient.v1.package_creator import hot_package
+from muranoclient.v1.package_creator import mpl_package
+
 
 LOG = logging.getLogger(__name__)
 

@@ -15,9 +15,9 @@
 from osc_lib import utils
 from oslo_log import log as logging
 
+from muranoclient.apiclient import exceptions as exc
 from muranoclient.glance import client as art_client
 from muranoclient.i18n import _
-from muranoclient.openstack.common.apiclient import exceptions as exc
 
 LOG = logging.getLogger(__name__)
 

@@ -19,8 +19,8 @@ import tempfile
 import yaml
 
 import muranoclient
+from muranoclient.apiclient import exceptions
 from muranoclient.common import utils
-from muranoclient.openstack.common.apiclient import exceptions
 
 
 def prepare_package(args):
