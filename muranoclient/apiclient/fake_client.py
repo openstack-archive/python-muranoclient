@@ -30,7 +30,7 @@ import requests
 import six
 from six.moves.urllib import parse
 
-from muranoclient.openstack.common.apiclient import client
+from muranoclient.apiclient import client
 
 
 def assert_has_keys(dct, required=None, optional=None):
@@ -48,8 +48,7 @@ def assert_has_keys(dct, required=None, optional=None):
 
 
 class TestResponse(requests.Response):
-    """Wrap requests.Response and provide a convenient initialization.
-    """
+    """Wrap requests.Response and provide a convenient initialization."""
 
     def __init__(self, data):
         super(TestResponse, self).__init__()
@@ -86,13 +85,12 @@ class FakeHTTPClient(client.HTTPClient):
     def __init__(self, *args, **kwargs):
         self.callstack = []
         self.fixtures = kwargs.pop("fixtures", None) or {}
-        if not args and not "auth_plugin" in kwargs:
+        if not args and "auth_plugin" not in kwargs:
             args = (None, )
         super(FakeHTTPClient, self).__init__(*args, **kwargs)
 
     def assert_called(self, url, method, body=None, pos=-1):
-        """Assert than an API method was just called.
-        """
+        """Assert than an API method was just called."""
         expected = (url, method)
         called = self.callstack[pos][0:2]
         assert self.callstack, \
@@ -107,8 +105,7 @@ class FakeHTTPClient(client.HTTPClient):
                                      (self.callstack[pos][3], body))
 
     def assert_called_anytime(self, url, method, body=None):
-        """Assert than an API method was called anytime in the test.
-        """
+        """Assert than an API method was called anytime in the test."""
         expected = (url, method)
 
         assert self.callstack, \

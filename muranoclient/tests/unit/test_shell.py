@@ -33,9 +33,9 @@ import requests_mock
 import six
 from testtools import matchers
 
+from muranoclient.apiclient import exceptions
 from muranoclient.common import exceptions as common_exceptions
 from muranoclient.common import utils
-from muranoclient.openstack.common.apiclient import exceptions
 import muranoclient.shell
 from muranoclient.tests.unit import base
 from muranoclient.tests.unit import test_utils

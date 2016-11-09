@@ -24,7 +24,7 @@ import os
 import six
 from stevedore import extension
 
-from muranoclient.openstack.common.apiclient import exceptions
+from muranoclient.apiclient import exceptions
 
 
 _discovered_plugins = {}
@@ -41,7 +41,7 @@ def discover_auth_systems():
     def add_plugin(ext):
         _discovered_plugins[ext.name] = ext.plugin
 
-    ep_namespace = "muranoclient.openstack.common.apiclient.auth"
+    ep_namespace = "muranoclient.apiclient.auth"
     mgr = extension.ExtensionManager(ep_namespace)
     mgr.map(add_plugin)
 
@@ -143,8 +143,7 @@ class BaseAuthPlugin(object):
 
     @classmethod
     def add_opts(cls, parser):
-        """Populate the parser with the options for this plugin.
-        """
+        """Populate the parser with the options for this plugin."""
         for opt in cls.opt_names:
             # use `BaseAuthPlugin.common_opt_names` since it is never
             # changed in child classes
@@ -153,8 +152,7 @@ class BaseAuthPlugin(object):
 
     @classmethod
     def add_common_opts(cls, parser):
-        """Add options that are common for several plugins.
-        """
+        """Add options that are common for several plugins."""
         for opt in cls.common_opt_names:
             cls._parser_add_opt(parser, opt)
 
@@ -191,8 +189,7 @@ class BaseAuthPlugin(object):
 
     @abc.abstractmethod
     def _do_authenticate(self, http_client):
-        """Protected method for authentication.
-        """
+        """Protected method for authentication."""
 
     def sufficient_options(self):
         """Check if all required options are present.

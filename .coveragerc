@@ -3,7 +3,6 @@ source = muranoclient
 omit =
  .tox/*
  muranoclient/tests/*
- muranoclient/openstack/*
 
 [report]
 ignore_errors = True

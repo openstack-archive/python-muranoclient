@@ -28,8 +28,7 @@ from muranoclient.i18n import _
 
 
 class ClientException(Exception):
-    """The base exception class for all exceptions this library raises.
-    """
+    """The base exception class for all exceptions this library raises."""
     pass
 
 
@@ -107,8 +106,7 @@ class AmbiguousEndpoints(EndpointException):
 
 
 class HttpError(ClientException):
-    """The base exception class for all HTTP exceptions.
-    """
+    """The base exception class for all HTTP exceptions."""
     http_status = 0
     message = _("HTTP Error")
 
@@ -426,7 +424,7 @@ def from_response(response, url, method):
     """
 
     req_id = response.headers.get("x-openstack-request-id")
-    #NOTE(hdd) true for older versions of nova and cinder
+    # NOTE(hdd): true for older versions of nova and cinder
     if not req_id:
         req_id = response.headers.get("x-compute-request-id")
     kwargs = {

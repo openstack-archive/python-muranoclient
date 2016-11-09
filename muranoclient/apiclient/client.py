@@ -36,9 +36,8 @@ from oslo_log import log as logging
 from oslo_utils import importutils
 import requests
 
+from muranoclient.apiclient import exceptions
 from muranoclient.i18n import _
-from muranoclient.openstack.common.apiclient import exceptions
-
 
 
 _logger = logging.getLogger(__name__)
@@ -63,7 +62,7 @@ class HTTPClient(object):
       into terminal and send the same request with curl.
     """
 
-    user_agent = "muranoclient.openstack.common.apiclient"
+    user_agent = "muranoclient.apiclient"
 
     def __init__(self,
                  auth_plugin,
@@ -354,8 +353,7 @@ class BaseClient(object):
                     "Must be one of: %(version_map)s") % {
                         'api_name': api_name,
                         'version': version,
-                        'version_map': ', '.join(version_map.keys())
-                    }
+                        'version_map': ', '.join(version_map.keys())}
             raise exceptions.UnsupportedVersion(msg)
 
         return importutils.import_class(client_path)

@@ -22,7 +22,7 @@ import copy
 
 import six
 
-from muranoclient.openstack.common.apiclient import exceptions
+from muranoclient.apiclient import exceptions
 
 
 # Python 2.4 compat

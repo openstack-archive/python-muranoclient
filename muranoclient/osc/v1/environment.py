@@ -18,13 +18,14 @@ import sys
 import uuid
 
 import jsonpatch
-
-from muranoclient.common import utils as murano_utils
-from muranoclient.openstack.common.apiclient import exceptions
 from osc_lib.command import command
 from osc_lib import utils
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
+
+from muranoclient.apiclient import exceptions
+from muranoclient.common import utils as murano_utils
+
 
 LOG = logging.getLogger(__name__)
 

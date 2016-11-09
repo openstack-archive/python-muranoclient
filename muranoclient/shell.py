@@ -35,10 +35,11 @@ import six
 import six.moves.urllib.parse as urlparse
 
 import muranoclient
+from muranoclient.apiclient import exceptions as exc
 from muranoclient import client as murano_client
 from muranoclient.common import utils
 from muranoclient.glance import client as art_client
-from muranoclient.openstack.common.apiclient import exceptions as exc
+
 
 logger = logging.getLogger(__name__)
 
