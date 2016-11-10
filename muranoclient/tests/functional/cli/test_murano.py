@@ -372,6 +372,12 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
                                                  'TestMuranoSanityEnvTemp')
         env_template_list = self.listing('env-template-list')
 
+        # Deleting dates from dictionaries to skip it in assert
+        map(lambda x: x.pop('Updated', None),
+            env_template_list + [env_template])
+        map(lambda x: x.pop('Created', None),
+            env_template_list + [env_template])
+
         self.assertIn(env_template, env_template_list)
 
     def test_environment_template_delete(self):
