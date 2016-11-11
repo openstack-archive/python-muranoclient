@@ -70,13 +70,14 @@ def make_pkg(manifest_override, image_dicts=None):
         'Classes': {'foo': 'foo.yaml'},
         'Description': '',
         'Format': 1.0,
-        'FullName': '',
+        'FullName': 'org.foo',
         'Name': 'Apache HTTP Server',
         'Type': 'Application'}
     manifest.update(manifest_override)
     file_obj = six.BytesIO()
     zfile = zipfile.ZipFile(file_obj, "a")
     zfile.writestr('manifest.yaml', yaml.dump(manifest))
+    zfile.writestr('Classes/foo.yaml', yaml.dump({}))
     if image_dicts:
         images_list = []
         default_image_spec = {
@@ -414,10 +415,12 @@ class PackageTest(testtools.TestCase):
         self.assertRaises(ValueError, utils.Package.from_location,
                           name='foo.bar.baz', base_url='')
 
-    def test_file_object_repo(self):
+    @mock.patch.object(utils.Package, 'validate')
+    def test_file_object_repo(self, m_validate):
         resp = requests.Response()
         resp.raw = six.BytesIO(six.b("123"))
         resp.status_code = 200
+        m_validate.return_value = None
         with mock.patch(
                 'requests.get',
                 mock.Mock(side_effect=lambda k, *args, **kwargs: resp)):

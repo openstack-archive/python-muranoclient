@@ -19,6 +19,8 @@ import yaml
 
 from muranoclient.common import base
 from muranoclient.common import exceptions
+from muranoclient.common import utils
+
 
 DEFAULT_PAGE_SIZE = 20
 
@@ -51,6 +53,10 @@ class PackageManager(base.Manager):
                           response_key='categories', obj_class=Category)
 
     def create(self, data, files):
+        for pkg_file in files.values():
+            utils.Package.from_file(pkg_file)
+            pkg_file.seek(0)
+
         response = self.api.request(
             '/v1/catalog/packages',
             'POST',

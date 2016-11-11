@@ -17,6 +17,9 @@ from __future__ import print_function
 
 import collections
 import json
+from muranopkgcheck import manager as check_manager
+from muranopkgcheck import pkg_loader as check_pkg_loader
+from muranopkgcheck import validators as check_validators
 import os
 import re
 import shutil
@@ -307,7 +310,11 @@ class Package(FileWrapperMixin):
     def from_file(file_obj):
         if not isinstance(file_obj, File):
             file_obj = File(file_obj)
-        return Package(file_obj)
+        pkg = Package(file_obj)
+        errs = pkg.validate()
+        if errs:
+            raise exceptions.HTTPBadRequest(details=errs)
+        return pkg
 
     @staticmethod
     def fromFile(file_obj):
@@ -341,6 +348,16 @@ class Package(FileWrapperMixin):
             path='apps/',
             extension='.zip')
         )
+
+    def validate(self):
+        m = check_manager.Manager(self._file,
+                                  loader=check_pkg_loader.ZipLoader)
+        errors = m.validate(
+            validators=[check_validators.manifest.ManifestValidator],
+            only_errors=True)
+        if errors:
+            fmt = check_manager.PlainTextFormatter().format
+            return 'Invalid Murano package\n{}\n'.format(fmt(errors))
 
     @property
     def contents(self):
