@@ -167,6 +167,12 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
                                                 'TestMuranoSanityEnv')
         env_list = self.listing('environment-list')
 
+        # Deleting dates from dictionaries to skip it in assert
+        map(lambda x: x.pop('Updated', None),
+            env_list + [environment])
+        map(lambda x: x.pop('Created', None),
+            env_list + [environment])
+
         self.assertIn(environment, env_list)
 
     def test_environment_delete(self):
@@ -197,6 +203,12 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
         renamed_env = self.get_object(new_list, new_env_name)
         self.addCleanup(self.delete_murano_object, 'environment', renamed_env)
         new_env_list = self.listing('environment-list')
+
+        # Deleting dates from dictionaries to skip it in assert
+        map(lambda x: x.pop('Updated', None),
+            new_env_list + [environment] + [renamed_env])
+        map(lambda x: x.pop('Created', None),
+            new_env_list + [environment] + [renamed_env])
 
         self.assertIn(renamed_env, new_env_list)
         self.assertNotIn(environment, new_env_list)
