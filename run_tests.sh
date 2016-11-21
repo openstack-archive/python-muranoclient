@@ -49,8 +49,8 @@ for arg in "$@"; do
 done
 
 function run_tests {
-  # Cleanup *pyc
-  ${wrapper} find . -type f -name "*.pyc" -delete
+  # Cleanup *pyc and *pyo
+  ${wrapper} find . -type f -name "*.py[c|o]" -delete
   # Just run the test suites in current environment
   ${wrapper} $NOSETESTS
 }
