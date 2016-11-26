@@ -97,9 +97,9 @@ class TestListEnvironment(TestEnvironment):
         self.assertEqual(expected_data, data)
 
     @mock.patch('osc_lib.utils.get_item_properties')
-    def test_environment_list_with_options(self, mock_util):
+    def test_environment_list_with_all_tenants(self, mock_util):
         arglist = ['--all-tenants']
-        verifylist = [('all_tenants', True)]
+        verifylist = [('all_tenants', True), ('tenant', None)]
 
         mock_util.return_value = ('1234', 'Environment of all tenants',
                                   'fake deployed', '2015-12-16T17:31:54',
@@ -119,6 +119,32 @@ class TestListEnvironment(TestEnvironment):
                           'fake deployed', '2015-12-16T17:31:54',
                           '2015-12-16T17:31:54')]
         self.assertEqual(expected_data, data)
+        self.environment_mock.list.assert_called_once_with(True, None)
+
+    @mock.patch('osc_lib.utils.get_item_properties')
+    def test_environment_list_with_tenant(self, mock_util):
+        arglist = ['--tenant=ABC']
+        verifylist = [('all_tenants', False), ('tenant', 'ABC')]
+
+        mock_util.return_value = ('1234', 'Environment of tenant ABC',
+                                  'fake deployed', '2015-12-16T17:31:54',
+                                  '2015-12-16T17:31:54'
+                                  )
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ['Id', 'Name', 'Status', 'Created', 'Updated']
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'Environment of tenant ABC',
+                          'fake deployed', '2015-12-16T17:31:54',
+                          '2015-12-16T17:31:54')]
+        self.assertEqual(expected_data, data)
+        self.environment_mock.list.assert_called_once_with(False, 'ABC')
 
 
 class TestShowEnvironment(TestEnvironment):

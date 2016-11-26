@@ -41,13 +41,20 @@ class ListEnvironments(command.Lister):
             default=False,
             help='List environments from all tenants (admin only).',
         )
+        parser.add_argument(
+            '--tenant',
+            metavar='<TENANT_ID>',
+            default=None,
+            help='Allows to list environments for a given tenant (admin only).'
+        )
 
         return parser
 
     def take_action(self, parsed_args):
         LOG.debug("take_action({0})".format(parsed_args))
         client = self.app.client_manager.application_catalog
-        data = client.environments.list(parsed_args.all_tenants)
+        data = client.environments.list(
+            parsed_args.all_tenants, parsed_args.tenant)
 
         columns = ('id', 'name', 'status', 'created', 'updated')
         column_headers = [c.capitalize() for c in columns]

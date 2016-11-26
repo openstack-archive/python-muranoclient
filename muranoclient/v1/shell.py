@@ -41,12 +41,16 @@ _bool_from_str_strict = functools.partial(
 @utils.arg('--all-tenants', action='store_true', default=False,
            help='Allows to list environments from all tenants'
                 ' (admin only).')
+@utils.arg('--tenant', metavar="<TENANT_ID>", default=None,
+           help='Allows to list environments for a given tenant'
+                ' (admin only).')
 def do_environment_list(mc, args=None):
     """List the environments."""
     if args is None:
         args = {}
     all_tenants = getattr(args, 'all_tenants', False)
-    environments = mc.environments.list(all_tenants)
+    tenant = getattr(args, 'tenant', None)
+    environments = mc.environments.list(all_tenants, tenant)
     _print_environment_list(environments)
 
 

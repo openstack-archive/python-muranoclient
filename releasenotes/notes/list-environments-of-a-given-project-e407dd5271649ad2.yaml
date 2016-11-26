@@ -1,0 +1,4 @@
+---
+features:
+  - The client now is able to consume the updated `List Environments` API call,
+    which may be used to filter environments by an owner project (tenant).

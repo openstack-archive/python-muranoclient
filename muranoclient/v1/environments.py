@@ -36,9 +36,12 @@ class Status(base.Resource):
 class EnvironmentManager(base.ManagerWithFind):
     resource_class = Environment
 
-    def list(self, all_tenants=False):
+    def list(self, all_tenants=False, tenant_id=None):
+        params = {'all_tenants': all_tenants}
+        if tenant_id:
+            params['tenant'] = tenant_id
         path = '/v1/environments?{query}'.format(
-            query=urllib.parse.urlencode({'all_tenants': all_tenants}))
+            query=urllib.parse.urlencode(params))
         return self._list(path, 'environments')
 
     def create(self, data):
