@@ -27,6 +27,7 @@ import six
 from six.moves import urllib
 
 from muranoclient.common import exceptions as exc
+from muranoclient.i18n import _LW
 
 LOG = logging.getLogger(__name__)
 USER_AGENT = 'python-muranoclient'
@@ -48,7 +49,7 @@ def get_system_ca_file():
         if os.path.exists(ca):
             LOG.debug("Using ca file %s", ca)
             return ca
-    LOG.warning("System ca file could not be found.")
+    LOG.warning(_LW("System ca file could not be found."))
 
 
 class HTTPClient(object):
@@ -370,5 +371,5 @@ def _set_data(kwargs):
         if 'data' in kwargs:
             raise ValueError("Can't provide both 'data' and "
                              "'body' to a request")
-        LOG.warning("Use of 'body' is deprecated; use 'data' instead")
+        LOG.warning(_LW("Use of 'body' is deprecated; use 'data' instead"))
         kwargs['data'] = kwargs.pop('body')
