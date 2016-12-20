@@ -397,10 +397,13 @@ class MuranoShell(object):
             (v2_auth_url, v3_auth_url) = self._discover_auth_versions(
                 keystone_session, args.os_auth_url)
             if v3_auth_url:
-                args.os_project_domain_id = (args.os_project_domain_id or
-                                             'default')
-                args.os_user_domain_id = (args.os_user_domain_id or
-                                          'default')
+                if (not args.os_user_domain_id and
+                        not args.os_user_domain_name):
+                    args.os_user_domain_id = 'default'
+
+                if (not args.os_project_domain_id and
+                        not args.os_project_domain_name):
+                    args.os_project_domain_id = 'default'
 
             keystone_auth = AuthCLI.load_from_argparse_arguments(args)
 
