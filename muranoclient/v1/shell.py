@@ -762,7 +762,7 @@ def do_package_import(mc, args):
     present in murano.
     """
     data = {"is_public": args.is_public}
-
+    exception_occurred = False
     version = args.package_version
     if version and len(args.filename) >= 2:
         print("Requested to import more than one package, "
@@ -792,6 +792,7 @@ def do_package_import(mc, args):
         except Exception as e:
             print("Failed to create package for '{0}', reason: {1}".format(
                 filename, e))
+            exception_occurred = True
             continue
         total_reqs.update(package.requirements(base_url=args.murano_repo_url))
         main_packages_names.append(package.manifest['FullName'])
@@ -818,6 +819,7 @@ def do_package_import(mc, args):
             except Exception as e:
                 print("Error {0} occurred while installing "
                       "images for {1}".format(e, name))
+                exception_occurred = True
         if name in main_packages_names:
             exists_action = args.exists_action
         else:
@@ -830,9 +832,17 @@ def do_package_import(mc, args):
         except Exception as e:
             print("Error {0} occurred while installing package {1}".format(
                 e, name))
-
+            exception_occurred = True
     if imported_list:
         _print_package_list(imported_list)
+    if exception_occurred:
+        # NOTE(jose-phillips) Leave a Warning to users in case some packages
+        # can be uploaded successfully.
+        if imported_list:
+            print ("Warning: there were some errors during the operation.")
+            sys.exit(1)
+        else:
+            sys.exit(1)
 
 
 @utils.arg("id", metavar="<ID>",

@@ -1210,11 +1210,11 @@ class ShellPackagesOperations(ShellCommandTest):
 
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_dep_update_ea(self, from_file):
-        self._test_conflict_dep(
-            self.client.packages,
-            from_file,
-            dep_exists_action='u',
-        )
+        self.assertRaises(SystemExit, self._test_conflict_dep,
+                          self.client.packages,
+                          from_file,
+                          dep_exists_action='u',
+                          )
 
         self.assertTrue(self.client.packages.delete.called)
 
