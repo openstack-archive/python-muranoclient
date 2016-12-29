@@ -28,6 +28,26 @@ from osc_lib import utils
 FIXTURE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'fixture_data'))
 
+COLUMNS = ['Id', 'Name', 'Fully_qualified_name', 'Author', 'Active',
+           'Is public', 'Type', 'Version']
+
+DATA = {
+    'class_definitions': ['com.example.apache.ApacheHttpServer'],
+    'updated': '2016-09-20T06:23:45.000000',
+    'description': 'Test description.\n',
+    'created': '2016-09-20T06:23:15.000000',
+    'author': 'Mirantis, Inc',
+    'enabled': True,
+    'owner_id': 'a203405ea871484a940850d6c0b8dfd9',
+    'tags': ['Server', 'WebServer', 'Apache', 'HTTP', 'HTML'],
+    'is_public': False,
+    'fully_qualified_name': 'com.example.apache.ApacheHttpServer',
+    'type': 'Application',
+    'id': '46860070-5f8a-4936-96e8-d7b89e5187d7',
+    'categories': [],
+    'name': 'Apache HTTP Server'
+}
+
 
 class TestPackage(fakes.TestApplicationCatalog):
     def setUp(self):
@@ -108,31 +128,11 @@ class TestCreatePackage(TestPackage):
 
 class TestPackageList(TestPackage):
 
-    columns = ['Id', 'Name', 'Fully_qualified_name', 'Author', 'Active',
-               'Is public', 'Type', 'Version']
-
-    data = {
-        'class_definitions': ['com.example.apache.ApacheHttpServer'],
-        'updated': '2016-09-20T06:23:45.000000',
-        'description': 'Test description.\n',
-        'created': '2016-09-20T06:23:15.000000',
-        'author': 'Mirantis, Inc',
-        'enabled': True,
-        'owner_id': 'a203405ea871484a940850d6c0b8dfd9',
-        'tags': ['Server', 'WebServer', 'Apache', 'HTTP', 'HTML'],
-        'is_public': False,
-        'fully_qualified_name': 'com.example.apache.ApacheHttpServer',
-        'type': 'Application',
-        'id': '46860070-5f8a-4936-96e8-d7b89e5187d7',
-        'categories': [],
-        'name': 'Apache HTTP Server'
-    }
-
     def setUp(self):
         super(TestPackageList, self).setUp()
         self.cmd = osc_pkg.ListPackages(self.app, None)
         self.package_mock.filter.return_value = \
-            [packages.Package(None, self.data)]
+            [packages.Package(None, DATA)]
         utils.get_dict_properties = mock.MagicMock(return_value='')
 
     def test_stack_list_defaults(self):
@@ -144,7 +144,7 @@ class TestPackageList(TestPackage):
         self.package_mock.filter.assert_called_with(
             include_disabled=False,
             owned=False)
-        self.assertEqual(self.columns, columns)
+        self.assertEqual(COLUMNS, columns)
 
     def test_stack_list_with_limit(self):
         arglist = ['--limit', '10']
@@ -189,3 +189,36 @@ class TestPackageList(TestPackage):
             include_disabled=False,
             fqn='mysql',
             owned=False)
+
+
+class TestPackageDelete(TestPackage):
+    def setUp(self):
+        super(TestPackageDelete, self).setUp()
+        self.package_mock.delete.return_value = None
+        self.package_mock.filter.return_value = \
+            [packages.Package(None, DATA)]
+
+        # Command to test
+        self.cmd = osc_pkg.DeletePackage(self.app, None)
+
+    @mock.patch('osc_lib.utils.get_item_properties')
+    def test_package_delete(self, mock_util):
+        arglist = ['fake1']
+        verifylist = [('id', ['fake1'])]
+
+        mock_util.return_value = ('1234', 'Core library',
+                                  'io.murano', 'murano.io', '',
+                                  'True', 'Library', '0.0.0'
+                                  )
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        self.assertEqual(COLUMNS, columns)
+
+        # Check that data is correct
+        expected_data = [('1234', 'Core library', 'io.murano',
+                          'murano.io', '', 'True', 'Library', '0.0.0')]
+        self.assertEqual(expected_data, data)
