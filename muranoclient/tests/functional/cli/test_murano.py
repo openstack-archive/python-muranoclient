@@ -441,8 +441,6 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
         self.assertIn(env_template['ID'], tested_env)
         self.assertIn(env_template['Name'], tested_env)
-        self.assertIn(env_template['Updated'], tested_env)
-        self.assertIn(env_template['Created'], tested_env)
 
     def test_env_template_create_environment(self):
         """Test scenario:
