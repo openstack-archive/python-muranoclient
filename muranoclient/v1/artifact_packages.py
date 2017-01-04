@@ -243,6 +243,7 @@ class PackageManagerAdapter(object):
         category = kwargs.pop('category', None)
         fqn = kwargs.pop('fqn', None)
         class_name = kwargs.pop('class_name', None)
+        name = kwargs.pop('name', None)
         if category:
             kwargs['categories'] = category
         if search:
@@ -255,6 +256,8 @@ class PackageManagerAdapter(object):
             kwargs['name'] = fqn
         if class_name:
             kwargs['class_definitions'] = class_name
+        if name:
+            kwargs['display_name'] = name
         # if 'owned' is used there should be a filter with 'owner' parameter
         if kwargs.pop('owned', None):
             kwargs['owner'] = self.glare.tenant
