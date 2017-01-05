@@ -16,6 +16,8 @@ from osc_lib.command import command
 from osc_lib import utils
 from oslo_log import log as logging
 
+from muranoclient.apiclient import exceptions
+
 LOG = logging.getLogger(__name__)
 
 
@@ -27,7 +29,15 @@ class ListDeployment(command.Lister):
         parser.add_argument(
             "id",
             metavar="<ID>",
+            nargs="?",
+            default=None,
             help=("Environment ID for which to list deployments."),
+        )
+        parser.add_argument(
+            "--all-environments",
+            action="store_true",
+            default=False,
+            help="List all deployments for all environments in user's tenant."
         )
 
         return parser
@@ -36,9 +46,22 @@ class ListDeployment(command.Lister):
         LOG.debug("take_action({0})".format(parsed_args))
         client = self.app.client_manager.application_catalog
 
-        environment = utils.find_resource(client.environments,
-                                          parsed_args.id)
-        data = client.deployments.list(environment.id)
+        all_environments = getattr(parsed_args, 'all_environments', False)
+        env_id = getattr(parsed_args, 'id', None)
+
+        if env_id and all_environments:
+            raise exceptions.CommandError(
+                'Environment ID and all-environments flag cannot both be set.')
+        elif not env_id and not all_environments:
+            raise exceptions.CommandError(
+                'Either environment ID or all-environments flag must be set.')
+
+        if all_environments:
+            data = client.deployments.list(None, all_environments)
+        else:
+            environment = utils.find_resource(client.environments,
+                                              env_id)
+            data = client.deployments.list(environment.id)
 
         columns = ('id', 'state', 'created', 'updated', 'finished')
         column_headers = [c.capitalize() for c in columns]

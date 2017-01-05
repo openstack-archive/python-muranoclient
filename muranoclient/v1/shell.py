@@ -523,15 +523,32 @@ def do_env_template_clone(mc, args):
         utils.print_dict(env_template.to_dict(), formatters=formatters)
 
 
-@utils.arg("id", metavar="<ID>",
+@utils.arg("id", metavar="<ID>", nargs='?', default=None,
            help="Environment ID for which to list deployments.")
+@utils.arg('--all-environments', action='store_true', default=False,
+           help="Lists all deployments for all environments in user's tenant.")
 def do_deployment_list(mc, args):
-    """List deployments for an environment."""
+    """List deployments for an environment or multiple environments."""
+    all_environments = getattr(args, 'all_environments', False)
+    env_id = getattr(args, 'id', None)
+    if env_id and all_environments:
+        raise exceptions.CommandError(
+            'Environment ID and all-environments flag cannot both be set.')
+    elif not env_id and not all_environments:
+        raise exceptions.CommandError(
+            'Either environment ID or all-environments flag must be set.')
     try:
-        environment = utils.find_resource(mc.environments, args.id)
-        deployments = mc.deployments.list(environment.id)
+        if all_environments:
+            deployments = mc.deployments.list(None, all_environments)
+        else:
+            environment = utils.find_resource(mc.environments, env_id)
+            deployments = mc.deployments.list(environment.id)
     except exceptions.NotFound:
-        raise exceptions.CommandError("Environment %s not found" % args.id)
+        if env_id:
+            msg = "Environment %s not found" % env_id
+        else:
+            msg = "Environments not found"
+        raise exceptions.CommandError(msg)
     else:
         field_labels = ["ID", "State", "Created", "Updated", "Finished"]
         fields = ["id", "state", "created", "updated", "finished"]

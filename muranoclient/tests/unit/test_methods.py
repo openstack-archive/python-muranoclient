@@ -18,6 +18,7 @@ import testtools
 
 from muranoclient import client
 from muranoclient.v1 import actions
+from muranoclient.v1 import deployments
 import muranoclient.v1.environments as environments
 from muranoclient.v1 import packages
 import muranoclient.v1.sessions as sessions
@@ -331,3 +332,24 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         result = manager.get('test')
 
         self.assertIsNotNone(result.manager)
+
+    def test_deployment_manager_list(self):
+        manager = deployments.DeploymentManager(api)
+        manager._list = mock.Mock(return_value=mock.sentinel.deployments)
+
+        result = manager.list(mock.sentinel.environment_id)
+        self.assertEqual(mock.sentinel.deployments, result)
+
+        manager._list.assert_called_once_with(
+            '/v1/environments/sentinel.environment_id/deployments',
+            'deployments')
+
+    def test_deployment_manager_list_all_environments(self):
+        manager = deployments.DeploymentManager(api)
+        manager._list = mock.Mock(return_value=mock.sentinel.deployments)
+
+        result = manager.list(mock.sentinel.environment_id,
+                              all_environments=True)
+        self.assertEqual(mock.sentinel.deployments, result)
+
+        manager._list.assert_called_once_with('/v1/deployments', 'deployments')

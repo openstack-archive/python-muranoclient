@@ -816,6 +816,44 @@ class ShellCommandTest(ShellTest):
             name='env-id-or-name')
         self.assertEqual(1, self.client.deployments.list.call_count)
 
+    @mock.patch('muranoclient.v1.deployments.DeploymentManager')
+    @requests_mock.mock()
+    def test_deployments_list_all_environments(self, mock_deployment_manager,
+                                               m_requests):
+        self.client.deployments = mock_deployment_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        self.shell('deployment-list --all-environments')
+        self.client.deployments.list.assert_called_once_with(
+            None, True)
+
+    @mock.patch('muranoclient.v1.deployments.DeploymentManager')
+    @requests_mock.mock()
+    def test_deployments_list_negative(self, mock_deployment_manager,
+                                       m_requests):
+        self.client.deployments = mock_deployment_manager()
+        self.make_env()
+        self.register_keystone_discovery_fixture(m_requests)
+        self.register_keystone_token_fixture(m_requests)
+        e = self.assertRaises(
+            exceptions.CommandError,
+            self.shell,
+            'deployment-list env-id --all-environments')
+        self.assertIn(
+            'Environment ID and all-environments flag cannot both be set.',
+            e.__str__())
+        self.assertFalse(self.client.deployments.list.called)
+
+        e = self.assertRaises(
+            exceptions.CommandError,
+            self.shell,
+            'deployment-list')
+        self.assertIn(
+            'Either environment ID or all-environments flag must be set.',
+            e.__str__())
+        self.assertFalse(self.client.deployments.list.called)
+
     @mock.patch('muranoclient.v1.services.ServiceManager')
     @mock.patch('muranoclient.v1.environments.EnvironmentManager')
     @requests_mock.mock()

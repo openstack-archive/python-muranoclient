@@ -19,6 +19,10 @@ from muranoclient.v1 import deployments as api_deployment
 DEPLOYMENT_COLUMNS = ('id', 'state', 'created', 'updated', 'finished')
 DEPLOYMENT_DATA = ('xyz123', 'success', '2016-06-25T12:21:37',
                    '2016-06-25T12:21:47', '2016-06-25T12:21:47')
+ALL_DEPLOYMENT_DATA = (('abc123', 'success', '2016-06-25T12:21:37',
+                        '2016-06-25T12:21:47', '2016-06-25T12:21:47'),
+                       ('xyz456', 'success', '2017-01-31T11:22:35',
+                        '2017-01-31T11:22:47', '2017-01-31T11:22:47'))
 
 
 class TestDeployment(fakes.TestApplicationCatalog):
@@ -42,7 +46,7 @@ class TestListDeployment(TestDeployment):
         self.cmd = osc_deployment.ListDeployment(self.app, None)
 
     @mock.patch('osc_lib.utils.get_item_properties')
-    def test_category_list(self, mock_util):
+    def test_deployment_list(self, mock_util):
         arglist = ['xyz123']
         verifylist = [('id', 'xyz123')]
         mock_util.return_value = DEPLOYMENT_DATA
@@ -57,4 +61,22 @@ class TestListDeployment(TestDeployment):
 
         # Check that data is correct
         expected_data = [DEPLOYMENT_DATA]
+        self.assertEqual(expected_data, data)
+
+    @mock.patch('osc_lib.utils.get_item_properties', autospec=True)
+    def test_deployment_list_all_environments(self, mock_util):
+        arglist = ['--all-environments']
+        verifylist = [('id', None), ('all_environments', True)]
+        mock_util.return_value = ALL_DEPLOYMENT_DATA
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = [c.title() for c in DEPLOYMENT_COLUMNS]
+        self.assertEqual(expected_columns, columns)
+
+        # Check that data is correct
+        expected_data = [ALL_DEPLOYMENT_DATA]
         self.assertEqual(expected_data, data)
