@@ -17,13 +17,19 @@ import tempfile
 
 from testtools import matchers
 
+from muranoclient.common import exceptions as common_exceptions
+from muranoclient.common import utils as mc_utils
 from muranoclient.osc.v1 import package as osc_pkg
 from muranoclient.tests.unit.osc.v1 import fakes
+from muranoclient.tests.unit import test_utils
 from muranoclient.v1 import packages
 
 import mock
 from osc_lib import exceptions as exc
 from osc_lib import utils
+import requests_mock
+
+make_pkg = test_utils.make_pkg
 
 FIXTURE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                            'fixture_data'))
@@ -222,3 +228,323 @@ class TestPackageDelete(TestPackage):
         expected_data = [('1234', 'Core library', 'io.murano',
                           'murano.io', '', 'True', 'Library', '0.0.0')]
         self.assertEqual(expected_data, data)
+
+
+class TestPackageImport(TestPackage):
+    def setUp(self):
+        super(TestPackageImport, self).setUp()
+        self.package_mock.filter.return_value = \
+            [packages.Package(None, DATA)]
+
+        # Command to test
+        self.cmd = osc_pkg.ImportPackage(self.app, None)
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import(self, from_file):
+        with tempfile.NamedTemporaryFile() as f:
+            RESULT_PACKAGE = f.name
+            categories = ['Cat1', 'Cat2 with space']
+
+            pkg = make_pkg({'FullName': RESULT_PACKAGE})
+            from_file.return_value = mc_utils.Package(mc_utils.File(pkg))
+
+            arglist = [RESULT_PACKAGE, '--categories',
+                       categories, '--is-public']
+            parsed_args = self.check_parser(self.cmd, arglist, [])
+            self.cmd.take_action(parsed_args)
+
+            self.package_mock.create.assert_called_once_with({
+                'categories': [categories],
+                'is_public': True
+            }, {RESULT_PACKAGE: mock.ANY},)
+
+    def _test_conflict(self,
+                       packages, from_file, raw_input_mock,
+                       input_action, exists_action=''):
+        packages.create = mock.MagicMock(
+            side_effect=[common_exceptions.HTTPConflict("Conflict"), None])
+
+        packages.filter.return_value = [mock.Mock(id='test_id')]
+
+        raw_input_mock.return_value = input_action
+        with tempfile.NamedTemporaryFile() as f:
+            pkg = make_pkg({'FullName': f.name})
+            from_file.return_value = mc_utils.Package(mc_utils.File(pkg))
+            if exists_action:
+                arglist = [f.name, '--exists-action', exists_action]
+            else:
+                arglist = [f.name]
+            parsed_args = self.check_parser(self.cmd, arglist, [])
+            self.cmd.take_action(parsed_args)
+
+            return f.name
+
+    @mock.patch('six.moves.input')
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_skip(self, from_file, raw_input_mock):
+
+        name = self._test_conflict(
+            self.package_mock,
+            from_file,
+            raw_input_mock,
+            's',
+        )
+
+        self.package_mock.create.assert_called_once_with({
+            'is_public': False,
+        }, {name: mock.ANY},)
+
+    @mock.patch('six.moves.input')
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_skip_ea(self, from_file, raw_input_mock):
+
+        name = self._test_conflict(
+            self.package_mock,
+            from_file,
+            raw_input_mock,
+            '',
+            exists_action='s',
+        )
+
+        self.package_mock.create.assert_called_once_with({
+            'is_public': False,
+        }, {name: mock.ANY},)
+        self.assertFalse(raw_input_mock.called)
+
+    @mock.patch('six.moves.input')
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_abort(self, from_file, raw_input_mock):
+
+        self.assertRaises(SystemExit, self._test_conflict,
+                          self.package_mock,
+                          from_file,
+                          raw_input_mock,
+                          'a',
+                          )
+
+        self.package_mock.create.assert_called_once_with({
+            'is_public': False,
+        }, mock.ANY,)
+
+    @mock.patch('six.moves.input')
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_abort_ea(self,
+                                              from_file, raw_input_mock):
+
+        self.assertRaises(SystemExit, self._test_conflict,
+                          self.package_mock,
+                          from_file,
+                          raw_input_mock,
+                          '',
+                          exists_action='a',
+                          )
+
+        self.package_mock.create.assert_called_once_with({
+            'is_public': False,
+        }, mock.ANY,)
+        self.assertFalse(raw_input_mock.called)
+
+    @mock.patch('six.moves.input')
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_update(self, from_file, raw_input_mock):
+
+        name = self._test_conflict(
+            self.package_mock,
+            from_file,
+            raw_input_mock,
+            'u',
+        )
+
+        self.assertEqual(2, self.package_mock.create.call_count)
+        self.package_mock.delete.assert_called_once_with('test_id')
+
+        self.package_mock.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {name: mock.ANY},),
+                mock.call({'is_public': False}, {name: mock.ANY},)
+            ], any_order=True,
+        )
+
+    @mock.patch('six.moves.input')
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_update_ea(self,
+                                               from_file, raw_input_mock):
+
+        name = self._test_conflict(
+            self.package_mock,
+            from_file,
+            raw_input_mock,
+            '',
+            exists_action='u',
+        )
+
+        self.assertEqual(2, self.package_mock.create.call_count)
+        self.package_mock.delete.assert_called_once_with('test_id')
+
+        self.package_mock.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {name: mock.ANY},),
+                mock.call({'is_public': False}, {name: mock.ANY},)
+            ], any_order=True,
+        )
+        self.assertFalse(raw_input_mock.called)
+
+    def _test_conflict_dep(self,
+                           packages, from_file,
+                           dep_exists_action=''):
+        packages.create = mock.MagicMock(
+            side_effect=[common_exceptions.HTTPConflict("Conflict"),
+                         common_exceptions.HTTPConflict("Conflict"),
+                         None])
+
+        packages.filter.return_value = [mock.Mock(id='test_id')]
+
+        pkg1 = make_pkg(
+            {'FullName': 'first_app', 'Require': {'second_app': '1.0'}, })
+        pkg2 = make_pkg({'FullName': 'second_app', })
+
+        def side_effect(name):
+            if 'first_app' in name:
+                return mc_utils.Package(mc_utils.File(pkg1))
+            if 'second_app' in name:
+                return mc_utils.Package(mc_utils.File(pkg2))
+
+        from_file.side_effect = side_effect
+
+        arglist = ['first_app', '--exists-action', 's',
+                   '--dep-exists-action', dep_exists_action]
+
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        self.cmd.take_action(parsed_args)
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_dep_skip_ea(self, from_file):
+        self._test_conflict_dep(
+            self.package_mock,
+            from_file,
+            dep_exists_action='s',
+        )
+
+        self.assertEqual(2, self.package_mock.create.call_count)
+        self.package_mock.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_dep_abort_ea(self, from_file):
+        self.assertRaises(SystemExit, self._test_conflict_dep,
+                          self.package_mock,
+                          from_file,
+                          dep_exists_action='a',
+                          )
+
+        self.package_mock.create.assert_called_with({
+            'is_public': False,
+        }, {'second_app': mock.ANY},)
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_conflict_dep_update_ea(self, from_file):
+        self._test_conflict_dep(
+            self.package_mock,
+            from_file,
+            dep_exists_action='u',
+        )
+
+        self.assertGreater(self.package_mock.create.call_count, 2)
+        self.assertLess(self.package_mock.create.call_count, 5)
+
+        self.assertTrue(self.package_mock.delete.called)
+
+        self.package_mock.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )
+
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_no_categories(self, from_file):
+        with tempfile.NamedTemporaryFile() as f:
+            RESULT_PACKAGE = f.name
+            pkg = make_pkg({'FullName': RESULT_PACKAGE})
+            from_file.return_value = mc_utils.Package(mc_utils.File(pkg))
+
+            arglist = [RESULT_PACKAGE]
+            parsed_args = self.check_parser(self.cmd, arglist, [])
+            self.cmd.take_action(parsed_args)
+
+            self.package_mock.create.assert_called_once_with(
+                {'is_public': False},
+                {RESULT_PACKAGE: mock.ANY},
+            )
+
+    @requests_mock.mock()
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_url(self, rm, from_file):
+        filename = "http://127.0.0.1/test_package.zip"
+
+        pkg = make_pkg({'FullName': 'test_package'})
+        from_file.return_value = mc_utils.Package(mc_utils.File(pkg))
+
+        rm.get(filename, body=make_pkg({'FullName': 'test_package'}))
+
+        arglist = [filename]
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        self.cmd.take_action(parsed_args)
+
+        self.package_mock.create.assert_called_once_with(
+            {'is_public': False},
+            {'test_package': mock.ANY},
+        )
+
+    @requests_mock.mock()
+    @mock.patch('muranoclient.common.utils.Package.from_file')
+    def test_package_import_by_name(self, rm, from_file):
+        filename = "io.test.apps.test_application"
+        murano_repo_url = "http://127.0.0.1"
+
+        pkg = make_pkg({'FullName': filename})
+        from_file.return_value = mc_utils.Package(mc_utils.File(pkg))
+
+        rm.get(murano_repo_url + '/apps/' + filename + '.zip',
+               body=make_pkg({'FullName': 'first_app'}))
+
+        arglist = [filename, '--murano-repo-url', murano_repo_url]
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        self.cmd.take_action(parsed_args)
+
+        self.assertTrue(self.package_mock.create.called)
+        self.package_mock.create.assert_called_once_with(
+            {'is_public': False},
+            {filename: mock.ANY},
+        )
+
+    @requests_mock.mock()
+    def test_package_import_multiple(self, rm):
+        filename = ["io.test.apps.test_application",
+                    "http://127.0.0.1/test_app2.zip", ]
+        murano_repo_url = "http://127.0.0.1"
+
+        rm.get(murano_repo_url + '/apps/' + filename[0] + '.zip',
+               body=make_pkg({'FullName': 'first_app'}))
+
+        rm.get(filename[1],
+               body=make_pkg({'FullName': 'second_app'}))
+
+        arglist = [filename[0], filename[1],
+                   '--murano-repo-url', murano_repo_url]
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        self.cmd.take_action(parsed_args)
+
+        self.assertEqual(2, self.package_mock.create.call_count)
+
+        self.package_mock.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )

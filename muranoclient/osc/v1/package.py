@@ -12,9 +12,12 @@
 
 """Application-catalog v1 package action implementation"""
 
+import collections
 import itertools
 import os
 import shutil
+import six
+import sys
 import tempfile
 import zipfile
 
@@ -24,11 +27,15 @@ from osc_lib import utils
 from oslo_log import log as logging
 
 from muranoclient.apiclient import exceptions
+from muranoclient.common import exceptions as common_exceptions
+from muranoclient.common import utils as murano_utils
 from muranoclient.v1.package_creator import hot_package
 from muranoclient.v1.package_creator import mpl_package
 
 
 LOG = logging.getLogger(__name__)
+
+DEFAULT_REPO_URL = "http://apps.openstack.org/api/v1/murano_repo/liberty/"
 
 
 class CreatePackage(command.Command):
@@ -319,4 +326,192 @@ class DeletePackage(command.Lister):
                 s,
                 columns,
             ) for s in data)
+        )
+
+
+def _handle_package_exists(mc, data, package, exists_action):
+    name = package.manifest['FullName']
+    version = package.manifest.get('Version', '0')
+    while True:
+        print("Importing package {0}".format(name))
+        try:
+            return mc.packages.create(data, {name: package.file()})
+        except common_exceptions.HTTPConflict:
+            print("Importing package {0} failed. Package with the same"
+                  " name/classes is already registered.".format(name))
+            allowed_results = ['s', 'u', 'a']
+            res = exists_action
+            if not res:
+                while True:
+                    print("What do you want to do? (s)kip, (u)pdate, (a)bort")
+                    res = six.moves.input()
+                    if res in allowed_results:
+                        break
+            if res == 's':
+                print("Skipping.")
+                return None
+            elif res == 'a':
+                print("Exiting.")
+                sys.exit()
+            elif res == 'u':
+                pkgs = list(mc.packages.filter(fqn=name, version=version,
+                                               owned=True))
+                if not pkgs:
+                    msg = (
+                        "Got a conflict response, but could not find the "
+                        "package '{0}' in the current tenant.\nThis probably "
+                        "means the conflicting package is in another tenant.\n"
+                        "Please delete it manually."
+                    ).format(name)
+                    raise exceptions.CommandError(msg)
+                elif len(pkgs) > 1:
+                    msg = (
+                        "Got {0} packages with name '{1}'.\nI do not trust "
+                        "myself, please delete the package manually."
+                    ).format(len(pkgs), name)
+                    raise exceptions.CommandError(msg)
+                print("Deleting package {0}({1})".format(name, pkgs[0].id))
+                mc.packages.delete(pkgs[0].id)
+                continue
+
+
+class ImportPackage(command.Lister):
+    """Import a package."""
+
+    def get_parser(self, prog_name):
+        parser = super(ImportPackage, self).get_parser(prog_name)
+        parser.add_argument(
+            'filename',
+            metavar='<FILE>',
+            nargs='+',
+            help='URL of the murano zip package, FQPN, path to zip package'
+                 ' or path to directory with package.'
+        )
+        parser.add_argument(
+            '--categories',
+            metavar='<CATEGORY>',
+            nargs='*',
+            help='Category list to attach.',
+        )
+        parser.add_argument(
+            '--is-public',
+            action='store_true',
+            default=False,
+            help="Make the package available for users from other tenants.",
+        )
+        parser.add_argument(
+            '--package-version',
+            default='',
+            help='Version of the package to use from repository '
+                 '(ignored when importing with multiple packages).'
+        )
+        parser.add_argument(
+            '--exists-action',
+            default='',
+            choices=['a', 's', 'u'],
+            help='Default action when a package already exists: '
+                 '(s)kip, (u)pdate, (a)bort.'
+        )
+        parser.add_argument(
+            '--dep-exists-action',
+            default='',
+            choices=['a', 's', 'u'],
+            help='Default action when a dependency package already exists: '
+                 '(s)kip, (u)pdate, (a)bort.'
+        )
+        parser.add_argument('--murano-repo-url',
+                            default=murano_utils.env(
+                                'MURANO_REPO_URL',
+                                default=DEFAULT_REPO_URL),
+                            help=('Defaults to env[MURANO_REPO_URL] '
+                                  'or {0}'.format(DEFAULT_REPO_URL)))
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action({0})".format(parsed_args))
+
+        client = self.app.client_manager.application_catalog
+
+        data = {"is_public": parsed_args.is_public}
+        version = parsed_args.package_version
+        if version and len(parsed_args.filename) >= 2:
+            print("Requested to import more than one package, "
+                  "ignoring version.")
+            version = ''
+
+        if parsed_args.categories:
+            data["categories"] = parsed_args.categories
+
+        total_reqs = collections.OrderedDict()
+        main_packages_names = []
+        for filename in parsed_args.filename:
+            if os.path.isfile(filename) or os.path.isdir(filename):
+                _file = filename
+            else:
+                print("Package file '{0}' does not exist, attempting to "
+                      "download".format(filename))
+                _file = murano_utils.to_url(
+                    filename,
+                    version=version,
+                    base_url=parsed_args.murano_repo_url,
+                    extension='.zip',
+                    path='apps/',
+                )
+            try:
+                package = murano_utils.Package.from_file(_file)
+            except Exception as e:
+                print("Failed to create package for '{0}', reason: {1}".format(
+                    filename, e))
+                continue
+            total_reqs.update(
+                package.requirements(base_url=parsed_args.murano_repo_url))
+            main_packages_names.append(package.manifest['FullName'])
+
+        imported_list = []
+
+        dep_exists_action = parsed_args.dep_exists_action
+        if dep_exists_action == '':
+            dep_exists_action = parsed_args.exists_action
+
+        for name, package in six.iteritems(total_reqs):
+            image_specs = package.images()
+            if image_specs:
+                print("Inspecting required images")
+                try:
+                    imgs = murano_utils.ensure_images(
+                        glance_client=client.glance_client,
+                        image_specs=image_specs,
+                        base_url=parsed_args.murano_repo_url,
+                        is_package_public=parsed_args.is_public)
+                    for img in imgs:
+                        print("Added {0}, {1} image".format(
+                            img['name'], img['id']))
+                except Exception as e:
+                    print("Error {0} occurred while installing "
+                          "images for {1}".format(e, name))
+
+            if name in main_packages_names:
+                exists_action = parsed_args.exists_action
+            else:
+                exists_action = dep_exists_action
+            try:
+                imported_package = _handle_package_exists(
+                    client, data, package, exists_action)
+                if imported_package:
+                    imported_list.append(imported_package)
+            except Exception as e:
+                print("Error {0} occurred while installing package {1}".format(
+                    e, name))
+
+        columns = ('id', 'name', 'fully_qualified_name', 'author', 'active',
+                   'is public', 'type', 'version')
+        column_headers = [c.capitalize() for c in columns]
+
+        return (
+            column_headers,
+            list(utils.get_item_properties(
+                s,
+                columns,
+            ) for s in imported_list)
         )
