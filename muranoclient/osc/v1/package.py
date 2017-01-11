@@ -274,3 +274,49 @@ class ListPackages(command.Lister):
                     columns,
                 ) for s in itertools.islice(data, parsed_args.limit))
             )
+
+
+class DeletePackage(command.Lister):
+    """Delete a package."""
+
+    def get_parser(self, prog_name):
+        parser = super(DeletePackage, self).get_parser(prog_name)
+        parser.add_argument(
+            'id',
+            metavar="<ID>",
+            nargs="+",
+            help="Package ID to delete.",
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action({0})".format(parsed_args))
+
+        client = self.app.client_manager.application_catalog
+
+        failure_count = 0
+        for package_id in parsed_args.id:
+            try:
+                client.packages.delete(package_id)
+            except exceptions.NotFound:
+                failure_count += 1
+                print("Failed to delete '{0}'; package not found".
+                      format(package_id))
+
+        if failure_count == len(parsed_args.id):
+            raise exceptions.CommandError("Unable to find and delete any of "
+                                          "the specified packages.")
+        data = client.packages.filter()
+
+        columns = ('id', 'name', 'fully_qualified_name', 'author', 'active',
+                   'is public', 'type', 'version')
+        column_headers = [c.capitalize() for c in columns]
+
+        return (
+            column_headers,
+            list(utils.get_item_properties(
+                s,
+                columns,
+            ) for s in data)
+        )
