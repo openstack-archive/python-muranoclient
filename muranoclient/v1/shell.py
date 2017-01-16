@@ -839,7 +839,7 @@ def do_package_import(mc, args):
         # NOTE(jose-phillips) Leave a Warning to users in case some packages
         # can be uploaded successfully.
         if imported_list:
-            print ("Warning: there were some errors during the operation.")
+            print("Warning: there were some errors during the operation.")
             sys.exit(1)
         else:
             sys.exit(1)
