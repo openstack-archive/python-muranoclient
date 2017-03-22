@@ -19,8 +19,8 @@ import shutil
 import SocketServer
 import tempfile
 import time
-import uuid
 
+from oslo_utils import uuidutils
 from six.moves import SimpleHTTPServer
 from tempest.lib.cli import output_parser
 from tempest.lib import exceptions
@@ -95,7 +95,7 @@ class CLIUtilsTestBase(muranoclient.ClientTestBase):
     @staticmethod
     def generate_uuid():
         """Generate uuid for objects."""
-        return uuid.uuid4().hex
+        return uuidutils.generate_uuid(dashed=False)
 
     @staticmethod
     def generate_name(prefix):

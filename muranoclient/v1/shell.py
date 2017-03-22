@@ -20,11 +20,11 @@ import os
 import shutil
 import sys
 import tempfile
-import uuid
 import zipfile
 
 import jsonpatch
 from oslo_utils import strutils
+from oslo_utils import uuidutils
 import six
 import six.moves
 
@@ -65,7 +65,7 @@ def _generate_join_existing_net(net, subnet):
         'defaultNetworks': {
             'environment': {
                 '?': {
-                    'id': uuid.uuid4().hex,
+                    'id': uuidutils.generate_uuid(dashed=False),
                     'type': 'io.murano.resources.ExistingNeutronNetwork'
                 },
             },
