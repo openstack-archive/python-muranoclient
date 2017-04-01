@@ -43,7 +43,6 @@ import yaql
 
 from muranoclient.common import exceptions
 from muranoclient.i18n import _
-from muranoclient.i18n import _LW
 
 try:
     import yaql.language  # noqa
@@ -586,8 +585,8 @@ def ensure_images(glance_client, image_specs, base_url,
     def _image_valid(image, keys):
         for key in keys:
             if key not in image:
-                LOG.warning(_LW("Image specification invalid: "
-                            "No {0} key in image ").format(key))
+                LOG.warning("Image specification invalid: "
+                            "No {0} key in image ").format(key)
                 return False
         return True
 
