@@ -33,6 +33,7 @@ import zipfile
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
+from oslo_utils import uuidutils
 
 import prettytable
 import requests
@@ -770,13 +771,14 @@ def traverse_and_replace(obj,
     """Helper function that traverses object model and substitutes ids.
 
     Recursively checks values of objects found in `obj` against `pattern`,
-    and replaces strings that match pattern with uuid.uuid4(). Keeps track of
-    any replacements already made, i.e. ===id1=== would always be the same,
-    across `obj`. Uses 1st group, found in the `pattern` regexp as unique
-    identifier of a replacement
+    and replaces strings that match pattern with uuidutils.generate_uuid().
+    Keeps track of any replacements already made, i.e. ===id1=== would
+    always be the same, across `obj`. Uses 1st group, found in the `pattern`
+    regexp as unique identifier of a replacement
     """
     if replacements is None:
-        replacements = collections.defaultdict(lambda: uuid.uuid4().hex)
+        replacements = collections.defaultdict(
+            lambda: uuidutils.generate_uuid(dashed=False))
 
     def _maybe_replace(obj, key, value):
         """Check and replace value against pattern"""
@@ -784,7 +786,8 @@ def traverse_and_replace(obj,
             m = pattern.search(value)
             if m:
                 if m.group(1) not in replacements:
-                    replacements[m.group(1)] = uuid.uuid4().hex
+                    replacements[m.group(1)] = uuidutils.generate_uuid(
+                        dashed=False)
                 obj[key] = replacements[m.group(1)]
 
     if isinstance(obj, list):

@@ -15,13 +15,13 @@
 import json
 import six
 import sys
-import uuid
 
 import jsonpatch
 from osc_lib.command import command
 from osc_lib import utils
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
+from oslo_utils import uuidutils
 
 from muranoclient.apiclient import exceptions
 from muranoclient.common import utils as murano_utils
@@ -209,7 +209,7 @@ class EnvironmentCreate(command.Lister):
                 'defaultNetworks': {
                     'environment': {
                         '?': {
-                            'id': uuid.uuid4().hex,
+                            'id': uuidutils.generate_uuid(dashed=False),
                             'type':
                             'io.murano.resources.ExistingNeutronNetwork'
                         },
