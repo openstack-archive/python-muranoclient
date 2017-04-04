@@ -207,7 +207,7 @@ class Controller(object):
         filters['limit'] = page_size
 
         url_params = []
-        for param, items in six.iteritems(filters):
+        for param, items in filters.items():
             values = [items] if not isinstance(items, list) else items
             for value in values:
                 if isinstance(value, six.string_types):

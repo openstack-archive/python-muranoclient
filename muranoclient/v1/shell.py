@@ -25,7 +25,6 @@ import zipfile
 import jsonpatch
 from oslo_utils import strutils
 from oslo_utils import uuidutils
-import six
 import six.moves
 
 from muranoclient.apiclient import exceptions
@@ -820,7 +819,7 @@ def do_package_import(mc, args):
     if dep_exists_action == '':
         dep_exists_action = args.exists_action
 
-    for name, package in six.iteritems(total_reqs):
+    for name, package in total_reqs.items():
         image_specs = package.images()
         if image_specs:
             print("Inspecting required images")
@@ -939,7 +938,7 @@ def do_bundle_import(mc, args):
 
     imported_list = []
 
-    for name, dep_package in six.iteritems(total_reqs):
+    for name, dep_package in total_reqs.items():
         image_specs = dep_package.images()
         if image_specs:
             print("Inspecting required images")
@@ -973,7 +972,7 @@ def do_bundle_import(mc, args):
 def _handle_save_packages(packages, dst, base_url, no_images):
     downloaded_images = []
 
-    for name, pkg in six.iteritems(packages):
+    for name, pkg in packages.items():
         if not no_images:
             image_specs = pkg.images()
             for image_spec in image_specs:

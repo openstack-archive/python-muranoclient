@@ -12,7 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 from six.moves import urllib
 
 from muranoclient.common import base
@@ -40,7 +39,7 @@ class CategoryManager(base.Manager):
         """
 
         params = {}
-        for key, value in six.iteritems(kwargs):
+        for key, value in kwargs.items():
             if value:
                 params[key] = value
 

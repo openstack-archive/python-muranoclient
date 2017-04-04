@@ -125,7 +125,7 @@ class PackageManager(base.Manager):
         """
         url = '/v1/catalog/packages/{0}'.format(app_id)
         data = []
-        for key, value in six.iteritems(body):
+        for key, value in body.items():
             data.append({'op': operation, 'path': '/' + key, 'value': value})
         return self.api.json_patch_request(url, data=data)
 

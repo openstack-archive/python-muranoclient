@@ -13,7 +13,6 @@
 # under the License.
 
 from glanceclient import exc
-import six
 
 
 class ArtifactType(object):
@@ -32,7 +31,7 @@ class ArtifactType(object):
             msg = "Invalid parameters were provided"
             raise exc.HTTPBadRequest(msg)
         self.type_specific_properties = {}
-        for key, value in six.iteritems(kwargs):
+        for key, value in kwargs.items():
             try:
                 if _is_dependency(value):
 

@@ -15,7 +15,6 @@
 import collections
 
 from glanceclient import exc as glance_exc
-import six
 import yaml
 
 from muranoclient.common import exceptions as exc
@@ -51,7 +50,7 @@ class ArtifactRepo(object):
             'tags': manifest.get('Tags', []),
             'class_definitions': package.classes.keys()
         }
-        for k, v in six.iteritems(kwargs):
+        for k, v in kwargs.items():
             package_draft[k] = v
 
         inherits = self._get_local_inheritance(package.classes,
@@ -112,7 +111,7 @@ class ArtifactRepo(object):
     @staticmethod
     def _get_local_inheritance(classes, resolvers):
         result = {}
-        for class_name, klass in six.iteritems(classes):
+        for class_name, klass in classes.items():
             if 'Extends' not in klass:
                 continue
             ns = klass.get('Namespaces')

@@ -11,7 +11,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
 from six.moves import urllib
 
 from muranoclient.common import base
@@ -73,7 +72,7 @@ class EnvironmentManager(base.ManagerWithFind):
                                 response_key='lastStatuses',
                                 headers=headers)
         result = {}
-        for k, v in six.iteritems(status_dict):
+        for k, v in status_dict.items():
             if v:
                 result[k] = Status(self, v, loaded=True)
         return result

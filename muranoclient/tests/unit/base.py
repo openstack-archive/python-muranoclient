@@ -16,7 +16,6 @@
 import os
 
 import fixtures
-import six
 import testtools
 
 
@@ -42,4 +41,4 @@ class TestAdditionalAsserts(testtools.TestCase):
     def check_dict_is_subset(self, dict1, dict2):
         # There is an assert for this in Python 2.7 but not 2.6
         self.assertTrue(all(k in dict2 and dict2[k] == v for k, v
-                            in six.iteritems(dict1)))
+                            in dict1.items()))
