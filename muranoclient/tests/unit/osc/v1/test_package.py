@@ -135,7 +135,7 @@ class TestPackageList(TestPackage):
             [packages.Package(None, DATA)]
         utils.get_dict_properties = mock.MagicMock(return_value='')
 
-    def test_stack_list_defaults(self):
+    def test_package_list_defaults(self):
         arglist = []
         parsed_args = self.check_parser(self.cmd, arglist, [])
 
@@ -146,7 +146,7 @@ class TestPackageList(TestPackage):
             owned=False)
         self.assertEqual(COLUMNS, columns)
 
-    def test_stack_list_with_limit(self):
+    def test_package_list_with_limit(self):
         arglist = ['--limit', '10']
         parsed_args = self.check_parser(self.cmd, arglist, [])
 
@@ -157,7 +157,7 @@ class TestPackageList(TestPackage):
             limit=10,
             owned=False)
 
-    def test_stack_list_with_marker(self):
+    def test_package_list_with_marker(self):
         arglist = ['--marker', '12345']
         parsed_args = self.check_parser(self.cmd, arglist, [])
 
@@ -168,7 +168,7 @@ class TestPackageList(TestPackage):
             marker='12345',
             owned=False)
 
-    def test_stack_list_with_name(self):
+    def test_package_list_with_name(self):
         arglist = ['--name', 'mysql']
         parsed_args = self.check_parser(self.cmd, arglist, [])
 
@@ -179,7 +179,7 @@ class TestPackageList(TestPackage):
             name='mysql',
             owned=False)
 
-    def test_stack_list_with_fqn(self):
+    def test_package_list_with_fqn(self):
         arglist = ['--fqn', 'mysql']
         parsed_args = self.check_parser(self.cmd, arglist, [])
 
