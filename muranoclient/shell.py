@@ -390,11 +390,11 @@ class MuranoShell(object):
             if v3_auth_url:
                 if (not args.os_user_domain_id and
                         not args.os_user_domain_name):
-                    args.os_user_domain_id = 'default'
+                    args.os_user_domain_name = 'default'
 
                 if (not args.os_project_domain_id and
                         not args.os_project_domain_name):
-                    args.os_project_domain_id = 'default'
+                    args.os_project_domain_name = 'default'
 
             keystone_auth = AuthCLI.load_from_argparse_arguments(args)
 
