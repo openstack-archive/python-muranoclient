@@ -36,3 +36,7 @@ variables::
 
 Once you've configured your authentication parameters, you can run
 :command:`murano help` to see a complete listing of available commands.
+
+.. toctree::
+
+   murano
