@@ -31,8 +31,8 @@ Command-line Tool
 
 In order to use the CLI, you must provide your OpenStack username,
 password, tenant, and auth endpoint. Use the corresponding configuration
-options (:option:`--os-username`, :option:`--os-password`,
-:option:`--os-tenant-id`, and :option:`--os-auth-url`) or
+options (:option:``--os-username``, :option:``--os-password``,
+:option:``--os-tenant-id``, and :option:``--os-auth-url``) or
 set them in environment variables::
 
     export OS_USERNAME=user
@@ -42,8 +42,8 @@ set them in environment variables::
 
 The command line tool will attempt to reauthenticate using your provided
 credentials for every request. You can override this behavior by manually
-supplying an auth token using :option:`--os-image-url` and
-:option:`--os-auth-token`. You can alternatively set these environment
+supplying an auth token using :option:``--os-image-url`` and
+:option:``--os-auth-token``. You can alternatively set these environment
 variables::
 
     export MURANO_URL=http://murano.example.org:8082/
