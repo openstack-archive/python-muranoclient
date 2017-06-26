@@ -13,28 +13,22 @@
 
 import os
 
+import openstackdocstheme
+
 project = 'python-muranoclient'
 
 # -- General configuration ----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.intersphinx',
-              'sphinx.ext.coverage',
-              'sphinx.ext.ifconfig',
-              'sphinx.ext.graphviz']
+extensions = ['sphinx.ext.autodoc']
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
 # execute "export SPHINX_DEBUG=1" in your terminal to disable
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = []
-if os.getenv('HUDSON_PUBLISH_DOCS'):
-    templates_path = ['_ga', '_templates']
-else:
-    templates_path = ['_templates']
+templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -43,7 +37,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-copyright = u'Mirantis, Inc'
+copyright = u'OpenStack Foundation'
 exclude_trees = ['api']
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
@@ -60,7 +54,11 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = 'default'
+html_theme = 'openstackdocs'
+
+# Add any paths that contain custom themes here, relative to this directory.
+#html_theme_path = ['_theme']
+html_theme_path = [openstackdocstheme.get_html_theme_path()]
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
@@ -74,7 +72,7 @@ latex_documents = [
         'index',
         '%s.tex' % project,
         u'%s Documentation' % project,
-        u'Mirantis, Inc',
+        u'OpenStack Foundation',
         'manual'
     ),
 ]
