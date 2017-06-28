@@ -21,7 +21,6 @@ from muranoclient.common import base
 from muranoclient.common import exceptions
 from muranoclient.common import utils
 
-
 DEFAULT_PAGE_SIZE = 20
 
 
@@ -33,24 +32,9 @@ class Package(base.Resource):
         return self.manager.data(self, **kwargs)
 
 
-class Category(base.Resource):
-    def __init__(self, manager, info, loaded=False):
-        self.value = info
-
-    def __unicode__(self):
-        return self.value
-
-    def __repr__(self):
-        return self.value
-
-
 class PackageManager(base.Manager):
     resource_class = Package
     _tracked_packages = set()
-
-    def categories(self):
-        return self._list('/v1/catalog/packages/categories',
-                          response_key='categories', obj_class=Category)
 
     def create(self, data, files):
         for pkg_file in files.values():
