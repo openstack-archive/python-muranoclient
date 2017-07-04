@@ -13,15 +13,14 @@
 
 import os
 
-import openstackdocstheme
-
 project = 'python-muranoclient'
 
 # -- General configuration ----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc',
+              'openstackdocstheme',]
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
 # text edit cycles.
@@ -58,7 +57,15 @@ html_theme = 'openstackdocs'
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = ['_theme']
-html_theme_path = [openstackdocstheme.get_html_theme_path()]
+#html_theme_path = [openstackdocstheme.get_html_theme_path()]
+
+# openstackdocstheme options
+repository_name = 'openstack/python-muranoclient'
+bug_project = 'python-muranoclient'
+bug_tag = ''
+
+# Must set this variable to include year, month, day, hours, and minutes.
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = '%sdoc' % project
