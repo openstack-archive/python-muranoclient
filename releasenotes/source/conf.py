@@ -29,8 +29,6 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # sys.path.insert(0, os.path.abspath('.'))
 
-import openstackdocstheme
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -41,6 +39,7 @@ import openstackdocstheme
 # ones.
 extensions = [
     'reno.sphinxext',
+    'openstackdocstheme',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -122,7 +121,15 @@ html_theme = 'openstackdocs'
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
-html_theme_path = [openstackdocstheme.get_html_theme_path()]
+# html_theme_path = [openstackdocstheme.get_html_theme_path()]
+
+# openstackdocstheme options
+repository_name = 'openstack/python-muranoclient'
+bug_project = 'python-muranoclient'
+bug_tag = ''
+
+# Must set this variable to include year, month, day, hours, and minutes.
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
