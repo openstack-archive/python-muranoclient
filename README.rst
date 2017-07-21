@@ -38,8 +38,8 @@ in a "push-the-button" manner.
 .. _Blueprints: https://blueprints.launchpad.net/python-muranoclient
 .. _Bugs: https://bugs.launchpad.net/python-muranoclient
 .. _Source: https://git.openstack.org/cgit/openstack/python-muranoclient
-.. _How to Contribute: http://docs.openstack.org/infra/manual/developers.html
-.. _Specs: http://specs.openstack.org/openstack/murano-specs/
+.. _How to Contribute: https://docs.openstack.org/infra/manual/developers.html
+.. _Specs: https://specs.openstack.org/openstack/murano-specs/
 
 Python Muranoclient
 -------------------
@@ -61,7 +61,7 @@ Project status, bugs, and blueprints are tracked on Launchpad:
 
 Developer documentation can be found here:
 
-  http://docs.openstack.org/developer/murano/
+  https://docs.openstack.org/murano/latest/
 
 Additional resources are linked from the project wiki page:
 
