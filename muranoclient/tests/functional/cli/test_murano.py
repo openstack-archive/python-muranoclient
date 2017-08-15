@@ -814,6 +814,7 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
                              fail_ok=True)
         self.assertIn("murano bundle-import: error: too few arguments", result)
 
+    @unittest.skip("Skip due to apps.openstack.org website is retired.")
     def test_bundle_import_with_non_existing_package_name(self):
         """Test scenario:
 
@@ -828,6 +829,7 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
         self.assertIn("Couldn't find file for package", result)
         self.assertIn("Error Got non-ok status(404) while connecting", result)
 
+    @unittest.skip("Skip due to apps.openstack.org website is retired.")
     def test_bundle_import_with_non_existing_name(self):
         """Test scenario:
 
