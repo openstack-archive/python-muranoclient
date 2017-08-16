@@ -688,3 +688,27 @@ class TestBundleImport(TestPackage):
             ], any_order=True,
         )
         shutil.rmtree(tmp_dir)
+
+
+class TestShowPackage(TestPackage):
+    def setUp(self):
+        super(TestShowPackage, self).setUp()
+
+        # Command to test
+        self.cmd = osc_pkg.ShowPackage(self.app, None)
+
+    def test_package_show(self):
+        arglist = ['fake']
+        verifylist = [('id', 'fake')]
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        columns, data = self.cmd.take_action(parsed_args)
+
+        # Check that columns are correct
+        expected_columns = ('categories', 'class_definitions', 'description',
+                            'enabled', 'fully_qualified_name', 'id',
+                            'is_public', 'name', 'owner_id', 'tags', 'type')
+        self.assertEqual(expected_columns, columns)
+
+        self.package_mock.get.assert_called_with('fake')

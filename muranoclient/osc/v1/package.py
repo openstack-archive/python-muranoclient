@@ -25,6 +25,7 @@ from osc_lib.command import command
 from osc_lib import exceptions as exc
 from osc_lib import utils
 from oslo_log import log as logging
+from oslo_serialization import jsonutils
 
 from muranoclient.apiclient import exceptions
 from muranoclient.common import exceptions as common_exceptions
@@ -631,3 +632,44 @@ class ImportBundle(command.Lister):
                 columns,
             ) for s in imported_list)
         )
+
+
+class ShowPackage(command.ShowOne):
+    """Display details for a package."""
+
+    def get_parser(self, prog_name):
+        parser = super(ShowPackage, self).get_parser(prog_name)
+        parser.add_argument(
+            "id",
+            metavar="<ID>",
+            help=("Package ID to show."),
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action({0})".format(parsed_args))
+        client = self.app.client_manager.application_catalog
+
+        try:
+            package = client.packages.get(parsed_args.id)
+        except common_exceptions.HTTPNotFound:
+            raise exceptions.CommandError("Package with id %s not "
+                                          "found" % parsed_args.id)
+        else:
+            to_display = dict(
+                id=package.id,
+                type=package.type,
+                owner_id=package.owner_id,
+                name=package.name,
+                fully_qualified_name=package.fully_qualified_name,
+                is_public=package.is_public,
+                enabled=package.enabled,
+                class_definitions=jsonutils.dumps(package.class_definitions,
+                                                  indent=2),
+                categories=jsonutils.dumps(package.categories, indent=2),
+                tags=jsonutils.dumps(package.tags, indent=2),
+                description=package.description
+            )
+
+        return self.dict2columns(to_display)
