@@ -758,3 +758,24 @@ class TestUpdatePackage(TestPackage):
 
         self.package_mock.update.assert_called_with(
             '123', {'tags': ['foo']})
+
+
+class TestDownloadPackage(TestPackage):
+    def setUp(self):
+        super(TestDownloadPackage, self).setUp()
+
+        self.package_mock.download.return_value = \
+            b'This is a fake package buffer'
+
+        # Command to test
+        self.cmd = osc_pkg.DownloadPackage(self.app, None)
+
+    def test_package_download(self):
+        arglist = ['1234', '/tmp/foo.zip']
+        verifylist = [('id', '1234'), ('filename', '/tmp/foo.zip')]
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+
+        self.cmd.take_action(parsed_args)
+
+        self.package_mock.download.assert_called_with('1234')

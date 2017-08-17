@@ -751,3 +751,48 @@ class UpdatePackage(command.ShowOne):
         )
 
         return self.dict2columns(to_display)
+
+
+class DownloadPackage(command.Command):
+    """Download a package to a filename or stdout."""
+
+    def get_parser(self, prog_name):
+        parser = super(DownloadPackage, self).get_parser(prog_name)
+        parser.add_argument(
+            "id",
+            metavar="<ID>",
+            help=("Package ID to download."),
+        )
+        parser.add_argument(
+            "filename",
+            metavar="file", nargs="?",
+            help=("Filename to save package to. If it is not "
+                  "specified and there is no stdout redirection "
+                  "the package won't be saved."),
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action({0})".format(parsed_args))
+        client = self.app.client_manager.application_catalog
+
+        def download_to_fh(package_id, fh):
+            try:
+                fh.write(client.packages.download(package_id))
+            except common_exceptions.HTTPNotFound:
+                raise exceptions.CommandError("Package with id %s not "
+                                              "found" % parsed_args.id)
+
+        if parsed_args.filename:
+            with open(parsed_args.filename, 'wb') as fh:
+                download_to_fh(parsed_args.id, fh)
+                print("Package downloaded to %s" % parsed_args.filename)
+        elif not sys.stdout.isatty():
+            download_to_fh(parsed_args.id, sys.stdout)
+        else:
+            msg = ("No stdout redirection or local file specified for "
+                   "downloaded package. Please specify a local file to "
+                   "save downloaded package or redirect output to "
+                   "another source.")
+            raise exceptions.CommandError(msg)
