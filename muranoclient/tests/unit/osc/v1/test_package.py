@@ -712,3 +712,49 @@ class TestShowPackage(TestPackage):
         self.assertEqual(expected_columns, columns)
 
         self.package_mock.get.assert_called_with('fake')
+
+
+class TestUpdatePackage(TestPackage):
+    def setUp(self):
+        super(TestUpdatePackage, self).setUp()
+
+        self.package_mock.update.return_value = \
+            (mock.MagicMock(), mock.MagicMock())
+
+        # Command to test
+        self.cmd = osc_pkg.UpdatePackage(self.app, None)
+
+    def test_package_update(self):
+        arglist = ['123', '--is-public', 'true']
+        verifylist = [('id', '123'), ('is_public', True)]
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        self.cmd.take_action(parsed_args)
+
+        self.package_mock.update.assert_called_with('123', {'is_public': True})
+
+        arglist = ['123', '--enabled', 'true']
+        verifylist = [('id', '123'), ('enabled', True)]
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        self.cmd.take_action(parsed_args)
+
+        self.package_mock.update.assert_called_with('123', {'enabled': True})
+
+        arglist = ['123', '--name', 'foo', '--description', 'bar']
+        verifylist = [('id', '123'), ('name', 'foo'), ('description', 'bar')]
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        self.cmd.take_action(parsed_args)
+
+        self.package_mock.update.assert_called_with(
+            '123', {'name': 'foo', 'description': 'bar'})
+
+        arglist = ['123', '--tags', 'foo']
+        verifylist = [('id', '123'), ('tags', ['foo'])]
+
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        self.cmd.take_action(parsed_args)
+
+        self.package_mock.update.assert_called_with(
+            '123', {'tags': ['foo']})

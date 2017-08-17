@@ -13,6 +13,7 @@
 """Application-catalog v1 package action implementation"""
 
 import collections
+import functools
 import itertools
 import os
 import shutil
@@ -26,6 +27,7 @@ from osc_lib import exceptions as exc
 from osc_lib import utils
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
+from oslo_utils import strutils
 
 from muranoclient.apiclient import exceptions
 from muranoclient.common import exceptions as common_exceptions
@@ -37,6 +39,9 @@ from muranoclient.v1.package_creator import mpl_package
 LOG = logging.getLogger(__name__)
 
 DEFAULT_REPO_URL = "http://apps.openstack.org/api/v1/murano_repo/liberty/"
+
+_bool_from_str_strict = functools.partial(
+    strutils.bool_from_string, strict=True)
 
 
 class CreatePackage(command.Command):
@@ -671,5 +676,78 @@ class ShowPackage(command.ShowOne):
                 tags=jsonutils.dumps(package.tags, indent=2),
                 description=package.description
             )
+
+        return self.dict2columns(to_display)
+
+
+class UpdatePackage(command.ShowOne):
+    """Update an existing package."""
+
+    def get_parser(self, prog_name):
+        parser = super(UpdatePackage, self).get_parser(prog_name)
+        parser.add_argument(
+            'id',
+            metavar="<ID>",
+            help="Package ID to update.",
+        )
+        parser.add_argument(
+            '--is-public',
+            type=_bool_from_str_strict,
+            metavar="{true|false}",
+            help="Make package available to users from other tenants.",
+        )
+        parser.add_argument(
+            '--enabled',
+            type=_bool_from_str_strict,
+            metavar="{true|false}",
+            help="Make package active and available for deployments.",
+        )
+        parser.add_argument(
+            '--name',
+            default=None,
+            help="New name for the package.",
+        )
+        parser.add_argument(
+            '--description',
+            default=None,
+            help="New package description.",
+        )
+        parser.add_argument(
+            '--tags',
+            metavar='<TAG>', nargs='*',
+            default=None,
+            help="A list of keywords connected to the application.",
+        )
+
+        return parser
+
+    def take_action(self, parsed_args):
+        LOG.debug("take_action({0})".format(parsed_args))
+        client = self.app.client_manager.application_catalog
+        data = {}
+        parameters = ('is_public', 'enabled',
+                      'name', 'description',
+                      'tags')
+        for parameter in parameters:
+            param_value = getattr(parsed_args, parameter, None)
+            if param_value is not None:
+                data[parameter] = param_value
+
+        _, package = client.packages.update(parsed_args.id, data)
+
+        to_display = dict(
+            id=package["id"],
+            type=package["type"],
+            owner_id=package["owner_id"],
+            name=package["name"],
+            fully_qualified_name=package["fully_qualified_name"],
+            is_public=package["is_public"],
+            enabled=package["enabled"],
+            class_definitions=jsonutils.dumps(package["class_definitions"],
+                                              indent=2),
+            categories=jsonutils.dumps(package["categories"], indent=2),
+            tags=jsonutils.dumps(package["tags"], indent=2),
+            description=package["description"]
+        )
 
         return self.dict2columns(to_display)
