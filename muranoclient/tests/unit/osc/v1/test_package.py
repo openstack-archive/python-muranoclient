@@ -10,7 +10,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import os
+import shutil
 import six
 import sys
 import tempfile
@@ -548,3 +550,141 @@ class TestPackageImport(TestPackage):
                 mock.call({'is_public': False}, {'second_app': mock.ANY}),
             ], any_order=True,
         )
+
+
+class TestBundleImport(TestPackage):
+    def setUp(self):
+        super(TestBundleImport, self).setUp()
+
+        # Command to test
+        self.cmd = osc_pkg.ImportBundle(self.app, None)
+
+    @requests_mock.mock()
+    def test_import_bundle_by_name(self, m):
+        """Asserts bundle import calls packages create once for each pkg."""
+        pkg1 = make_pkg({'FullName': 'first_app'})
+        pkg2 = make_pkg({'FullName': 'second_app'})
+
+        murano_repo_url = "http://127.0.0.1"
+
+        m.get(murano_repo_url + '/apps/first_app.zip', body=pkg1)
+        m.get(murano_repo_url + '/apps/second_app.1.0.zip',
+              body=pkg2)
+        s = six.StringIO()
+        bundle_contents = {'Packages': [
+            {'Name': 'first_app'},
+            {'Name': 'second_app', 'Version': '1.0'}
+        ]}
+        json.dump(bundle_contents, s)
+        s = six.BytesIO(s.getvalue().encode('ascii'))
+
+        m.get(murano_repo_url + '/bundles/test_bundle.bundle',
+              body=s)
+
+        arglist = ["test_bundle", '--murano-repo-url', murano_repo_url]
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        self.cmd.take_action(parsed_args)
+
+        self.package_mock.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )
+
+    @requests_mock.mock()
+    def test_import_bundle_wrong_url(self, m):
+        url = 'http://127.0.0.2/test_bundle.bundle'
+        m.get(url, status_code=404)
+
+        arglist = [url]
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        self.cmd.take_action(parsed_args)
+
+        self.assertFalse(self.package_mock.packages.create.called)
+
+    @requests_mock.mock()
+    def test_import_bundle_no_bundle(self, m):
+        url = 'http://127.0.0.1/bundles/test_bundle.bundle'
+        m.get(url, status_code=404)
+
+        arglist = ["test_bundle"]
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        self.cmd.take_action(parsed_args)
+
+        self.assertFalse(self.package_mock.packages.create.called)
+
+    @requests_mock.mock()
+    def test_import_bundle_by_url(self, m):
+        """Asserts bundle import calls packages create once for each pkg."""
+        pkg1 = make_pkg({'FullName': 'first_app'})
+        pkg2 = make_pkg({'FullName': 'second_app'})
+
+        murano_repo_url = 'http://127.0.0.1'
+        m.get(murano_repo_url + '/apps/first_app.zip', body=pkg1)
+        m.get(murano_repo_url + '/apps/second_app.1.0.zip',
+              body=pkg2)
+        s = six.StringIO()
+        bundle_contents = {'Packages': [
+            {'Name': 'first_app'},
+            {'Name': 'second_app', 'Version': '1.0'}
+        ]}
+        json.dump(bundle_contents, s)
+        s = six.BytesIO(s.getvalue().encode('ascii'))
+
+        url = 'http://127.0.0.2/test_bundle.bundle'
+        m.get(url, body=s)
+
+        arglist = [url, '--murano-repo-url', murano_repo_url]
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        self.cmd.take_action(parsed_args)
+
+        self.package_mock.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+            ], any_order=True,
+        )
+
+    @requests_mock.mock()
+    def test_import_local_bundle(self, m):
+        """Asserts local bundles are first searched locally."""
+        tmp_dir = tempfile.mkdtemp()
+        bundle_file = os.path.join(tmp_dir, 'bundle.bundle')
+        with open(os.path.join(tmp_dir, 'bundle.bundle'), 'w') as f:
+
+            bundle_contents = {'Packages': [
+                {'Name': 'first_app'},
+                {'Name': 'second_app', 'Version': '1.0'}
+            ]}
+            json.dump(bundle_contents, f)
+
+        pkg1 = make_pkg({'FullName': 'first_app',
+                         'Require': {'third_app': None}})
+        pkg2 = make_pkg({'FullName': 'second_app'})
+        pkg3 = make_pkg({'FullName': 'third_app'})
+        with open(os.path.join(tmp_dir, 'first_app'), 'wb') as f:
+            f.write(pkg1.read())
+        with open(os.path.join(tmp_dir, 'third_app'), 'wb') as f:
+            f.write(pkg3.read())
+
+        murano_repo_url = "http://127.0.0.1"
+        m.get(murano_repo_url + '/apps/first_app.zip',
+              status_code=404)
+        m.get(murano_repo_url + '/apps/second_app.1.0.zip',
+              body=pkg2)
+        m.get(murano_repo_url + '/apps/third_app.zip',
+              status_code=404)
+
+        arglist = [bundle_file, '--murano-repo-url', murano_repo_url]
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        self.cmd.take_action(parsed_args)
+
+        self.package_mock.create.assert_has_calls(
+            [
+                mock.call({'is_public': False}, {'first_app': mock.ANY}),
+                mock.call({'is_public': False}, {'second_app': mock.ANY}),
+                mock.call({'is_public': False}, {'third_app': mock.ANY}),
+            ], any_order=True,
+        )
+        shutil.rmtree(tmp_dir)
