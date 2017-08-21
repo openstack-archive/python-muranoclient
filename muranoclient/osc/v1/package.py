@@ -515,3 +515,119 @@ class ImportPackage(command.Lister):
                 columns,
             ) for s in imported_list)
         )
+
+
+class ImportBundle(command.Lister):
+    """Import a bundle."""
+
+    def get_parser(self, prog_name):
+        parser = super(ImportBundle, self).get_parser(prog_name)
+        parser.add_argument(
+            'filename',
+            metavar='<FILE>',
+            nargs='+',
+            help='Bundle URL, bundle name, or path to the bundle file.'
+        )
+        parser.add_argument(
+            '--is-public',
+            action='store_true',
+            default=False,
+            help="Make the package available for users from other tenants.",
+        )
+        parser.add_argument(
+            '--exists-action',
+            default='',
+            choices=['a', 's', 'u'],
+            help='Default action when a package already exists: '
+                 '(s)kip, (u)pdate, (a)bort.'
+        )
+        parser.add_argument('--murano-repo-url',
+                            default=murano_utils.env(
+                                'MURANO_REPO_URL',
+                                default=DEFAULT_REPO_URL),
+                            help=('Defaults to env[MURANO_REPO_URL] '
+                                  'or {0}'.format(DEFAULT_REPO_URL)))
+
+        return parser
+
+    def take_action(self, parsed_args):
+
+        LOG.debug("take_action({0})".format(parsed_args))
+
+        client = self.app.client_manager.application_catalog
+
+        total_reqs = collections.OrderedDict()
+        for filename in parsed_args.filename:
+            local_path = None
+            if os.path.isfile(filename):
+                _file = filename
+                local_path = os.path.dirname(os.path.abspath(filename))
+            else:
+                print("Bundle file '{0}' does not exist, attempting "
+                      "to download".format(filename))
+                _file = murano_utils.to_url(
+                    filename,
+                    base_url=parsed_args.murano_repo_url,
+                    path='bundles/',
+                    extension='.bundle',
+                )
+
+            try:
+                bundle_file = murano_utils.Bundle.from_file(_file)
+            except Exception as e:
+                print("Failed to create bundle for '{0}', reason: {1}".format(
+                    filename, e))
+                continue
+
+            data = {"is_public": parsed_args.is_public}
+
+            for package in bundle_file.packages(
+                    base_url=parsed_args.murano_repo_url, path=local_path):
+
+                requirements = package.requirements(
+                    base_url=parsed_args.murano_repo_url,
+                    path=local_path,
+                )
+                total_reqs.update(requirements)
+
+        imported_list = []
+
+        for name, dep_package in total_reqs.items():
+            image_specs = dep_package.images()
+            if image_specs:
+                print("Inspecting required images")
+                try:
+                    imgs = parsed_args.ensure_images(
+                        glance_client=client.glance_client,
+                        image_specs=image_specs,
+                        base_url=parsed_args.murano_repo_url,
+                        local_path=local_path,
+                        is_package_public=parsed_args.is_public)
+                    for img in imgs:
+                        print("Added {0}, {1} image".format(
+                            img['name'], img['id']))
+                except Exception as e:
+                    print("Error {0} occurred while installing "
+                          "images for {1}".format(e, name))
+            try:
+                imported_package = _handle_package_exists(
+                    client, data, dep_package, parsed_args.exists_action)
+                if imported_package:
+                    imported_list.append(imported_package)
+            except exceptions.CommandError:
+                raise
+            except Exception as e:
+                print("Error {0} occurred while "
+                      "installing package {1}".format(e, name))
+
+        columns = ('id', 'name', 'fully_qualified_name', 'author', 'active',
+                   'is public', 'type', 'version')
+        column_headers = [c.capitalize() for c in columns]
+
+        return (
+            column_headers,
+            list(utils.get_item_properties(
+                s,
+                columns,
+            ) for s in imported_list)
+        )
