@@ -474,7 +474,11 @@ def do_env_template_del_app(mc, args):
            help="Environment template name.")
 def do_env_template_update(mc, args):
     """Update an environment template."""
-    env_template = mc.env_templates.update(args.id, args.name)
+    try:
+        env_template = mc.env_templates.update(args.id, args.name)
+    except common_exceptions.HTTPNotFound:
+        raise exceptions.CommandError("Environment template %s not found"
+                                      % args.id)
     _print_env_template_list([env_template])
 
 
