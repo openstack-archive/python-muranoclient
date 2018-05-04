@@ -29,7 +29,6 @@ from keystoneclient import exceptions as ks_exc
 from keystoneclient import session as ksession
 from oslo_log import handlers
 from oslo_log import log as logging
-from oslo_log import versionutils
 from oslo_utils import encodeutils
 from oslo_utils import importutils
 import six
@@ -68,7 +67,7 @@ class MuranoShell(object):
 
         identity.Password.register_argparse_arguments(parser)
 
-    def get_base_parser(self):
+    def get_base_parser(self, argv):
 
         parser = argparse.ArgumentParser(
             prog='murano',
@@ -97,20 +96,6 @@ class MuranoShell(object):
         parser.add_argument('-v', '--verbose',
                             default=False, action="store_true",
                             help="Print more verbose output.")
-
-        # os-cert, os-key, insecure, ca-file are all added
-        # by keystone session register_cli_opts later
-        parser.add_argument('--cert-file',
-                            dest='os_cert',
-                            help='DEPRECATED! Use --os-cert.')
-
-        parser.add_argument('--key-file',
-                            dest='os_key',
-                            help='DEPRECATED! Use --os-key.')
-
-        parser.add_argument('--ca-file',
-                            dest='os_cacert',
-                            help='DEPRECATED! Use --os-cacert.')
 
         parser.add_argument('--api-timeout',
                             help='Number of seconds to wait for an '
@@ -186,12 +171,31 @@ class MuranoShell(object):
                                  'Defaults to env[MURANO_PACKAGES_SERVICE] or '
                                  'to "murano"')
 
+        # The following 3 arguments are deprecated and are all added
+        # by keystone session register_cli_opts later.  Only add these
+        # arguments if they are present on the command line.
+
+        if '--cert-file' in argv:
+            parser.add_argument('--cert-file',
+                                dest='os_cert',
+                                help='DEPRECATED! Use --os-cert.')
+
+        if '--key-file' in argv:
+            parser.add_argument('--key-file',
+                                dest='os_key',
+                                help='DEPRECATED! Use --os-key.')
+
+        if '--ca-file' in argv:
+            parser.add_argument('--ca-file',
+                                dest='os_cacert',
+                                help='DEPRECATED! Use --os-cacert.')
+
         self._append_global_identity_args(parser)
 
         return parser
 
-    def get_subcommand_parser(self, version):
-        parser = self.get_base_parser()
+    def get_subcommand_parser(self, version, argv):
+        parser = self.get_base_parser(argv)
 
         self.subcommands = {}
         subparsers = parser.add_subparsers(metavar='<subcommand>')
@@ -267,13 +271,13 @@ class MuranoShell(object):
 
     def main(self, argv):
         # Parse args once to find version
-        parser = self.get_base_parser()
+        parser = self.get_base_parser(argv)
         (options, args) = parser.parse_known_args(argv)
         self._setup_logging(options.debug)
 
         # build available subcommands based on version
         api_version = options.murano_api_version
-        subcommand_parser = self.get_subcommand_parser(api_version)
+        subcommand_parser = self.get_subcommand_parser(api_version, argv)
         self.parser = subcommand_parser
 
         keystone_session = None
@@ -304,11 +308,6 @@ class MuranoShell(object):
 
         if args.murano_packages_service == 'glance':
             args.murano_packages_service = 'glare'
-            # TODO(kzaitsev): remove in P cycle
-            versionutils.report_deprecated_feature(
-                logger, "'glance' is no longer a valid option for "
-                        "--murano-packages-service, please use 'glare' "
-                        "instead.")
 
         if args.os_no_client_auth:
             if not args.murano_url:
