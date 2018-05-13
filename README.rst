@@ -11,11 +11,11 @@ Murano
 ======
 
 .. image:: https://img.shields.io/pypi/v/python-muranoclient.svg
-    :target: https://pypi.python.org/pypi/python-muranoclient/
+    :target: https://pypi.org/project/python-muranoclient/
     :alt: Latest Version
 
 .. image:: https://img.shields.io/pypi/dm/python-muranoclient.svg
-    :target: https://pypi.python.org/pypi/python-muranoclient/
+    :target: https://pypi.org/project/python-muranoclient/
     :alt: Downloads
 
 Murano Project introduces an application catalog, which allows application
@@ -33,7 +33,7 @@ in a "push-the-button" manner.
 * `Specs`_
 * `How to Contribute`_
 
-.. _PyPi: https://pypi.python.org/pypi/python-muranoclient
+.. _PyPi: https://pypi.org/project/python-muranoclient
 .. _Launchpad project: https://launchpad.net/python-muranoclient
 .. _Blueprints: https://blueprints.launchpad.net/python-muranoclient
 .. _Bugs: https://bugs.launchpad.net/python-muranoclient
