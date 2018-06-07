@@ -14,10 +14,6 @@ Murano
     :target: https://pypi.org/project/python-muranoclient/
     :alt: Latest Version
 
-.. image:: https://img.shields.io/pypi/dm/python-muranoclient.svg
-    :target: https://pypi.org/project/python-muranoclient/
-    :alt: Downloads
-
 Murano Project introduces an application catalog, which allows application
 developers and cloud administrators to publish various cloud-ready
 applications in a browsable categorised catalog, which may be used by the
