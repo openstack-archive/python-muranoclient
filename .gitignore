@@ -29,7 +29,7 @@ develop-eggs/
 doc/source/api
 
 #Testing framework
-.testrepository
+.stestr/
 .coverage
 *,cover
 cover
