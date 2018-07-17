@@ -40,6 +40,7 @@ in a "push-the-button" manner.
 .. _Source: https://git.openstack.org/cgit/openstack/python-muranoclient
 .. _How to Contribute: https://docs.openstack.org/infra/manual/developers.html
 .. _Specs: https://specs.openstack.org/openstack/murano-specs/
+.. _Release Notes: https://docs.openstack.org/releasenotes/python-muranoclient
 
 Python Muranoclient
 -------------------
