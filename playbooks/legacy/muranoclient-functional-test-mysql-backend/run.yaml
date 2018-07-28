@@ -1,0 +1,74 @@
+- hosts: all
+  name: Autoconverted job legacy-muranoclient-dsvm-functional-mysql-backend from old
+    job gate-muranoclient-dsvm-functional-mysql-backend-ubuntu-xenial
+  tasks:
+
+    - name: Ensure legacy workspace directory
+      file:
+        path: '{{ ansible_user_dir }}/workspace'
+        state: directory
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          cat > clonemap.yaml << EOF
+          clonemap:
+            - name: openstack-infra/devstack-gate
+              dest: devstack-gate
+          EOF
+          /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
+              git://git.openstack.org \
+              openstack-infra/devstack-gate
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
+
+    - shell:
+        cmd: |
+          set -e
+          set -x
+          export PYTHONUNBUFFERED=true
+          export DEVSTACK_GATE_NEUTRON=1
+          export DEVSTACK_PROJECT_FROM_GIT=python-muranoclient
+          export BRANCH_OVERRIDE=default
+
+          export ENABLED_SERVICES=tempest
+          export PROJECTS="openstack/heat $PROJECTS"
+          export PROJECTS="openstack/python-heatclient $PROJECTS"
+          export PROJECTS="openstack/murano $PROJECTS"
+          export PROJECTS="openstack/murano-dashboard $PROJECTS"
+          export KEEP_LOCALRC=1
+
+          # Enable murano devstack plugin. Provided repo should be cloned by zuul before devstack run
+          # and below provided link should not be used.
+          export DEVSTACK_LOCAL_CONFIG="enable_plugin heat git://git.openstack.org/openstack/heat"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin murano git://git.openstack.org/openstack/murano"
+
+          if [ "mysql-backend" = "glare-backend" ]; then
+              export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_service g-glare"
+              export DEVSTACK_LOCAL_CONFIG+=$'\n'"MURANO_USE_GLARE=True"
+          fi
+
+          if [ "$BRANCH_OVERRIDE" != "default" ] ; then
+              export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
+          fi
+
+          function pre_test_hook {
+              # Install Murano devstack modules
+              cd /opt/stack/new/murano/functionaltests
+              ./pre_test_hook.sh
+          }
+          export -f pre_test_hook
+
+          function post_test_hook {
+              # Configure and run functional tests
+              /opt/stack/new/python-muranoclient/muranoclient/tests/functional/hooks/post_test_hook.sh
+          }
+          export -f post_test_hook
+
+          cp devstack-gate/devstack-vm-gate-wrap.sh ./safe-devstack-vm-gate-wrap.sh
+          ./safe-devstack-vm-gate-wrap.sh
+        executable: /bin/bash
+        chdir: '{{ ansible_user_dir }}/workspace'
+      environment: '{{ zuul | zuul_legacy_vars }}'
