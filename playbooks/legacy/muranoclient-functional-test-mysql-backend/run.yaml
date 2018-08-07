@@ -54,13 +54,6 @@
               export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
           fi
 
-          function pre_test_hook {
-              # Install Murano devstack modules
-              cd /opt/stack/new/murano/functionaltests
-              ./pre_test_hook.sh
-          }
-          export -f pre_test_hook
-
           function post_test_hook {
               # Configure and run functional tests
               /opt/stack/new/python-muranoclient/muranoclient/tests/functional/hooks/post_test_hook.sh
