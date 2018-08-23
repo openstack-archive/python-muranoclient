@@ -1,13 +1,25 @@
 - project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - check-requirements
+      - release-notes-jobs
+      - publish-openstack-sphinx-docs
+      - openstackclient-plugin-jobs
     check:
       jobs:
         - openstack-tox-lower-constraints
         - muranoclient-functional-test-mysql-backend
+        - openstack-tox-cover:
+            voting: false
     gate:
       jobs:
         - openstack-tox-lower-constraints
         - muranoclient-functional-test-mysql-backend
 
+    post:
+      jobs:
+        - openstack-tox-cover
 - job:
     name: muranoclient-functional-test-mysql-backend
     parent: legacy-dsvm-base
