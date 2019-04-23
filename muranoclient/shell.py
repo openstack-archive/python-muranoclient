@@ -49,7 +49,7 @@ DEFAULT_REPO_URL = "http://apps.openstack.org/api/v1/murano_repo/liberty/"
 # quick local fix for keystoneclient bug which blocks built-in reauth
 # functionality in case of expired token.
 # bug: https://bugs.launchpad.net/python-keystoneclient/+bug/1551392
-# fix: https://review.openstack.org/#/c/286236/
+# fix: https://review.opendev.org/#/c/286236/
 class AuthCLI(DefaultCLI):
     def invalidate(self):
         retval = super(AuthCLI, self).invalidate()

@@ -82,7 +82,7 @@ CLONE_FROM_GIT=$1
                 fi
         fi
 # Cloning from GIT
-                GIT_WEBPATH_PRFX="https://git.openstack.org/cgit/openstack/"
+                GIT_WEBPATH_PRFX="https://opendev.org/openstack/"
                 gitclone "$GIT_WEBPATH_PRFX$SERVICE_SRV_NAME.git" $GIT_CLONE_DIR
 # End clone from git section
         fi
