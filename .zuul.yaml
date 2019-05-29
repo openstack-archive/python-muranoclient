@@ -22,6 +22,13 @@
     run: playbooks/legacy/muranoclient-functional-test-mysql-backend/run.yaml
     post-run: playbooks/legacy/muranoclient-functional-test-mysql-backend/post.yaml
     timeout: 4200
+    irrelevant-files:
+      - ^(test-|)requirements.txt$
+      - ^setup.cfg$
+      - ^doc/.*$
+      - ^.*\.rst$
+      - ^releasenotes/.*$
+      - ^muranoclient/tests/.*$
     required-projects:
       - openstack/devstack-gate
       - openstack/heat
