@@ -13,8 +13,6 @@
 
 import os
 
-project = 'python-muranoclient'
-
 # -- General configuration ----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -64,11 +62,8 @@ repository_name = 'openstack/python-muranoclient'
 bug_project = 'python-muranoclient'
 bug_tag = ''
 
-# Must set this variable to include year, month, day, hours, and minutes.
-html_last_updated_fmt = '%Y-%m-%d %H:%M'
-
 # Output file base name for HTML help builder.
-htmlhelp_basename = '%sdoc' % project
+htmlhelp_basename = 'python-muranoclientdoc'
 
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -77,8 +72,8 @@ htmlhelp_basename = '%sdoc' % project
 latex_documents = [
     (
         'index',
-        '%s.tex' % project,
-        u'%s Documentation' % project,
+        'python-muranoclient.tex',
+        u'python-muranoclient Documentation',
         u'OpenStack Foundation',
         'manual'
     ),

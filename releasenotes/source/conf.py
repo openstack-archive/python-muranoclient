@@ -55,7 +55,6 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Murano Client Release Notes'
 copyright = u'2015, Murano Developers'
 
 # Release notes are version independent.
@@ -122,9 +121,6 @@ html_theme = 'openstackdocs'
 repository_name = 'openstack/python-muranoclient'
 bug_project = 'python-muranoclient'
 bug_tag = ''
-
-# Must set this variable to include year, month, day, hours, and minutes.
-html_last_updated_fmt = '%Y-%m-%d %H:%M'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -198,17 +194,6 @@ htmlhelp_basename = 'MuranoClientReleaseNotesdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
-
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    # 'papersize': 'letterpaper',
-
-    # The font size ('10pt', '11pt' or '12pt').
-    # 'pointsize': '10pt',
-
-    # Additional stuff for the LaTeX preamble.
-    # 'preamble': '',
-}
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
