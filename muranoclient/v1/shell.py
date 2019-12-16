@@ -931,14 +931,18 @@ def do_bundle_import(mc, args):
 
         data = {"is_public": args.is_public}
 
-        for package in bundle_file.packages(
-                base_url=args.murano_repo_url, path=local_path):
+        try:
+            for package in bundle_file.packages(
+                    base_url=args.murano_repo_url, path=local_path):
 
-            requirements = package.requirements(
-                base_url=args.murano_repo_url,
-                path=local_path,
-            )
-            total_reqs.update(requirements)
+                requirements = package.requirements(
+                    base_url=args.murano_repo_url,
+                    path=local_path,
+                )
+                total_reqs.update(requirements)
+        except Exception:
+            print("Can't parse bundle contents")
+            continue
 
     imported_list = []
 
@@ -1227,13 +1231,16 @@ def _print_category_list(categories):
            help="ID of a category(s) to show.")
 def do_category_show(mc, args):
     """Display category details."""
-    category = mc.categories.get(args.id)
-    packages = mc.packages.filter(category=category.name)
-    to_display = dict(id=category.id,
-                      name=category.name,
-                      packages=', '.join(p.name for p in packages))
-    formatters = {'packages': utils.text_wrap_formatter}
-    utils.print_dict(to_display, formatters)
+    try:
+        category = mc.categories.get(args.id)
+        packages = mc.packages.filter(category=category.name)
+        to_display = dict(id=category.id,
+                          name=category.name,
+                          packages=', '.join(p.name for p in packages))
+        formatters = {'packages': utils.text_wrap_formatter}
+        utils.print_dict(to_display, formatters)
+    except common_exceptions.HTTPNotFound:
+        print("Category id '{0}' not found". format(args.id))
 
 
 @utils.arg("name", metavar="<CATEGORY_NAME>",

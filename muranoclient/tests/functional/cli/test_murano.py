@@ -168,10 +168,10 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
         env_list = self.listing('environment-list')
 
         # Deleting dates from dictionaries to skip it in assert
-        map(lambda x: x.pop('Updated', None),
-            env_list + [environment])
-        map(lambda x: x.pop('Created', None),
-            env_list + [environment])
+        list(map(lambda x: x.pop('Updated', None),
+             env_list + [environment]))
+        list(map(lambda x: x.pop('Created', None),
+             env_list + [environment]))
 
         self.assertIn(environment, env_list)
 
@@ -205,10 +205,10 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
         new_env_list = self.listing('environment-list')
 
         # Deleting dates from dictionaries to skip it in assert
-        map(lambda x: x.pop('Updated', None),
-            new_env_list + [environment] + [renamed_env])
-        map(lambda x: x.pop('Created', None),
-            new_env_list + [environment] + [renamed_env])
+        list(map(lambda x: x.pop('Updated', None),
+             new_env_list + [environment] + [renamed_env]))
+        list(map(lambda x: x.pop('Created', None),
+             new_env_list + [environment] + [renamed_env]))
 
         self.assertIn(renamed_env, new_env_list)
         self.assertNotIn(environment, new_env_list)
@@ -226,7 +226,7 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
         self.assertEqual(['acquired_by', 'created', 'description_text', 'id',
                           'name', 'services', 'status', 'tenant_id',
                           'updated', 'version'],
-                         map(lambda x: x['Property'], env_show))
+                         list(map(lambda x: x['Property'], env_show)))
 
     def test_environment_show(self):
         """Test scenario:
@@ -240,11 +240,13 @@ class EnvironmentMuranoSanityClientTest(utils.CLIUtilsTestBase):
         env_show = self.listing('environment-show', params=environment['Name'])
 
         self.assertIn(environment['Created'],
-                      map(lambda x: x['Value'], env_show))
+                      list(map(lambda x: x['Value'], env_show)))
         self.assertIn(environment['Updated'],
-                      map(lambda x: x['Value'], env_show))
-        self.assertIn(environment['Name'], map(lambda x: x['Value'], env_show))
-        self.assertIn(environment['ID'], map(lambda x: x['Value'], env_show))
+                      list(map(lambda x: x['Value'], env_show)))
+        self.assertIn(environment['Name'],
+                      list(map(lambda x: x['Value'], env_show)))
+        self.assertIn(environment['ID'],
+                      list(map(lambda x: x['Value'], env_show)))
 
     def test_environment_delete_by_id(self):
         """Test scenario:
@@ -318,7 +320,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
         category_show = self.listing('category-show', params=category['ID'])
 
         self.assertEqual(['id', 'name', 'packages'],
-                         map(lambda x: x['Property'], category_show))
+                         list(map(lambda x: x['Property'], category_show)))
 
     def test_category_show(self):
         """Test scenario:
@@ -330,9 +332,10 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
                                              'TestMuranoSanityCategory')
         category_show = self.listing('category-show', params=category['ID'])
 
-        self.assertIn(category['ID'], map(lambda x: x['Value'], category_show))
+        self.assertIn(category['ID'],
+                      list(map(lambda x: x['Value'], category_show)))
         self.assertIn(category['Name'],
-                      map(lambda x: x['Value'], category_show))
+                      list(map(lambda x: x['Value'], category_show)))
 
     def test_non_existing_category_delete(self):
         """Test scenario:
@@ -353,7 +356,7 @@ class CategoryMuranoSanityClientTest(utils.CLIUtilsTestBase):
         """
         result = self.murano('category-show', params='non-existing',
                              fail_ok=True)
-        self.assertIn("Category id 'non-existing' not found", result)
+        self.assertIn("Category id 'non-existing' not found", str(result))
 
     def test_category_create_with_long_name(self):
         """Test scenario:
@@ -385,10 +388,10 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
         env_template_list = self.listing('env-template-list')
 
         # Deleting dates from dictionaries to skip it in assert
-        map(lambda x: x.pop('Updated', None),
-            env_template_list + [env_template])
-        map(lambda x: x.pop('Created', None),
-            env_template_list + [env_template])
+        list(map(lambda x: x.pop('Updated', None),
+             env_template_list + [env_template]))
+        list(map(lambda x: x.pop('Created', None),
+             env_template_list + [env_template]))
 
         self.assertIn(env_template, env_template_list)
 
@@ -416,7 +419,8 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
                                                  'TestMuranoSanityEnvTemp')
         env_template_show = self.listing('env-template-show',
                                          params=env_template['ID'])
-        tested_env_template = map(lambda x: x['Property'], env_template_show)
+        tested_env_template = list(
+            map(lambda x: x['Property'], env_template_show))
 
         self.assertIn('created', tested_env_template)
         self.assertIn('id', tested_env_template)
@@ -437,7 +441,7 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
                                                  'TestMuranoSanityEnvTemp')
         env_template_show = self.listing('env-template-show',
                                          params=env_template['ID'])
-        tested_env = map(lambda x: x['Value'], env_template_show)
+        tested_env = list(map(lambda x: x['Value'], env_template_show))
 
         self.assertIn(env_template['ID'], tested_env)
         self.assertIn(env_template['Name'], tested_env)
@@ -453,7 +457,7 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
         new_env_name = self.generate_name('EnvFromTemp')
         params = "{0} {1}".format(env_template['ID'], new_env_name)
         env_created = self.listing('env-template-create-env', params=params)
-        tested_env_created = map(lambda x: x['Property'], env_created)
+        tested_env_created = list(map(lambda x: x['Property'], env_created))
 
         self.assertIn('environment_id', tested_env_created)
         self.assertIn('session_id', tested_env_created)
@@ -473,9 +477,10 @@ class EnvTemplateMuranoSanityClientTest(utils.CLIUtilsTestBase):
 
         params = "{0} {1}".format(env_template['ID'], new_template)
         template_created = self.listing('env-template-clone', params=params)
-        list = map(lambda x: ({x['Property']: x['Value']}), template_created)
-        result_name = filter(lambda x: x.get('name'), list)[0]['name']
-        result_id = filter(lambda x: x.get('id'), list)[0]['id']
+        tp_list = list(
+            map(lambda x: ({x['Property']: x['Value']}), template_created))
+        result_name = list(filter(lambda x: x.get('name'), tp_list))[0]['name']
+        result_id = list(filter(lambda x: x.get('id'), tp_list))[0]['id']
         self.listing('env-template-delete', params=result_id)
 
         self.assertIn(result_name, new_template)
@@ -812,7 +817,8 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
         """
         result = self.murano('bundle-import', params='',
                              fail_ok=True)
-        self.assertIn("murano bundle-import: error: too few arguments", result)
+        self.assertIn("murano bundle-import: error: the following "
+                      "arguments are required", result)
 
     @unittest.skip("Skip due to apps.openstack.org website is retired.")
     def test_bundle_import_with_non_existing_package_name(self):
@@ -857,7 +863,7 @@ class BundleMuranoSanityClientTest(utils.CLIUtilsTestPackagesBase):
                 params=self.prepare_bundle_with_invalid_format(),
                 fail_ok=False)
         except utils.exceptions.CommandFailed as exception:
-            self.assertIn("Can't parse bundle contents", exception.stdout)
+            self.assertIn("Can't parse bundle contents", str(exception))
 
 
 class StaticActionMuranoClientTest(utils.CLIUtilsTestPackagesBase):
