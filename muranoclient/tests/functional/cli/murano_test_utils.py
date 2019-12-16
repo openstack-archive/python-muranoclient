@@ -16,12 +16,12 @@ import json
 import multiprocessing
 import os
 import shutil
-import SocketServer
 import tempfile
 import time
 
 from oslo_utils import uuidutils
 from six.moves import SimpleHTTPServer
+from six.moves import socketserver
 from tempest.lib.cli import output_parser
 from tempest.lib import exceptions
 
@@ -136,7 +136,7 @@ class TestSuiteRepository(CLIUtilsTestBase):
             class Handler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 pass
             os.chdir(self.serve_dir)
-            httpd = SocketServer.TCPServer(
+            httpd = socketserver.TCPServer(
                 ("0.0.0.0", 8089),
                 Handler, bind_and_activate=False)
             httpd.allow_reuse_address = True
