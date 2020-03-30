@@ -153,9 +153,9 @@ class ShellCommandTest(ShellTest):
 
     def test_help(self):
         required = [
-            '.*?^usage: murano',
-            '.*?^\s+package-create\s+Create an application package.',
-            '.*?^See "murano help COMMAND" for help on a specific command',
+            r'.*?^usage: murano',
+            r'.*?^\s+package-create\s+Create an application package.',
+            r'.*?^See "murano help COMMAND" for help on a specific command',
         ]
         stdout, stderr = self.shell('help')
         for r in required:
@@ -174,9 +174,9 @@ class ShellCommandTest(ShellTest):
 
     def test_help_no_options(self):
         required = [
-            '.*?^usage: murano',
-            '.*?^\s+package-create\s+Create an application package',
-            '.*?^See "murano help COMMAND" for help on a specific command',
+            r'.*?^usage: murano',
+            r'.*?^\s+package-create\s+Create an application package',
+            r'.*?^See "murano help COMMAND" for help on a specific command',
         ]
         stdout, stderr = self.shell('')
         for r in required:

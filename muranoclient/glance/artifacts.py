@@ -97,7 +97,7 @@ class Controller(object):
 
         :param artifact_id: ID of the artifact to modify.
         :param remove_props: List of property names to remove
-        :param \*\*kwargs: Artifact attribute names and their new values.
+        :param **kwargs: Artifact attribute names and their new values.
         """
         type_name, type_version = self._check_type_params(type_name,
                                                           type_version)

@@ -35,7 +35,7 @@ class YaqlExpression(object):
     def match(expr):
         if not isinstance(expr, six.string_types):
             return False
-        if re.match('^[\s\w\d.:]*$', expr):
+        if re.match(r'^[\s\w\d.:]*$', expr):
             return False
         try:
             yaql.parse(expr)

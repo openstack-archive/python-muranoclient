@@ -743,12 +743,14 @@ class DummyYaqlYamlLoader(yaml.SafeLoader):
     """Constructor that treats !yaql as string."""
     pass
 
+
 DummyYaqlYamlLoader.add_constructor(
     u'!yaql', DummyYaqlYamlLoader.yaml_constructors[u'tag:yaml.org,2002:str'])
 
 
 class YaqlYamlLoader(yaml.SafeLoader):
     pass
+
 
 # workaround for PyYAML bug: http://pyyaml.org/ticket/221
 resolvers = {}
@@ -760,6 +762,7 @@ YaqlYamlLoader.yaml_implicit_resolvers = resolvers
 def yaql_constructor(loader, node):
     value = loader.construct_scalar(node)
     return YaqlExpression(value)
+
 
 YaqlYamlLoader.add_constructor(u'!yaql', yaql_constructor)
 YaqlYamlLoader.add_implicit_resolver(u'!yaql', YaqlExpression, None)
