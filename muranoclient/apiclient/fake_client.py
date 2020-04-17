@@ -26,9 +26,8 @@ places where actual behavior differs from the spec.
 
 import json
 
+import parse
 import requests
-import six
-from six.moves.urllib import parse
 
 from muranoclient.apiclient import client
 
@@ -65,7 +64,7 @@ class TestResponse(requests.Response):
             else:
                 self._content = text
                 default_headers = {}
-            if six.PY3 and isinstance(self._content, six.string_types):
+            if isinstance(self._content, str):
                 self._content = self._content.encode('utf-8', 'strict')
             self.headers = data.get('headers') or default_headers
         else:
