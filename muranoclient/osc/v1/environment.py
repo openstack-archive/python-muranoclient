@@ -13,8 +13,8 @@
 """Application-catalog v1 stack action implementation"""
 
 import json
-import six
 import sys
+import urllib
 
 import jsonpatch
 from osc_lib.command import command
@@ -428,7 +428,7 @@ class EnvironmentModelShow(command.ShowOne):
         client = self.app.client_manager.application_catalog
 
         session_id = parsed_args.session_id or None
-        path = six.moves.urllib.parse.quote(parsed_args.path)
+        path = urllib.parse.quote(parsed_args.path)
         env_model = client.environments.get_model(parsed_args.id, path,
                                                   session_id)
 
