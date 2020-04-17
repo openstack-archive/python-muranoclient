@@ -31,8 +31,7 @@ from oslo_log import handlers
 from oslo_log import log as logging
 from oslo_utils import encodeutils
 from oslo_utils import importutils
-import six
-import six.moves.urllib.parse as urlparse
+import urllib.parse as urlparse
 
 import muranoclient
 from muranoclient.apiclient import exceptions as exc
@@ -525,7 +524,7 @@ def main(args=sys.argv[1:]):
         if '--debug' in args or '-d' in args:
             raise
         else:
-            print(encodeutils.safe_encode(six.text_type(e)), file=sys.stderr)
+            print(encodeutils.safe_encode(str(e)), file=sys.stderr)
         sys.exit(1)
 
 

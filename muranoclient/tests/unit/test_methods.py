@@ -13,7 +13,6 @@
 #    under the License.
 
 import mock
-import six
 import testtools
 
 from muranoclient import client
@@ -240,7 +239,7 @@ class UnitTestsForClassesAndFunctions(testtools.TestCase):
         api.configure_mock(**{'json_request.side_effect': json_request})
 
         manager = packages.PackageManager(api)
-        category = six.b('\xd0\xbf\xd0\xb8\xd0\xb2\xd0\xbe')
+        category = b'\xd0\xbf\xd0\xb8\xd0\xb2\xd0\xbe'
         kwargs = {'category': category.decode('utf-8')}
         list(manager.filter(**kwargs))
 

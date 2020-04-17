@@ -14,6 +14,7 @@
 
 import collections
 import filecmp
+import io
 import json
 import logging
 import os
@@ -30,7 +31,6 @@ import mock
 from oslo_log import handlers
 from oslo_log import log
 import requests_mock
-import six
 from testtools import matchers
 
 from muranoclient.apiclient import exceptions
@@ -117,8 +117,8 @@ class ShellCommandTest(ShellTest):
         orig = sys.stdout
         orig_stderr = sys.stderr
         try:
-            sys.stdout = six.StringIO()
-            sys.stderr = six.StringIO()
+            sys.stdout = io.StringIO()
+            sys.stderr = io.StringIO()
             _shell = muranoclient.shell.MuranoShell()
             _shell.main(argstr.split())
         except SystemExit:
@@ -998,7 +998,7 @@ class ShellCommandTest(ShellTest):
         ex = self.assertRaises(exceptions.CommandError, self.shell,
                                'category-delete category-id')
         expected = 'Unable to find and delete any of the specified categories.'
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
 
 
 class ShellPackagesOperations(ShellCommandTest):
@@ -1078,7 +1078,7 @@ class ShellPackagesOperations(ShellCommandTest):
             v1_shell.do_package_import(self.client, args)
             return f.name
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_skip(self, from_file, raw_input_mock):
 
@@ -1093,7 +1093,7 @@ class ShellPackagesOperations(ShellCommandTest):
             'is_public': False,
         }, {name: mock.ANY},)
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_skip_ea(self, from_file, raw_input_mock):
 
@@ -1110,7 +1110,7 @@ class ShellPackagesOperations(ShellCommandTest):
         }, {name: mock.ANY},)
         self.assertFalse(raw_input_mock.called)
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_abort(self, from_file, raw_input_mock):
 
@@ -1125,7 +1125,7 @@ class ShellPackagesOperations(ShellCommandTest):
             'is_public': False,
         }, mock.ANY,)
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_abort_ea(self,
                                               from_file, raw_input_mock):
@@ -1143,7 +1143,7 @@ class ShellPackagesOperations(ShellCommandTest):
         }, mock.ANY,)
         self.assertFalse(raw_input_mock.called)
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_update(self, from_file, raw_input_mock):
 
@@ -1164,7 +1164,7 @@ class ShellPackagesOperations(ShellCommandTest):
         )
         self.assertEqual(2, self.client.packages.create.call_count)
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_update_ea(self,
                                                from_file, raw_input_mock):
@@ -1367,13 +1367,13 @@ class ShellPackagesOperations(ShellCommandTest):
         m.get(TestArgs.murano_repo_url + '/apps/first_app.zip', body=pkg1)
         m.get(TestArgs.murano_repo_url + '/apps/second_app.1.0.zip',
               body=pkg2)
-        s = six.StringIO()
+        s = io.StringIO()
         bundle_contents = {'Packages': [
             {'Name': 'first_app'},
             {'Name': 'second_app', 'Version': '1.0'}
         ]}
         json.dump(bundle_contents, s)
-        s = six.BytesIO(s.getvalue().encode('ascii'))
+        s = io.BytesIO(s.getvalue().encode('ascii'))
 
         m.get(TestArgs.murano_repo_url + '/bundles/test_bundle.bundle',
               body=s)
@@ -1405,13 +1405,13 @@ class ShellPackagesOperations(ShellCommandTest):
         m.get(TestArgs.murano_repo_url + '/apps/second_app.1.0.zip',
               body=pkg2)
 
-        s = six.StringIO()
+        s = io.StringIO()
         # bundle only contains 1st package
         bundle_contents = {'Packages': [
             {'Name': 'first_app'},
         ]}
         json.dump(bundle_contents, s)
-        s = six.BytesIO(s.getvalue().encode('ascii'))
+        s = io.BytesIO(s.getvalue().encode('ascii'))
 
         m.get(TestArgs.murano_repo_url + '/bundles/test_bundle.bundle',
               body=s)
@@ -1437,13 +1437,13 @@ class ShellPackagesOperations(ShellCommandTest):
         m.get(TestArgs.murano_repo_url + '/apps/first_app.zip', body=pkg1)
         m.get(TestArgs.murano_repo_url + '/apps/second_app.1.0.zip',
               body=pkg2)
-        s = six.StringIO()
+        s = io.StringIO()
         bundle_contents = {'Packages': [
             {'Name': 'first_app'},
             {'Name': 'second_app', 'Version': '1.0'}
         ]}
         json.dump(bundle_contents, s)
-        s = six.BytesIO(s.getvalue().encode('ascii'))
+        s = io.BytesIO(s.getvalue().encode('ascii'))
 
         url = 'http://127.0.0.2/test_bundle.bundle'
         m.get(url, body=s)
@@ -1536,12 +1536,12 @@ class ShellPackagesOperations(ShellCommandTest):
 
         m.get(TestArgs.murano_repo_url + '/apps/test_app.zip', body=pkg)
 
-        s = six.StringIO()
+        s = io.StringIO()
         expected_bundle = {'Packages': [
             {'Name': 'test_app'},
         ]}
         json.dump(expected_bundle, s)
-        s = six.BytesIO(s.getvalue().encode('ascii'))
+        s = io.BytesIO(s.getvalue().encode('ascii'))
 
         m.get(TestArgs.murano_repo_url + '/bundles/test_bundle.bundle',
               body=s)
