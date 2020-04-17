@@ -25,7 +25,7 @@ import zipfile
 import jsonpatch
 from oslo_utils import strutils
 from oslo_utils import uuidutils
-import six.moves
+import urllib
 
 from muranoclient.apiclient import exceptions
 from muranoclient.common import exceptions as common_exceptions
@@ -333,7 +333,7 @@ def do_environment_apps_edit(mc, args):
 def do_environment_model_show(mc, args):
     """Display an environment's object model."""
     session_id = args.session_id or None
-    path = six.moves.urllib.parse.quote(args.path)
+    path = urllib.parse.quote(args.path)
     env_model = mc.environments.get_model(args.id, path, session_id)
     print(utils.json_formatter(env_model))
 
@@ -724,7 +724,7 @@ def _handle_package_exists(mc, data, package, exists_action):
             if not res:
                 while True:
                     print("What do you want to do? (s)kip, (u)pdate, (a)bort")
-                    res = six.moves.input()
+                    res = input()
                     if res in allowed_results:
                         break
             if res == 's':

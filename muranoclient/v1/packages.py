@@ -13,8 +13,7 @@
 #    under the License.
 
 from oslo_serialization import jsonutils
-import six
-from six.moves import urllib
+import urllib
 import yaml
 
 from muranoclient.common import base
@@ -60,7 +59,7 @@ class PackageManager(base.Manager):
 
         def construct_url(params):
             for k, v in params.items():
-                if isinstance(v, six.text_type):
+                if isinstance(v, str):
                     v = v.encode('utf-8')
                     params[k] = v
             return '?'.join(
