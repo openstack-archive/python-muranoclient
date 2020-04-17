@@ -12,9 +12,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import configparser
 import os
 
-from six.moves import configparser
 from tempest.lib.cli import base
 
 

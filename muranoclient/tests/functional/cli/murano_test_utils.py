@@ -12,16 +12,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from http import server as SimpleHTTPServer
 import json
 import multiprocessing
 import os
 import shutil
+import socketserver
 import tempfile
 import time
 
 from oslo_utils import uuidutils
-from six.moves import SimpleHTTPServer
-from six.moves import socketserver
 from tempest.lib.cli import output_parser
 from tempest.lib import exceptions
 
