@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import io
 import json
 import os.path
 import tempfile
@@ -21,7 +22,6 @@ import zipfile
 import mock
 import requests
 import requests_mock
-import six
 import testtools
 import yaml
 
@@ -45,7 +45,7 @@ class FileTest(testtools.TestCase):
     def test_file_object_url_fails(self):
         resp = requests.Response()
         resp.status_code = 400
-        resp.raw = six.BytesIO(six.b("123"))
+        resp.raw = io.BytesIO(b"123")
 
         with mock.patch(
                 'requests.get',
@@ -55,7 +55,7 @@ class FileTest(testtools.TestCase):
 
     def test_file_object_url(self):
         resp = requests.Response()
-        resp.raw = six.BytesIO(six.b("123"))
+        resp.raw = io.BytesIO(b"123")
         resp.status_code = 200
         with mock.patch(
                 'requests.get',
@@ -74,7 +74,7 @@ def make_pkg(manifest_override, image_dicts=None):
         'Name': 'Apache HTTP Server',
         'Type': 'Application'}
     manifest.update(manifest_override)
-    file_obj = six.BytesIO()
+    file_obj = io.BytesIO()
     zfile = zipfile.ZipFile(file_obj, "a")
     zfile.writestr('manifest.yaml', yaml.dump(manifest))
     zfile.writestr('Classes/foo.yaml', yaml.dump({}))
@@ -215,7 +215,7 @@ class PackageTest(testtools.TestCase):
         reqs = app.requirements(base_url=self.base_url)
 
         def key_position(key):
-            keys = list(six.iterkeys(reqs))
+            keys = list(iter(reqs.keys()))
             return keys.index(key)
 
         self.assertTrue(
@@ -265,7 +265,7 @@ class PackageTest(testtools.TestCase):
         reqs = app.requirements(base_url=self.base_url)
 
         def key_position(key):
-            keys = list(six.iterkeys(reqs))
+            keys = list(iter(reqs.keys()))
             return keys.index(key)
 
         self.assertTrue(
@@ -340,7 +340,7 @@ class PackageTest(testtools.TestCase):
         reqs = app.requirements(base_url=self.base_url)
 
         def key_position(key):
-            keys = list(six.iterkeys(reqs))
+            keys = list(iter(reqs.keys()))
             return keys.index(key)
 
         self.assertTrue(
@@ -378,7 +378,7 @@ class PackageTest(testtools.TestCase):
         reqs = app.requirements(base_url=self.base_url)
 
         def key_position(key):
-            keys = list(six.iterkeys(reqs))
+            keys = list(iter(reqs.keys()))
             return keys.index(key)
 
         self.assertTrue(
@@ -402,7 +402,7 @@ class PackageTest(testtools.TestCase):
 
     def test_file_object_repo_fails(self):
         resp = requests.Response()
-        resp.raw = six.BytesIO(six.b("123"))
+        resp.raw = io.BytesIO(b"123")
         resp.status_code = 400
         with mock.patch(
                 'requests.get',
@@ -418,7 +418,7 @@ class PackageTest(testtools.TestCase):
     @mock.patch.object(utils.Package, 'validate')
     def test_file_object_repo(self, m_validate):
         resp = requests.Response()
-        resp.raw = six.BytesIO(six.b("123"))
+        resp.raw = io.BytesIO(b"123")
         resp.status_code = 200
         m_validate.return_value = None
         with mock.patch(
@@ -434,7 +434,7 @@ class BundleTest(testtools.TestCase):
 
     @requests_mock.mock()
     def test_packages(self, m):
-        s = six.StringIO()
+        s = io.StringIO()
         bundle_contents = {'Packages': [
             {'Name': 'first_app'},
             {'Name': 'second_app', 'Version': '1.0'}

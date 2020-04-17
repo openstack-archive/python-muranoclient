@@ -16,6 +16,7 @@
 from __future__ import print_function
 
 import collections
+from io import BytesIO
 import json
 from muranopkgcheck import manager as check_manager
 from muranopkgcheck import pkg_loader as check_pkg_loader
@@ -37,8 +38,7 @@ from oslo_utils import uuidutils
 
 import prettytable
 import requests
-import six
-from six.moves import urllib
+import urllib
 import yaml
 import yaql
 
@@ -97,8 +97,7 @@ def print_list(objs, fields, field_labels, formatters=None, sortby=0):
 
     result = encodeutils.safe_encode(pt.get_string())
 
-    if six.PY3:
-        result = result.decode()
+    result = result.decode()
 
     print(result)
 
@@ -117,8 +116,7 @@ def print_dict(d, formatters=None):
 
     result = encodeutils.safe_encode(pt.get_string(sortby='Property'))
 
-    if six.PY3:
-        result = result.decode()
+    result = result.decode()
 
     print(result)
 
@@ -187,13 +185,10 @@ def getsockopt(self, *args, **kwargs):
 
 def exception_to_str(exc):
     try:
-        error = six.text_type(exc)
+        error = str(exc)
     except UnicodeError:
-        try:
-            error = str(exc)
-        except UnicodeError:
-            error = ("Caught '%(exception)s' exception." %
-                     {"exception": exc.__class__.__name__})
+        error = ("Caught '%(exception)s' exception." %
+                 {"exception": exc.__class__.__name__})
     return encodeutils.safe_encode(error, errors='ignore')
 
 
@@ -360,7 +355,7 @@ class Package(FileWrapperMixin):
             try:
                 self._file.seek(0)
                 self._zip_obj = zipfile.ZipFile(
-                    six.BytesIO(self._file.read()))
+                    BytesIO(self._file.read()))
             except Exception as e:
                 LOG.error("Error {0} occurred,"
                           " while parsing the package".format(e))
@@ -468,7 +463,7 @@ class Package(FileWrapperMixin):
 
         def transpose_graph(graph):
             transposed = collections.defaultdict(list)
-            for node, deps in six.viewitems(graph):
+            for node, deps in graph.items():
                 for dep in deps:
                     transposed[dep].append(node)
             return transposed
@@ -785,7 +780,7 @@ def traverse_and_replace(obj,
 
     def _maybe_replace(obj, key, value):
         """Check and replace value against pattern"""
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             m = pattern.search(value)
             if m:
                 if m.group(1) not in replacements:

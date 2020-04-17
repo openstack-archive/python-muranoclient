@@ -23,8 +23,7 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 import requests
-import six
-from six.moves import urllib
+import urllib
 
 from muranoclient.common import exceptions as exc
 
@@ -126,7 +125,7 @@ class HTTPClient(object):
         dump.append('')
         if resp.content:
             content = resp.content
-            if isinstance(content, six.binary_type):
+            if isinstance(content, bytes):
                 try:
                     content = encodeutils.safe_decode(resp.content)
                 except UnicodeDecodeError:
