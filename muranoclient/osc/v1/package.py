@@ -17,7 +17,6 @@ import functools
 import itertools
 import os
 import shutil
-import six
 import sys
 import tempfile
 import zipfile
@@ -350,7 +349,7 @@ def _handle_package_exists(mc, data, package, exists_action):
             if not res:
                 while True:
                     print("What do you want to do? (s)kip, (u)pdate, (a)bort")
-                    res = six.moves.input()
+                    res = input()
                     if res in allowed_results:
                         break
             if res == 's':
@@ -480,7 +479,7 @@ class ImportPackage(command.Lister):
         if dep_exists_action == '':
             dep_exists_action = parsed_args.exists_action
 
-        for name, package in six.iteritems(total_reqs):
+        for name, package in iter(total_reqs.items()):
             image_specs = package.images()
             if image_specs:
                 print("Inspecting required images")

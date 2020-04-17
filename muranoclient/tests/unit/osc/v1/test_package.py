@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
 import json
 import os
 import shutil
-import six
 import sys
 import tempfile
 
@@ -102,7 +102,7 @@ class TestCreatePackage(TestPackage):
             parsed_args = self.check_parser(self.cmd, arglist, [])
             orig = sys.stdout
             try:
-                sys.stdout = six.StringIO()
+                sys.stdout = io.StringIO()
                 self.cmd.take_action(parsed_args)
             finally:
                 stdout = sys.stdout.getvalue()
@@ -123,7 +123,7 @@ class TestCreatePackage(TestPackage):
             parsed_args = self.check_parser(self.cmd, arglist, [])
             orig = sys.stdout
             try:
-                sys.stdout = six.StringIO()
+                sys.stdout = io.StringIO()
                 self.cmd.take_action(parsed_args)
             finally:
                 stdout = sys.stdout.getvalue()
@@ -281,7 +281,7 @@ class TestPackageImport(TestPackage):
 
             return f.name
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_skip(self, from_file, raw_input_mock):
 
@@ -296,7 +296,7 @@ class TestPackageImport(TestPackage):
             'is_public': False,
         }, {name: mock.ANY},)
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_skip_ea(self, from_file, raw_input_mock):
 
@@ -313,7 +313,7 @@ class TestPackageImport(TestPackage):
         }, {name: mock.ANY},)
         self.assertFalse(raw_input_mock.called)
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_abort(self, from_file, raw_input_mock):
 
@@ -328,7 +328,7 @@ class TestPackageImport(TestPackage):
             'is_public': False,
         }, mock.ANY,)
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_abort_ea(self,
                                               from_file, raw_input_mock):
@@ -346,7 +346,7 @@ class TestPackageImport(TestPackage):
         }, mock.ANY,)
         self.assertFalse(raw_input_mock.called)
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_update(self, from_file, raw_input_mock):
 
@@ -367,7 +367,7 @@ class TestPackageImport(TestPackage):
             ], any_order=True,
         )
 
-    @mock.patch('six.moves.input')
+    @mock.patch('builtins.input')
     @mock.patch('muranoclient.common.utils.Package.from_file')
     def test_package_import_conflict_update_ea(self,
                                                from_file, raw_input_mock):
@@ -570,13 +570,13 @@ class TestBundleImport(TestPackage):
         m.get(murano_repo_url + '/apps/first_app.zip', body=pkg1)
         m.get(murano_repo_url + '/apps/second_app.1.0.zip',
               body=pkg2)
-        s = six.StringIO()
+        s = io.StringIO()
         bundle_contents = {'Packages': [
             {'Name': 'first_app'},
             {'Name': 'second_app', 'Version': '1.0'}
         ]}
         json.dump(bundle_contents, s)
-        s = six.BytesIO(s.getvalue().encode('ascii'))
+        s = io.BytesIO(s.getvalue().encode('ascii'))
 
         m.get(murano_repo_url + '/bundles/test_bundle.bundle',
               body=s)
@@ -624,13 +624,13 @@ class TestBundleImport(TestPackage):
         m.get(murano_repo_url + '/apps/first_app.zip', body=pkg1)
         m.get(murano_repo_url + '/apps/second_app.1.0.zip',
               body=pkg2)
-        s = six.StringIO()
+        s = io.StringIO()
         bundle_contents = {'Packages': [
             {'Name': 'first_app'},
             {'Name': 'second_app', 'Version': '1.0'}
         ]}
         json.dump(bundle_contents, s)
-        s = six.BytesIO(s.getvalue().encode('ascii'))
+        s = io.BytesIO(s.getvalue().encode('ascii'))
 
         url = 'http://127.0.0.2/test_bundle.bundle'
         m.get(url, body=s)
