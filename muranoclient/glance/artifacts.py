@@ -15,8 +15,7 @@
 from glanceclient.common import utils
 from glanceclient import exc
 from oslo_utils import encodeutils
-import six
-from six.moves.urllib import parse
+from urllib import parse
 
 from muranoclient.glance import ArtifactType
 
@@ -210,7 +209,7 @@ class Controller(object):
         for param, items in filters.items():
             values = [items] if not isinstance(items, list) else items
             for value in values:
-                if isinstance(value, six.string_types):
+                if isinstance(value, str):
                     value = encodeutils.safe_encode(value)
                 url_params.append({param: value})
 
