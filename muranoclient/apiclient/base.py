@@ -28,8 +28,7 @@ import copy
 
 from oslo_utils import strutils
 from oslo_utils import uuidutils
-import six
-from six.moves.urllib import parse
+import parse
 
 from muranoclient.apiclient import exceptions
 from muranoclient.i18n import _
@@ -204,8 +203,7 @@ class BaseManager(HookableMixin):
         return self.client.delete(url)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ManagerWithFind(BaseManager):
+class ManagerWithFind(BaseManager, metaclass=abc.ABCMeta):
     """Manager with additional `find()`/`findall()` methods."""
 
     @abc.abstractmethod

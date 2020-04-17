@@ -21,7 +21,6 @@ import abc
 import argparse
 import os
 
-import six
 from stevedore import extension
 
 from muranoclient.apiclient import exceptions
@@ -85,7 +84,7 @@ def load_plugin_from_args(args):
         plugin.sufficient_options()
         return plugin
 
-    for plugin_auth_system in sorted(six.iterkeys(_discovered_plugins)):
+    for plugin_auth_system in sorted(iter(_discovered_plugins.keys())):
         plugin_class = _discovered_plugins[plugin_auth_system]
         plugin = plugin_class()
         plugin.parse_opts(args)
@@ -97,8 +96,7 @@ def load_plugin_from_args(args):
     raise exceptions.AuthPluginOptionsMissing(["auth_system"])
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseAuthPlugin(object):
+class BaseAuthPlugin(object, metaclass=abc.ABCMeta):
     """Base class for authentication plugins.
 
     An authentication plugin needs to override at least the authenticate
