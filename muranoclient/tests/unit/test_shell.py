@@ -22,12 +22,12 @@ import re
 import shutil
 import sys
 import tempfile
+from unittest import mock
 
 import fixtures
 from keystoneclient import fixture
 from keystoneclient.fixture import v2 as ks_v2_fixture
 from keystoneclient.fixture import v3 as ks_v3_fixture
-import mock
 from oslo_log import handlers
 from oslo_log import log
 import requests_mock

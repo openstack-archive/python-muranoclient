@@ -10,7 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from muranoclient.osc.v1 import action as osc_action
 from muranoclient.tests.unit.osc.v1 import fakes

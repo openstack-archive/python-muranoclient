@@ -16,6 +16,7 @@ import os
 import shutil
 import sys
 import tempfile
+from unittest import mock
 
 from testtools import matchers
 
@@ -26,7 +27,6 @@ from muranoclient.tests.unit.osc.v1 import fakes
 from muranoclient.tests.unit import test_utils
 from muranoclient.v1 import packages
 
-import mock
 from osc_lib import exceptions as exc
 from osc_lib import utils
 import requests_mock

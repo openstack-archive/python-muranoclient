@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import socket
+from unittest import mock
 
-import mock
 import testtools
 
 from muranoclient.common import exceptions as exc

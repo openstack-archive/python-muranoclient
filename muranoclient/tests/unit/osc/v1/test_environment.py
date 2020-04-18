@@ -13,8 +13,8 @@
 import collections
 import json
 import tempfile
+from unittest import mock
 
-import mock
 
 from muranoclient.osc.v1 import environment as osc_env
 from muranoclient.tests.unit.osc.v1 import fakes

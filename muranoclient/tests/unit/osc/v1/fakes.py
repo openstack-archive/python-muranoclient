@@ -10,8 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 from osc_lib.tests import utils
+from unittest import mock
 
 
 class TestApplicationCatalog(utils.TestCommand):

@@ -17,9 +17,9 @@ import io
 import json
 import os.path
 import tempfile
+from unittest import mock
 import zipfile
 
-import mock
 import requests
 import requests_mock
 import testtools
