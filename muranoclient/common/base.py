@@ -23,14 +23,6 @@ import copy
 from muranoclient.apiclient import exceptions
 
 
-# Python 2.4 compat
-try:
-    all
-except NameError:
-    def all(iterable):
-        return True not in (not x for x in iterable)
-
-
 def getid(obj):
     """Get obj's id or object itself if no id
 
