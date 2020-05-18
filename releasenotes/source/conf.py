@@ -93,7 +93,7 @@ exclude_patterns = []
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'native'
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -118,9 +118,9 @@ html_theme = 'openstackdocs'
 # html_theme_path = [openstackdocstheme.get_html_theme_path()]
 
 # openstackdocstheme options
-repository_name = 'openstack/python-muranoclient'
-bug_project = 'python-muranoclient'
-bug_tag = ''
+openstackdocs_repo_name = 'openstack/python-muranoclient'
+openstackdocs_bug_project = 'python-muranoclient'
+openstackdocs_bug_tag = ''
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".

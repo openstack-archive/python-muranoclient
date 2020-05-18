@@ -45,7 +45,7 @@ add_function_parentheses = True
 add_module_names = True
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'native'
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -58,9 +58,9 @@ html_theme = 'openstackdocs'
 #html_theme_path = [openstackdocstheme.get_html_theme_path()]
 
 # openstackdocstheme options
-repository_name = 'openstack/python-muranoclient'
-bug_project = 'python-muranoclient'
-bug_tag = ''
+openstackdocs_repo_name = 'openstack/python-muranoclient'
+openstackdocs_bug_project = 'python-muranoclient'
+openstackdocs_bug_tag = ''
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'python-muranoclientdoc'
