@@ -16,8 +16,6 @@
 Command-line interface to the Murano Project.
 """
 
-from __future__ import print_function
-
 import argparse
 import sys
 
