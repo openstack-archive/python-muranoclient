@@ -43,7 +43,7 @@ class SchemaManager(base.Manager):
             key: value for key, value in (
                 ('classVersion', class_version),
                 ('packageName', package_name)) if value
-            }
+        }
 
         if len(params):
             base_url += '?' + urllib.parse.urlencode(params, True)

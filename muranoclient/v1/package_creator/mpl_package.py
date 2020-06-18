@@ -53,7 +53,7 @@ def prepare_package(args):
         f.write(yaml.dump(manifest, default_flow_style=False))
 
     logo_file = os.path.join(temp_dir, 'logo.png')
-    if not args.logo or(args.logo and not os.path.isfile(args.logo)):
+    if not args.logo or (args.logo and not os.path.isfile(args.logo)):
         shutil.copyfile(muranoclient.get_resource('mpl_logo.png'), logo_file)
     else:
         shutil.copyfile(args.logo, logo_file)
