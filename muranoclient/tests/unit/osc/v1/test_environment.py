@@ -537,7 +537,7 @@ class TestEnvironmentModelShow(TestEnvironment):
         self.assertEqual(expected_columns, columns)
 
         # Check that data is correct
-        self.assertItemsEqual(ENV_MODEL.values(), data)
+        self.assertCountEqual(ENV_MODEL.values(), data)
 
     def test_environment_model_show_full(self):
         arglist = ['env-id', '--path', '/path', '--session-id', 'sess-id']
@@ -551,7 +551,7 @@ class TestEnvironmentModelShow(TestEnvironment):
         self.assertEqual(expected_columns, columns)
 
         # Check that data is correct
-        self.assertItemsEqual(ENV_MODEL.values(), data)
+        self.assertCountEqual(ENV_MODEL.values(), data)
 
 
 class TestEnvironmentModelEdit(TestEnvironment):
@@ -581,4 +581,4 @@ class TestEnvironmentModelEdit(TestEnvironment):
         self.assertEqual(expected_columns, columns)
 
         # Check that data is correct
-        self.assertItemsEqual(ENV_MODEL.values(), data)
+        self.assertCountEqual(ENV_MODEL.values(), data)

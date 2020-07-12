@@ -50,5 +50,5 @@ class TestSchema(fakes.TestApplicationCatalog):
 
         columns, data = self.cmd.take_action(parsed_args)
         expected_columns = ['', 'modelBuilder']
-        self.assertItemsEqual(expected_columns, columns)
-        self.assertItemsEqual(tuple(SAMPLE_CLASS_SCHEMA.values()), data)
+        self.assertCountEqual(expected_columns, columns)
+        self.assertCountEqual(tuple(SAMPLE_CLASS_SCHEMA.values()), data)
