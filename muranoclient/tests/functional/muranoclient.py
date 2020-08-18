@@ -33,7 +33,8 @@ class ClientTestBase(base.ClientTestBase):
 
         self.username = os.environ.get('OS_USERNAME')
         self.password = os.environ.get('OS_PASSWORD')
-        self.tenant_name = os.environ.get('OS_TENANT_NAME')
+        self.tenant_name = os.environ.get('OS_PROJECT_NAME',
+                                          os.environ.get('OS_TENANT_NAME'))
         self.uri = os.environ.get('OS_AUTH_URL')
         config = configparser.RawConfigParser()
         if config.read('functional_creds.conf'):

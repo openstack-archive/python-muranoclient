@@ -16,10 +16,13 @@
 
 - job:
     name: muranoclient-functional-test-mysql-backend
-    parent: legacy-dsvm-base
-    run: playbooks/legacy/muranoclient-functional-test-mysql-backend/run.yaml
-    post-run: playbooks/legacy/muranoclient-functional-test-mysql-backend/post.yaml
+    parent: devstack-tox-functional
     timeout: 4200
+    vars:
+      openrc_enable_export: true
+      devstack_plugins:
+        heat: https://opendev.org/openstack/heat
+        murano: https://opendev.org/openstack/murano
     irrelevant-files:
       - ^(test-|)requirements.txt$
       - ^setup.cfg$
@@ -28,7 +31,6 @@
       - ^releasenotes/.*$
       - ^muranoclient/tests/.*$
     required-projects:
-      - openstack/devstack-gate
       - openstack/heat
       - openstack/murano
       - openstack/murano-dashboard
