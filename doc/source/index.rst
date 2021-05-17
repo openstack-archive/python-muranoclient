@@ -11,3 +11,13 @@ module) and a :doc:`command-line script <cli/murano>`
    :maxdepth: 2
 
    cli/index
+
+For Contributors
+================
+
+* If you are a new contributor to python-muranoclient please refer: :doc:`contributor/contributing`
+
+  .. toctree::
+     :hidden:
+
+     contributor/contributing
