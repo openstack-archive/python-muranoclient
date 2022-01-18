@@ -22,6 +22,8 @@
       devstack_plugins:
         heat: https://opendev.org/openstack/heat
         murano: https://opendev.org/openstack/murano
+      devstack_localrc:
+        KEYSTONE_ADMIN_ENDPOINT: true
     irrelevant-files:
       - ^(test-|)requirements.txt$
       - ^setup.cfg$
