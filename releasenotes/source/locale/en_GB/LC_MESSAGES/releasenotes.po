@@ -1,14 +1,15 @@
 # Andi Chandler <andi@gowling.com>, 2017. #zanata
 # Andi Chandler <andi@gowling.com>, 2018. #zanata
+# Andi Chandler <andi@gowling.com>, 2022. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: python-muranoclient\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-08-08 06:14+0000\n"
+"POT-Creation-Date: 2022-03-08 06:48+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2018-08-09 08:51+0000\n"
+"PO-Revision-Date: 2022-06-13 07:35+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -44,6 +45,9 @@ msgstr "0.8.6"
 
 msgid "0.9.0"
 msgstr "0.9.0"
+
+msgid "2.0.0"
+msgstr "2.0.0"
 
 msgid ""
 "Ability to load package from directory was added. If specified directory "
@@ -277,6 +281,15 @@ msgstr "Ocata Series Release Notes"
 msgid "Pike Series Release Notes"
 msgstr "Pike Series Release Notes"
 
+msgid ""
+"Python 2.7 support has been dropped. Last release of python-muranoclient to "
+"support python 2.7 is OpenStack Train. The minimum version of Python now "
+"supported is Python 3.6."
+msgstr ""
+"Python 2.7 support has been dropped. The last release of python-muranoclient "
+"to support python 2.7 is OpenStack Train. The minimum version of Python now "
+"supported is Python 3.6."
+
 msgid "Queens Series Release Notes"
 msgstr "Queens Series Release Notes"
 
@@ -303,6 +316,9 @@ msgstr ""
 "Since Glare is a separate project now usage of 'glance' value for --murano-"
 "packages-service has been deprecated and is scheduled to be removed in P "
 "cycle"
+
+msgid "Stein Series Release Notes"
+msgstr "Stein Series Release Notes"
 
 msgid "Support for class/method JSON-schema API was added"
 msgstr "Support for class/method JSON-schema API was added"
@@ -332,8 +348,26 @@ msgstr ""
 "The client now is able to consume the updated `List Environments` API call, "
 "which may be used to filter environments by an owner project (tenant)."
 
+msgid "Train Series Release Notes"
+msgstr "Train Series Release Notes"
+
 msgid "Upgrade Notes"
 msgstr "Upgrade Notes"
+
+msgid "Ussuri Series Release Notes"
+msgstr "Ussuri Series Release Notes"
+
+msgid "Victoria Series Release Notes"
+msgstr "Victoria Series Release Notes"
+
+msgid "Wallaby Series Release Notes"
+msgstr "Wallaby Series Release Notes"
+
+msgid "Xena Series Release Notes"
+msgstr "Xena Series Release Notes"
+
+msgid "Yoga Series Release Notes"
+msgstr "Yoga Series Release Notes"
 
 msgid ""
 "cli now makes use of type of the endpoint (defined either as a --os-endpoint-"
