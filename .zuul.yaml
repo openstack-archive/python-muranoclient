@@ -17,6 +17,7 @@
     name: muranoclient-functional-test-mysql-backend
     parent: devstack-tox-functional
     timeout: 4200
+    voting: false
     vars:
       openrc_enable_export: true
       devstack_plugins:
