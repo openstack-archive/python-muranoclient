@@ -1,5 +1,0 @@
----
-fixes:
-  - Added ability to use arguments ``--resources-dir`` and ``--template``
-    for ``package-create`` command simultaneously. It allows to create HOT-packages
-    with Resources folder.

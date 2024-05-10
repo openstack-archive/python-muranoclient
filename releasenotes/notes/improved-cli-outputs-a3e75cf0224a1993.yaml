@@ -1,4 +1,0 @@
----
-fixes:
-  - Changed murano-client CLI outputs to show only items affected
-    by current operation instead of full item list.

@@ -1,4 +1,0 @@
----
-fixes:
-  - Fixed a bug when a package containing multi-class yamls could not be added
-    to glare-based catalog.

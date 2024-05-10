@@ -1,4 +1,0 @@
----
-fixes:
-  - Added fallback from token to username/password if both
-    are provided and token expires or is invalid.
